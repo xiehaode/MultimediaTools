@@ -1,4 +1,6 @@
 #include "pch.h"
+#include <WORDTOPDF.h>
+
 
 TEST(TestCaseName, TestName) {
   EXPECT_EQ(1, 1);

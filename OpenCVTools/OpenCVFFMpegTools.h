@@ -5,18 +5,27 @@
 // OPENCVTOOLS_API 函数视为是从 DLL 导入的，而此 DLL 则将用此宏定义的
 // 符号视为是被导出的。
 #ifdef OPENCVTOOLS_EXPORTS
-#define OPENCVTOOLS_API __declspec(dllexport)
+#define OPENCVFFMPEGTOOLS_API __declspec(dllexport)
 #else
 #define OPENCVTOOLS_API __declspec(dllimport)
 #endif
+#include <opencv2/opencv.hpp>
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+}
 
 // 此类是从 dll 导出的
-class OPENCVTOOLS_API COpenCVTools {
+class OPENCVFFMPEGTOOLS_API COpenCVTools {
 public:
 	COpenCVTools(void);
 	// TODO: 在此处添加方法。
+	void test();
+	cv::Mat AVFrameToCVMat(AVFrame *yuv420Frame);
+	AVFrame *CVMatToAVFrame(cv::Mat &inMat);
 };
 
-extern OPENCVTOOLS_API int nOpenCVTools;
+extern OPENCVFFMPEGTOOLS_API int nOpenCVTools;
 
-OPENCVTOOLS_API int fnOpenCVTools(void);
+OPENCVFFMPEGTOOLS_API int fnOpenCVTools(void);
