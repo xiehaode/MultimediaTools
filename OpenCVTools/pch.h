@@ -9,5 +9,12 @@
 
 // 添加要在此处预编译的标头
 #include "framework.h"
-
+#include <opencv2/opencv.hpp>
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+#include <libavutil/pixfmt.h>
+#include <libavutil/imgutils.h>
+}
 #endif //PCH_H

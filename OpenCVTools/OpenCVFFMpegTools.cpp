@@ -43,7 +43,7 @@ cv::Mat COpenCVTools::AVFrameToCVMat(AVFrame * yuv420Frame)
 	sws_scale(swsCtx, (const uint8_t* const*)yuv420Frame->data, yuv420Frame->linesize, 0, srcH, bgr24Frame->data, bgr24Frame->linesize);
 
 	//释放
-	av_frame_free(bgr24Frame);
+	av_frame_free(&bgr24Frame);
 	sws_freeContext(swsCtx);
 
 	return mat;
@@ -66,13 +66,11 @@ AVFrame * COpenCVTools::CVMatToAVFrame(cv::Mat & inMat)
 	int ret = av_frame_get_buffer(frame, 32);
 	if (ret < 0)
 	{
-		qDebug() << "Could not allocate the video frame data";
 		return nullptr;
 	}
 	ret = av_frame_make_writable(frame);
 	if (ret < 0)
 	{
-		qDebug() << "Av frame make writable failed.";
 		return nullptr;
 	}
 
@@ -88,3 +86,6 @@ AVFrame * COpenCVTools::CVMatToAVFrame(cv::Mat & inMat)
 
 	return frame;
 }
+
+
+

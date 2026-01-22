@@ -7,14 +7,9 @@
 #ifdef OPENCVTOOLS_EXPORTS
 #define OPENCVFFMPEGTOOLS_API __declspec(dllexport)
 #else
-#define OPENCVTOOLS_API __declspec(dllimport)
+#define OPENCVFFMPEGTOOLS_API __declspec(dllimport)
 #endif
-#include <opencv2/opencv.hpp>
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-}
+#include "pch.h"
 
 // 此类是从 dll 导出的
 class OPENCVFFMPEGTOOLS_API COpenCVTools {

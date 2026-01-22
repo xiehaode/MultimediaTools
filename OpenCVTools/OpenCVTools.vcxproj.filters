@@ -30,6 +30,9 @@
     <ClInclude Include="CvTranslator.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AvWorker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -42,6 +45,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CvTranslator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AvWorker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
