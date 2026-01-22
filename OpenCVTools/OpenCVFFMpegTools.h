@@ -1,26 +1,53 @@
-﻿// 下列 ifdef 块是创建使从 DLL 导出更简单的
-// 宏的标准方法。此 DLL 中的所有文件都是用命令行上定义的 OPENCVTOOLS_EXPORTS
-// 符号编译的。在使用此 DLL 的
-// 任何项目上不应定义此符号。这样，源文件中包含此文件的任何其他项目都会将
-// OPENCVTOOLS_API 函数视为是从 DLL 导入的，而此 DLL 则将用此宏定义的
-// 符号视为是被导出的。
+﻿#pragma once
+
+// DLL export/import
+// 注意：本工程 vcxproj 里使用的是 OPENCVTOOLS_EXPORTS 作为导出开关
 #ifdef OPENCVTOOLS_EXPORTS
 #define OPENCVFFMPEGTOOLS_API __declspec(dllexport)
 #else
 #define OPENCVFFMPEGTOOLS_API __declspec(dllimport)
 #endif
-#include "pch.h"
 
-// 此类是从 dll 导出的
-class OPENCVFFMPEGTOOLS_API COpenCVTools {
-public:
-	COpenCVTools(void);
-	// TODO: 在此处添加方法。
-	void test();
-	cv::Mat AVFrameToCVMat(AVFrame *yuv420Frame);
-	AVFrame *CVMatToAVFrame(cv::Mat &inMat);
-};
+#include <cstddef>
+#include <cstdint>
+
+// ---- C API（可用于 LoadLibrary/GetProcAddress，外部无需链接任何 .lib）----
+#ifdef __cplusplus
+extern "C" {
+#else
+#include <stdbool.h>
+#endif
+
+OPENCVFFMPEGTOOLS_API void* AvWorker_Create();
+OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker);
+OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+// ---- 可选的 C++ API（暴露 OpenCV 类型）----
+// 默认不暴露，避免外部工程必须配置 OpenCV include。
+// 如果你希望使用 cv::Mat / AVFrame 相关接口，请在包含此头前定义：
+//   OPENCVFFMPEGTOOLS_EXPOSE_OPENCV_TYPES
+#ifdef __cplusplus
+
+struct AVFrame;
 
 extern OPENCVFFMPEGTOOLS_API int nOpenCVTools;
-
 OPENCVFFMPEGTOOLS_API int fnOpenCVTools(void);
+
+#ifdef OPENCVFFMPEGTOOLS_EXPOSE_OPENCV_TYPES
+#include <opencv2/core/mat.hpp>
+
+// 此类是从 dll 导出的（注意：该类的头会暴露 OpenCV 类型）
+class OPENCVFFMPEGTOOLS_API COpenCVTools {
+public:
+	COpenCVTools();
+	void test();
+	cv::Mat AVFrameToCVMat(AVFrame* yuv420Frame);
+	AVFrame* CVMatToAVFrame(cv::Mat& inMat);
+};
+#endif // OPENCVFFMPEGTOOLS_EXPOSE_OPENCV_TYPES
+
+#endif // __cplusplus

@@ -1,6 +1,6 @@
 /*****************************************************************//**
  * \file   CvTranslator.h
- * \brief  »ùÓÚopencvµÄ±ä»»
+ * \brief  åŸºäºopencvçš„å˜æ¢
  * 
  * \author 28026
  * \date   January 2026
@@ -14,7 +14,11 @@
 #endif
 */
 
+
+#include <opencv2/opencv.hpp>
+
 #include "OpenCVFFMpegTools.h"
+
 
 class OPENCVFFMPEGTOOLS_API CvTranslator
 {
@@ -23,44 +27,44 @@ public:
 	/**
 	* .
 	* 
-	* \param frame Ô´ÎÄ¼ş
-	* \return »Ò¶ÈÍ¼Ïñ
+	* \param frame æºæ–‡ä»¶
+	* \return ç°åº¦å›¾åƒ
 	*/
 	cv::Mat grayImage(const cv::Mat & frame);
 	/**
-	* @brief ÓÅ»¯°æÓÍ»­Ğ§¹ûÄ£Äâ£¨ÎŞÈÎºÎxphotoÒÀÀµ£©
-	* @param src ÊäÈë8Î»²ÊÉ«BGRÍ¼Ïñ
-	* @param radius ¿Õ¼äÂË²¨°ë¾¶£¨Ó°ÏìÎÆÀí´ÖÏ¸£©
-	* @param sigma_color ÑÕÉ«sigma£¨Ó°ÏìÑÕÉ«ÈÚºÏ¶È£©
-	* @return ÓÍ»­Ğ§¹ûÍ¼Ïñ
+	* @brief ä¼˜åŒ–ç‰ˆæ²¹ç”»æ•ˆæœæ¨¡æ‹Ÿï¼ˆæ— ä»»ä½•xphotoä¾èµ–ï¼‰
+	* @param src è¾“å…¥8ä½å½©è‰²BGRå›¾åƒ
+	* @param radius ç©ºé—´æ»¤æ³¢åŠå¾„ï¼ˆå½±å“çº¹ç†ç²—ç»†ï¼‰
+	* @param sigma_color é¢œè‰²sigmaï¼ˆå½±å“é¢œè‰²èåˆåº¦ï¼‰
+	* @return æ²¹ç”»æ•ˆæœå›¾åƒ
 	*/
 	cv::Mat customOilPaintApprox(const cv::Mat& src, int radius, double sigma_color);
 	/**
-	* @brief ÓÍ»­ÂË¾µÊµÏÖº¯Êı£¨´¿×Ô¶¨ÒåÊµÏÖ£¬ÎŞxphotoÒÀÀµ£©
-	* @param src ÊäÈëÍ¼Ïñ£¨cv::Mat£¬Ö§³Ö8Î»²ÊÉ«Í¼Ïñ£©
-	* @param radius ÓÍ»­Ğ§¹û°ë¾¶£¨¿Õ¼äÂË²¨²ÎÊı£©
-	* @param sigma_color ÑÕÉ«¿Õ¼äÂË²¨sigma£¨¿ØÖÆÑÕÉ«Æ½»¬¶È£©
-	* @return ´¦ÀíºóµÄÓÍ»­Ğ§¹ûÍ¼Ïñ£¨cv::Mat£©
+	* @brief æ²¹ç”»æ»¤é•œå®ç°å‡½æ•°ï¼ˆçº¯è‡ªå®šä¹‰å®ç°ï¼Œæ— xphotoä¾èµ–ï¼‰
+	* @param src è¾“å…¥å›¾åƒï¼ˆcv::Matï¼Œæ”¯æŒ8ä½å½©è‰²å›¾åƒï¼‰
+	* @param radius æ²¹ç”»æ•ˆæœåŠå¾„ï¼ˆç©ºé—´æ»¤æ³¢å‚æ•°ï¼‰
+	* @param sigma_color é¢œè‰²ç©ºé—´æ»¤æ³¢sigmaï¼ˆæ§åˆ¶é¢œè‰²å¹³æ»‘åº¦ï¼‰
+	* @return å¤„ç†åçš„æ²¹ç”»æ•ˆæœå›¾åƒï¼ˆcv::Matï¼‰
 	*/
 	cv::Mat applyOilPainting(const cv::Mat& src, int radius = 5, double sigma_color = 8.0);
 	/**
 	* .
 	*
-	* @param src Ô´ÎÄ¼ş
-    * @param mosaicRegion ĞèÒªµÄÇøÓò
-	* @param cellSize ÂíÈü¿Ë¿éµÄ´óĞ¡
-	* @return Ä¿±êmat
+	* @param src æºæ–‡ä»¶
+    * @param mosaicRegion éœ€è¦çš„åŒºåŸŸ
+	* @param cellSize é©¬èµ›å…‹å—çš„å¤§å°
+	* @return ç›®æ ‡mat
 	*/
 	cv::Mat applyMosaic(const cv::Mat &src, const cv::Rect &mosaicRegion, int cellSize);
 	/**
 	 * .
 	 * 
-	 * \param imageSource Ô´ÎÄ¼ş
- 	 * \return Ã«²£Á§Ğ§¹ûµÄmat 
+	 * \param imageSource æºæ–‡ä»¶
+ 	 * \return æ¯›ç»ç’ƒæ•ˆæœçš„mat 
 	 */
 	cv::Mat FrostedGlass(const cv::Mat &imageSource);
 	/**
-	 * @brief. ÎÄ×ÖË®Ó¡
+	 * @brief. æ–‡å­—æ°´å°
 	 * 
 	 * \param src
 	 * \param text
@@ -70,28 +74,28 @@ public:
 
 
 	/**
-	 * @brief Ä¥Æ¤.
+	 * @brief ç£¨çš®.
 	 * 
 	 * \param inputImage
 	 * \return 
 	 */
 	cv::Mat simpleSkinSmoothing(const cv::Mat& inputImage);
 	/**
-	 * @brief ÃÀ°×.
+	 * @brief ç¾ç™½.
 	 * 
 	 * \param src
 	 * \return 
 	 */
 	cv::Mat Whitening(const cv::Mat& src);
 	/**
-	 * @brief ÃÀ°×2.
+	 * @brief ç¾ç™½2.
 	 *
 	 * \param src
 	 * \return
 	 */
 	cv::Mat Whitening2(const cv::Mat &src);
 	/**
-	 * @brief Ë®Ó¡.
+	 * @brief æ°´å°.
 	 * 
 	 * \param src
 	 * \param text
@@ -105,11 +109,11 @@ public:
 	cv::Mat addTextWatermark(const cv::Mat& src, const std::string& text,
 		const cv::Point& pos = cv::Point(50, 50),
 		double fontScale = 1.0,
-		cv::Scalar color = cv::Scalar(0, 0, 255),  // BGR¸ñÊ½£¬Ä¬ÈÏºìÉ«
+		cv::Scalar color = cv::Scalar(0, 0, 255),  // BGRæ ¼å¼ï¼Œé»˜è®¤çº¢è‰²
 		int thickness = 2,
 		int lineType = cv::LINE_AA);
 	/**
-	 * @brief Í¼ÏñÑÕÉ«·´×ª.
+	 * @brief å›¾åƒé¢œè‰²åè½¬.
 	 * 
 	 * \param src
 	 * \return 

@@ -1,4 +1,3 @@
-#define  _CRT_SECURE_NO_WARNINGS 1
 #include "pch.h"
 #include "AvWorker.h"
 
@@ -278,4 +277,22 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 	avformat_network_deinit(); // 释放网络资源（如果是RTSP流）
 
 	return got_first_frame;
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void* AvWorker_Create()
+{
+	return new AvWorker();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker)
+{
+	delete static_cast<AvWorker*>(worker);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp)
+{
+	if (!worker || !input_url || !output_bmp) {
+		return false;
+	}
+	return static_cast<AvWorker*>(worker)->GetVideoFirstFrame(input_url, output_bmp, is_rtsp);
 }
