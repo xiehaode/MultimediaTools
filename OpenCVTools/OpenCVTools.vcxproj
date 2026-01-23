@@ -99,6 +99,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)OpenCVTools\3rd\include;$(SolutionDir)OpenCVTools\3rd\ffmpeg\include;$(SolutionDir)OpenCVTools\3rd\opencv\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -177,6 +178,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="OpenCVFFMpegTools.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="VideoHandle.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AvWorker.cpp" />

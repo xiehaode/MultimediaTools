@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "AvWorker.h"
 
+#include <algorithm>
+#include <vector>
 
 
 AvWorker::AvWorker()
@@ -10,10 +12,12 @@ AvWorker::AvWorker()
 
 void AvWorker::initAv()
 {
+
 }
 
 void AvWorker::finishAv()
 {
+
 }
 
 // 保存RGB数据为BMP图片（修复头格式问题，兼容ImageMagick）
@@ -279,6 +283,443 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 	return got_first_frame;
 }
 
+
+bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_url2, const std::string& output_url, bool is_rtsp)
+{
+	// 1. 初始化FFmpeg网络模块（本地文件也建议保留，兼容RTSP场景）
+	avformat_network_init();
+
+	// 资源初始化（所有资源默认置空，便于统一释放）
+	AVFormatContext* fmt_ctx1 = nullptr;
+	AVFormatContext* fmt_ctx2 = nullptr;
+	AVFormatContext* out_fmt_ctx = nullptr;
+	AVDictionary* options = nullptr;
+	int ret = 0;
+	bool is_success = false; // 标记整体操作是否成功
+
+	// 针对RTSP流设置参数（本地文件会自动忽略）
+	if (is_rtsp) {
+		av_dict_set(&options, "rtsp_transport", "tcp", 0);
+		av_dict_set(&options, "stimeout", "5000000", 0);
+		av_dict_set(&options, "max_delay", "1000000", 0);
+	}
+
+	// 2. 打开第一个输入文件/流（错误处理：失败则直接释放资源返回）
+	ret = avformat_open_input(&fmt_ctx1, input_url1.c_str(), nullptr, &options);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "[error] open_input 1 fair index: " << input_url1 << "-" << err_buf << std::endl;
+		av_dict_free(&options);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 3. 打开第二个输入文件/流（错误处理：失败则释放第一个输入资源）
+	ret = avformat_open_input(&fmt_ctx2, input_url2.c_str(), nullptr, &options);
+	if (ret < 0){
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "[error]open_input 2 fair index:" << input_url2 << "-" << err_buf << std::endl;
+		av_dict_free(&options);
+		avformat_close_input(&fmt_ctx1);
+		avformat_network_deinit();
+		return false;
+	}
+	av_dict_free(&options);
+	options = nullptr;
+
+	// 4. 获取第一个输入流信息
+	ret = avformat_find_stream_info(fmt_ctx1, nullptr);
+	if (ret < 0) {
+		std::cerr << "[error]find_stream_info 1 fair index:" << input_url1 << std::endl;
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 获取第二个输入流信息
+	ret = avformat_find_stream_info(fmt_ctx2, nullptr);
+	if (ret < 0) {
+		std::cerr << "[error]find_stream_info 2 fair index:" << input_url2 << std::endl;
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 打印输入流信息（调试用）
+	std::cout << "[info] Input 1 streams count: " << fmt_ctx1->nb_streams << std::endl;
+	std::cout << "[info] Input 2 streams count: " << fmt_ctx2->nb_streams << std::endl;
+
+	// 5. 创建输出上下文
+	ret = avformat_alloc_output_context2(&out_fmt_ctx, nullptr, nullptr, output_url.c_str());
+	if (!out_fmt_ctx) {
+		std::cerr << "[error]craete output stream fair index:" << output_url << std::endl;
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 6. 复制流信息到输出上下文
+	bool stream_copy_ok = true;
+	for (int i = 0; i < fmt_ctx1->nb_streams && stream_copy_ok; i++) {
+		AVStream* in_stream = fmt_ctx1->streams[i];
+		AVStream* out_stream = avformat_new_stream(out_fmt_ctx, nullptr);
+
+		if (!out_stream) {
+			std::cerr << "[error]create output stream fair index:" << i << std::endl;
+			stream_copy_ok = false;
+			break;
+		}
+
+		// 复制流参数
+		ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "[error]copy stream fair index:" << i << " - " << err_buf << std::endl;
+			stream_copy_ok = false;
+			break;
+		}
+		out_stream->codecpar->codec_tag = 0;
+
+		// 关键：把输入流的 time_base 同步到输出流，避免后续 rescale 使用错误 time_base
+		out_stream->time_base = in_stream->time_base;
+		out_stream->avg_frame_rate = in_stream->avg_frame_rate;
+		out_stream->r_frame_rate = in_stream->r_frame_rate;
+		out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
+	}
+
+	// 流复制失败的错误处理
+	if (!stream_copy_ok) {
+		avformat_free_context(out_fmt_ctx);
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 7. 打开输出文件IO
+	if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+		ret = avio_open(&out_fmt_ctx->pb, output_url.c_str(), AVIO_FLAG_WRITE);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "[error]open  output fair url:" << output_url << " - " << err_buf << std::endl;
+			avformat_free_context(out_fmt_ctx);
+			avformat_close_input(&fmt_ctx1);
+			avformat_close_input(&fmt_ctx2);
+			avformat_network_deinit();
+			return false;
+		}
+	}
+
+	// 8. 写入文件头
+	ret = avformat_write_header(out_fmt_ctx, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "[error]write header fair" << output_url << "-" << err_buf << std::endl;
+
+		// 释放输出资源
+		if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+			avio_closep(&out_fmt_ctx->pb);
+		}
+		avformat_free_context(out_fmt_ctx);
+
+		// 释放输入资源
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 9. 处理第一个视频的音视频帧
+	AVPacket pkt = {};
+	av_packet_unref(&pkt);
+
+	// 关键修复：定义AVRounding枚举变量，解决类型不兼容问题
+	AVRounding rounding = static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX);
+
+	// 关键：按“每个输出流”累计结束时间戳 + 最后一帧的DTS/PTS（用于单调性校验）
+	const int out_nb_streams = static_cast<int>(out_fmt_ctx->nb_streams);
+	std::vector<int64_t> out_stream_end_ts(out_nb_streams, 0);        // 拼接偏移量
+	std::vector<int64_t> out_stream_last_dts(out_nb_streams, -1);     // 最后一帧的DTS
+	std::vector<int64_t> out_stream_last_pts(out_nb_streams, -1);     // 最后一帧的PTS
+	std::vector<bool> out_stream_has_ts(out_nb_streams, false);
+
+	auto rescale_ts = [&](int64_t ts, const AVRational& in_tb, const AVRational& out_tb) -> int64_t {
+		if (ts == AV_NOPTS_VALUE) {
+			return AV_NOPTS_VALUE;
+		}
+		return av_rescale_q_rnd(ts, in_tb, out_tb, rounding);
+	};
+
+	// 关键：时间戳单调性修正函数
+	auto fix_timestamp_monotonic = [&](int stream_idx, int64_t& pts, int64_t& dts) {
+		if (stream_idx < 0 || stream_idx >= out_nb_streams) return;
+
+		// 修正DTS（必须严格递增）
+		if (dts != AV_NOPTS_VALUE) {
+			if (out_stream_last_dts[stream_idx] >= 0) {
+				if (dts <= out_stream_last_dts[stream_idx]) {
+					dts = out_stream_last_dts[stream_idx] + 1;
+				}
+			}
+			out_stream_last_dts[stream_idx] = dts;
+		}
+
+		// 修正PTS（PTS >= DTS 且递增）
+		if (pts != AV_NOPTS_VALUE) {
+			if (out_stream_last_pts[stream_idx] >= 0) {
+				if (pts <= out_stream_last_pts[stream_idx]) {
+					pts = out_stream_last_pts[stream_idx] + 1;
+				}
+			}
+			// 确保PTS >= DTS
+			if (dts != AV_NOPTS_VALUE && pts < dts) {
+				pts = dts;
+			}
+			out_stream_last_pts[stream_idx] = pts;
+		}
+	};
+
+	bool first_video_write_ok = true;
+	int first_video_frame_count = 0; // 统计第一个视频写入帧数
+	while (first_video_write_ok && av_read_frame(fmt_ctx1, &pkt) >= 0) {
+		const int out_index = pkt.stream_index;
+		if (out_index < 0 || out_index >= out_nb_streams) {
+			av_packet_unref(&pkt);
+			pkt = {};
+			continue;
+		}
+
+		AVStream* in_stream = fmt_ctx1->streams[pkt.stream_index];
+		AVStream* out_stream = out_fmt_ctx->streams[out_index];
+		if (!out_stream) {
+			av_packet_unref(&pkt);
+			pkt = {};
+			continue;
+		}
+
+		// 时基转换
+		pkt.pts = rescale_ts(pkt.pts, in_stream->time_base, out_stream->time_base);
+		pkt.dts = rescale_ts(pkt.dts, in_stream->time_base, out_stream->time_base);
+		pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
+		pkt.pos = -1;
+
+		// 修正时间戳单调性（第一个视频也要做）
+		fix_timestamp_monotonic(out_index, pkt.pts, pkt.dts);
+
+		ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "[error] write first frame failed, stream: " << out_index << " - " << err_buf << std::endl;
+			first_video_write_ok = false;
+			av_packet_unref(&pkt);
+			pkt = {};
+			break;
+		}
+
+		first_video_frame_count++;
+
+		// 累计每个输出流的结束时间戳（用修正后的DTS）
+		int64_t ts_for_end = (pkt.dts != AV_NOPTS_VALUE) ? pkt.dts : pkt.pts;
+		if (ts_for_end != AV_NOPTS_VALUE) {
+			int64_t end_ts = ts_for_end + ((pkt.duration > 0) ? pkt.duration : 1);
+			if (!out_stream_has_ts[out_index] || end_ts > out_stream_end_ts[out_index]) {
+				out_stream_end_ts[out_index] = end_ts;
+				out_stream_has_ts[out_index] = true;
+			}
+		}
+
+		av_packet_unref(&pkt);
+		pkt = {};
+	}
+
+	std::cout << "[info] First video frame count: " << first_video_frame_count << std::endl;
+
+	// 第一个视频写入失败的错误处理
+	if (!first_video_write_ok) {
+		av_write_trailer(out_fmt_ctx);
+		if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+			avio_closep(&out_fmt_ctx->pb);
+		}
+		avformat_free_context(out_fmt_ctx);
+		avformat_close_input(&fmt_ctx1);
+		avformat_close_input(&fmt_ctx2);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 10. 处理第二个视频的音视频帧
+	pkt = {};
+	av_packet_unref(&pkt);
+
+	// 流映射（按类型匹配）
+	std::vector<int> stream_mapping2(static_cast<int>(fmt_ctx2->nb_streams), -1);
+	std::vector<int> video_stream_idx;
+	std::vector<int> audio_stream_idx;
+	for (int j = 0; j < out_nb_streams; ++j) {
+		AVStream* out = out_fmt_ctx->streams[j];
+		if (out->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+			video_stream_idx.push_back(j);
+		}
+		else if (out->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+			audio_stream_idx.push_back(j);
+		}
+	}
+
+	int video_idx = 0, audio_idx = 0;
+	for (int i = 0; i < static_cast<int>(fmt_ctx2->nb_streams); ++i) {
+		AVStream* in2 = fmt_ctx2->streams[i];
+		if (in2->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && video_idx < video_stream_idx.size()) {
+			stream_mapping2[i] = video_stream_idx[video_idx++];
+		}
+		else if (in2->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && audio_idx < audio_stream_idx.size()) {
+			stream_mapping2[i] = audio_stream_idx[audio_idx++];
+		}
+		else {
+			stream_mapping2[i] = -1;
+		}
+	}
+
+	// 打印映射信息
+	std::cout << "[info] Stream mapping for input 2: " << std::endl;
+	for (int i = 0; i < stream_mapping2.size(); ++i) {
+		std::cout << "  Input2 stream " << i << " -> Output stream " << stream_mapping2[i] << std::endl;
+	}
+
+	// 第二个视频的首帧偏移（按流独立计算）
+	std::vector<int64_t> in2_first_pts(static_cast<int>(fmt_ctx2->nb_streams), AV_NOPTS_VALUE);
+	std::vector<int64_t> in2_first_dts(static_cast<int>(fmt_ctx2->nb_streams), AV_NOPTS_VALUE);
+
+	bool second_video_write_ok = true;
+	int second_video_frame_count = 0;
+
+	while (second_video_write_ok && av_read_frame(fmt_ctx2, &pkt) >= 0) {
+		const int in_index = pkt.stream_index;
+		if (in_index < 0 || in_index >= static_cast<int>(stream_mapping2.size())) {
+			av_packet_unref(&pkt);
+			pkt = {};
+			continue;
+		}
+		const int out_index = stream_mapping2[in_index];
+		if (out_index < 0 || out_index >= out_nb_streams) {
+			av_packet_unref(&pkt);
+			pkt = {};
+			continue;
+		}
+
+		AVStream* in_stream = fmt_ctx2->streams[in_index];
+		AVStream* out_stream = out_fmt_ctx->streams[out_index];
+		if (!out_stream) {
+			av_packet_unref(&pkt);
+			pkt = {};
+			second_video_write_ok = false;
+			break;
+		}
+
+		// 1. 转换到输出时基
+		int64_t new_pts = rescale_ts(pkt.pts, in_stream->time_base, out_stream->time_base);
+		int64_t new_dts = rescale_ts(pkt.dts, in_stream->time_base, out_stream->time_base);
+		int64_t new_duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
+
+		// 2. 第二个视频自身起点归零（按流独立）
+		if (new_pts != AV_NOPTS_VALUE && in2_first_pts[in_index] == AV_NOPTS_VALUE) {
+			in2_first_pts[in_index] = new_pts;
+		}
+		if (new_dts != AV_NOPTS_VALUE && in2_first_dts[in_index] == AV_NOPTS_VALUE) {
+			in2_first_dts[in_index] = new_dts;
+		}
+		if (new_pts != AV_NOPTS_VALUE && in2_first_pts[in_index] != AV_NOPTS_VALUE) {
+			new_pts -= in2_first_pts[in_index];
+		}
+		if (new_dts != AV_NOPTS_VALUE && in2_first_dts[in_index] != AV_NOPTS_VALUE) {
+			new_dts -= in2_first_dts[in_index];
+		}
+
+		// 3. 加上第一个视频的结束偏移（核心修复：按输出流独立偏移）
+		int64_t offset = out_stream_end_ts[out_index];
+		if (new_pts != AV_NOPTS_VALUE) new_pts += offset;
+		if (new_dts != AV_NOPTS_VALUE) new_dts += offset;
+
+		// 4. 强制修正时间戳单调性（解决核心错误）
+		fix_timestamp_monotonic(out_index, new_pts, new_dts);
+
+		// 5. 赋值给packet
+		pkt.stream_index = out_index;
+		pkt.pts = new_pts;
+		pkt.dts = new_dts;
+		pkt.duration = new_duration;
+		pkt.pos = -1;
+
+		// 6. 写入帧（忽略单帧错误，继续处理）
+		ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "[warning] write second frame failed (ignored), in_stream: " << in_index
+				<< " -> out_stream: " << out_index << " - " << err_buf << std::endl;
+			av_packet_unref(&pkt);
+			pkt = {};
+			continue;
+		}
+
+		second_video_frame_count++;
+
+		// 更新结束时间戳
+		int64_t ts_for_end = (pkt.dts != AV_NOPTS_VALUE) ? pkt.dts : pkt.pts;
+		if (ts_for_end != AV_NOPTS_VALUE) {
+			int64_t end_ts = ts_for_end + ((pkt.duration > 0) ? pkt.duration : 1);
+			if (end_ts > out_stream_end_ts[out_index]) {
+				out_stream_end_ts[out_index] = end_ts;
+			}
+		}
+
+		av_packet_unref(&pkt);
+		pkt = {};
+	}
+
+	std::cout << "[info] Second video frame count: " << second_video_frame_count << std::endl;
+
+	// 刷新缓冲区
+	if (out_fmt_ctx && out_fmt_ctx->pb) {
+		avio_flush(out_fmt_ctx->pb);
+	}
+
+	// 11. 写入文件尾
+	ret = av_write_trailer(out_fmt_ctx);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "[错误] 写入文件尾失败: " << output_url << " - " << err_buf << std::endl;
+	}
+	else {
+		std::cout << "[成功] 视频拼接完成，输出文件: " << output_url << std::endl;
+		is_success = true;
+	}
+
+	// 12. 释放资源
+	if (fmt_ctx1) avformat_close_input(&fmt_ctx1);
+	if (fmt_ctx2) avformat_close_input(&fmt_ctx2);
+
+	if (out_fmt_ctx) {
+		if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+			avio_closep(&out_fmt_ctx->pb);
+		}
+		avformat_free_context(out_fmt_ctx);
+	}
+
+	avformat_network_deinit();
+
+	return is_success;
+}
+
 extern "C" OPENCVFFMPEGTOOLS_API void* AvWorker_Create()
 {
 	return new AvWorker();
@@ -296,3 +737,12 @@ extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, 
 	}
 	return static_cast<AvWorker*>(worker)->GetVideoFirstFrame(input_url, output_bmp, is_rtsp);
 }
+
+extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_SpliceAV(void* worker, const char* input_url1, const char* input_url2, const char* output_url, bool is_rtsp)
+{
+	if (!worker || !input_url1 || !input_url2 || !output_url) {
+		return false;
+	}
+	return static_cast<AvWorker*>(worker)->SpliceAV(input_url1, input_url2, output_url, is_rtsp);
+}
+

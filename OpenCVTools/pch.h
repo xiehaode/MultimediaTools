@@ -7,8 +7,16 @@
 #ifndef PCH_H
 #define PCH_H
 
+
+
+
+
 // 添加要在此处预编译的标头
 #include "framework.h"
+#include <iostream>
+#include <string>
+#include <cerrno>
+#include <cstring>
 #include <opencv2/opencv.hpp>
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -16,5 +24,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 #include <libavutil/pixfmt.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/avutil.h>
+#include <libavutil/time.h>
 }
 #endif //PCH_H

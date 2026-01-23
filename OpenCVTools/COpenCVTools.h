@@ -1,7 +1,5 @@
 #pragma once
 
-// COpenCVTools：单独暴露 OpenCV/FFmpeg 相关 C++ 接口。
-// 说明：如果外部只想使用纯 C 接口（不引入 OpenCV 头），请只包含 `OpenCVFFMpegTools.h`。
 
 #include "OpenCVFFMpegTools.h"
 

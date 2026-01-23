@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CvTranslator.h"
 
+#include <exception>
+
 
 CvTranslator::CvTranslator()
 {
@@ -14,13 +16,13 @@ cv::Mat CvTranslator::grayImage(const cv::Mat & frame)
 	}
 	cv::Mat grayImage;
 
-	// Ê¹ÓÃcv::cvtColorº¯Êı½«²ÊÉ«Í¼Ïñ×ª»»Îª»Ò¶ÈÍ¼Ïñ  
+	
 	cv::cvtColor(frame, grayImage, cv::COLOR_BGR2GRAY);
 
 	if (grayImage.empty()) {
 		return cv::Mat();
 	}
-	return cv::Mat();
+	return grayImage;
 }
 
 
@@ -28,24 +30,24 @@ cv::Mat CvTranslator::grayImage(const cv::Mat & frame)
 
 cv::Mat CvTranslator::applyOilPainting(const cv::Mat& src, int radius, double sigma_color )
 {
-	// 1. ÑÏ¸ñµÄ²ÎÊıĞ£Ñé£¬±£Ö¤ÊäÈëÓĞĞ§ĞÔ
+	
 	if (src.empty()) {
-		throw std::invalid_argument("ÊäÈëÍ¼ÏñÎª¿Õ£¬Çë¼ì²éMatÓĞĞ§ĞÔ");
+		throw std::invalid_argument("src is null");
 	}
 	if (src.channels() != 3) {
-		throw std::invalid_argument("½öÖ§³Ö3Í¨µÀ²ÊÉ«Í¼ÏñÊäÈë£¨BGR¸ñÊ½£©");
+		throw std::invalid_argument("only rgb");
 	}
 	if (src.depth() != CV_8U) {
-		throw std::invalid_argument("½öÖ§³Ö8Î»ÎŞ·ûºÅÕûĞÍÍ¼ÏñÊäÈë");
+		throw std::invalid_argument("only 8 bit");
 	}
 	if (radius < 1) {
-		throw std::invalid_argument("radius±ØĞë´óÓÚµÈÓÚ1");
+		throw std::invalid_argument("radius must > 1");
 	}
 	if (sigma_color <= 0) {
-		throw std::invalid_argument("sigma_color±ØĞë´óÓÚ0");
+		throw std::invalid_argument("sigma_color must >0");
 	}
 
-	// Ö±½Óµ÷ÓÃ×Ô¶¨Òå½üËÆÊµÏÖ£¨ÒÆ³ıxphoto·ÖÖ§£©
+	// ç›´æ¥è°ƒç”¨è‡ªå®šä¹‰è¿‘ä¼¼å®ç°ï¼ˆç§»é™¤xphotoåˆ†æ”¯ï¼‰
 	cv::Mat dst = customOilPaintApprox(src, radius, sigma_color);
 	return dst;
 }
@@ -53,24 +55,24 @@ cv::Mat CvTranslator::applyOilPainting(const cv::Mat& src, int radius, double si
 
 cv::Mat CvTranslator::customOilPaintApprox(const cv::Mat& src, int radius, double sigma_color)
 {
-	// ²½Öè1£ºÏÂ²ÉÑùµ½Ô­³ß´çµÄ1/2£¬¼õÉÙ¼ÆËãÁ¿£¨ÓëPython°æ±¾ÍêÈ«¶ÔÆë£©
+	// æ­¥éª¤1ï¼šä¸‹é‡‡æ ·åˆ°åŸå°ºå¯¸çš„1/2ï¼Œå‡å°‘è®¡ç®—é‡ï¼ˆä¸Pythonç‰ˆæœ¬å®Œå…¨å¯¹é½ï¼‰
 	cv::Mat small;
 	cv::resize(src, small, cv::Size(), 0.5, 0.5, cv::INTER_LINEAR);
 
-	// ²½Öè2£ºË«±ßÂË²¨Ä£ÄâÓÍ»­ÎÆÀí
-	// Ë«±ßÂË²¨²ÎÊıËµÃ÷£º
-	// d: ÂË²¨ºËÖ±¾¶£¬ÉèÎª9£¨ÓëPython°æ±¾Ò»ÖÂ£©
-	// sigmaColor: ÑÕÉ«¿Õ¼äµÄsigma£¬¿ØÖÆÑÕÉ«ÏàËÆĞÔÈ¨ÖØ
-	// sigmaSpace: ×ø±ê¿Õ¼äµÄsigma£¬ÓÃradiusÖµ£¬¿ØÖÆ¿Õ¼ä¾àÀëÈ¨ÖØ
+	// æ­¥éª¤2ï¼šåŒè¾¹æ»¤æ³¢æ¨¡æ‹Ÿæ²¹ç”»çº¹ç†
+	// åŒè¾¹æ»¤æ³¢å‚æ•°è¯´æ˜ï¼š
+	// d: æ»¤æ³¢æ ¸ç›´å¾„ï¼Œè®¾ä¸º9ï¼ˆä¸Pythonç‰ˆæœ¬ä¸€è‡´ï¼‰
+	// sigmaColor: é¢œè‰²ç©ºé—´çš„sigmaï¼Œæ§åˆ¶é¢œè‰²ç›¸ä¼¼æ€§æƒé‡
+	// sigmaSpace: åæ ‡ç©ºé—´çš„sigmaï¼Œç”¨radiuså€¼ï¼Œæ§åˆ¶ç©ºé—´è·ç¦»æƒé‡
 	cv::Mat blur;
 	int d = 9;
 	cv::bilateralFilter(small, blur, d, sigma_color, static_cast<double>(radius));
 
-	// ²½Öè3£ºÉÏ²ÉÑù»ØÔ­³ß´ç£¬Ê¹ÓÃÈı´ÎÁ¢·½²åÖµ±£Ö¤ÇåÎú¶È£¨ÓëPythonÒ»ÖÂ£©
+	// æ­¥éª¤3ï¼šä¸Šé‡‡æ ·å›åŸå°ºå¯¸ï¼Œä½¿ç”¨ä¸‰æ¬¡ç«‹æ–¹æ’å€¼ä¿è¯æ¸…æ™°åº¦ï¼ˆä¸Pythonä¸€è‡´ï¼‰
 	cv::Mat result;
 	cv::resize(blur, result, src.size(), 0, 0, cv::INTER_CUBIC);
 
-	// ¿ÉÑ¡ÓÅ»¯£ºÔö¼ÓÇáÎ¢µÄÈñ»¯£¬ÈÃÓÍ»­ÎÆÀí¸üÃ÷ÏÔ
+	// å¯é€‰ä¼˜åŒ–ï¼šå¢åŠ è½»å¾®çš„é”åŒ–ï¼Œè®©æ²¹ç”»çº¹ç†æ›´æ˜æ˜¾
 	cv::Mat kernel = (cv::Mat_<float>(3, 3) << 0, -1, 0,
 		-1, 5, -1,
 		0, -1, 0);
@@ -81,33 +83,33 @@ cv::Mat CvTranslator::customOilPaintApprox(const cv::Mat& src, int radius, doubl
 
 
 cv::Mat CvTranslator::applyMosaic(const cv::Mat &src, const cv::Rect &mosaicRegion, int cellSize) {
-	// ´´½¨Ò»¸öÓëÔ´Í¼ÏñÏàÍ¬´óĞ¡µÄÄ¿±êÍ¼Ïñ
+	// åˆ›å»ºä¸€ä¸ªä¸æºå›¾åƒç›¸åŒå¤§å°çš„ç›®æ ‡å›¾åƒ
 	cv::Mat dst = src.clone();
 
-	// ÂíÈü¿ËÇøÓòµÄ±ß½ç¼ì²é
+	// é©¬èµ›å…‹åŒºåŸŸçš„è¾¹ç•Œæ£€æŸ¥
 	int startX = cv::max(0, mosaicRegion.x);
 	int startY = cv::max(0, mosaicRegion.y);
 	int endX = cv::min(src.cols, mosaicRegion.x + mosaicRegion.width);
 	int endY = cv::min(src.rows, mosaicRegion.y + mosaicRegion.height);
 
-	// ±éÀúÂíÈü¿ËÇøÓò
+	// éå†é©¬èµ›å…‹åŒºåŸŸ
 	for (int y = startY; y < endY; y += cellSize) {
 		for (int x = startX; x < endX; x += cellSize) {
-			// ¼ÆËãÂíÈü¿Ë¿éµÄ±ß½ç
+			// è®¡ç®—é©¬èµ›å…‹å—çš„è¾¹ç•Œ
 			int x1 = x;
 			int y1 = y;
 			int x2 = cv::min(x + cellSize, endX);
 			int y2 = cv::min(y + cellSize, endY);
 
-			// ¼ÆËãÂíÈü¿Ë¿éµÄÖĞĞÄµã
+			// è®¡ç®—é©¬èµ›å…‹å—çš„ä¸­å¿ƒç‚¹
 			int centerX = (x1 + x2) / 2;
 			int centerY = (y1 + y2) / 2;
 
-			// È·±£ÖĞĞÄµãÔÚÂíÈü¿ËÇøÓòÄÚ
+			// ç¡®ä¿ä¸­å¿ƒç‚¹åœ¨é©¬èµ›å…‹åŒºåŸŸå†…
 			if (centerX >= startX && centerX < endX && centerY >= startY && centerY < endY) {
 				cv::Vec3b centerPixel = src.at<cv::Vec3b>(centerY, centerX);
 
-				// ½«ÂíÈü¿Ë¿éÄÚµÄÏñËØÖµÉèÖÃÎªÖĞĞÄÏñËØÖµ
+				// å°†é©¬èµ›å…‹å—å†…çš„åƒç´ å€¼è®¾ç½®ä¸ºä¸­å¿ƒåƒç´ å€¼
 				for (int i = y1; i < y2; ++i) {
 					for (int j = x1; j < x2; ++j) {
 						dst.at<cv::Vec3b>(i, j) = centerPixel;
@@ -142,7 +144,7 @@ cv::Mat CvTranslator::FrostedGlass(const cv::Mat & imageSource)
 cv::Mat CvTranslator::simpleSkinSmoothing(const cv::Mat& inputImage) {
 	int d = 15; double sigmaColor = 150; double sigmaSpace = 15;
 	if (inputImage.empty()) {
-		std::cerr << "´íÎó: ÊäÈëÍ¼ÏñÎª¿Õ£¡" << std::endl;
+		std::cerr << "skinsmooth: input is null" << std::endl;
 		return inputImage;
 	}
 
@@ -151,43 +153,43 @@ cv::Mat CvTranslator::simpleSkinSmoothing(const cv::Mat& inputImage) {
 
 	return smoothedImage;
 }
-
+/*
 cv::Mat CvTranslator::addTextWatermark(const cv::Mat& src, const std::string& text) {
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	const cv::Point& pos = cv::Point(50, 50);
 	double fontScale = 1.0;
-	cv::Scalar color = cv::Scalar(0, 0, 255);  // BGR¸ñÊ½£¬Ä¬ÈÏºìÉ«
+	cv::Scalar color = cv::Scalar(0, 0, 255);  // BGRæ ¼å¼ï¼Œé»˜è®¤çº¢è‰²
 	int thickness = 2;
 	int lineType = cv::LINE_AA;
 
 
 
-	cv::Mat dst = src.clone();  // ¿ËÂ¡Ô­Í¼£¬±ÜÃâĞŞ¸ÄÔ­Í¼
+	cv::Mat dst = src.clone();  // å…‹éš†åŸå›¾ï¼Œé¿å…ä¿®æ”¹åŸå›¾
 
-	// ÉèÖÃ×ÖÌå£¨OpenCVÖ§³ÖµÄ×ÖÌå£©
-	int fontFace = cv::FONT_HERSHEY_SIMPLEX;  // ³£ÓÃ×ÖÌå
+	// è®¾ç½®å­—ä½“ï¼ˆOpenCVæ”¯æŒçš„å­—ä½“ï¼‰
+	int fontFace = cv::FONT_HERSHEY_SIMPLEX;  // å¸¸ç”¨å­—ä½“
 
-	// »æÖÆÎÄ×ÖË®Ó¡
+	// ç»˜åˆ¶æ–‡å­—æ°´å°
 	cv::putText(dst, text, pos, fontFace, fontScale, color, thickness, lineType);
 
 	return dst;
 }
-
+*/
 cv::Mat CvTranslator::Whitening(const cv::Mat& src) {
 	if (src.empty()) return cv::Mat();
 
 	cv::Mat dst = src.clone();
-	// ×ª»»Îª¸¡µãĞÍÒÔ±ÜÃâÔËËãÒç³ö£¨ÖĞ¼ä¹ı³ÌÊ¹ÓÃ¸ü¸ß¾«¶È£©
+	// è½¬æ¢ä¸ºæµ®ç‚¹å‹ä»¥é¿å…è¿ç®—æº¢å‡ºï¼ˆä¸­é—´è¿‡ç¨‹ä½¿ç”¨æ›´é«˜ç²¾åº¦ï¼‰
 	src.convertTo(dst, CV_32F);
 
-	// ¶¨ÒåÃÀ°×²ÎÊı£¨ÓëÔ­Âß¼­±£³ÖÒ»ÖÂ£©
-	double alpha = 1.3;    // ±ÈÀıÏµÊı
-	int beta = 30;         // Æ«ÒÆÁ¿
+	// å®šä¹‰ç¾ç™½å‚æ•°ï¼ˆä¸åŸé€»è¾‘ä¿æŒä¸€è‡´ï¼‰
+	double alpha = 1.3;    // æ¯”ä¾‹ç³»æ•°
+	int beta = 30;         // åç§»é‡
 
-	// ¾ØÕóÔËËã£ºdst = src * alpha + beta£¨Ìæ´úË«ÖØÑ­»·£©
+	// çŸ©é˜µè¿ç®—ï¼šdst = src * alpha + betaï¼ˆæ›¿ä»£åŒé‡å¾ªç¯ï¼‰
 	dst = dst * alpha + beta;
 
-	// ×ª»»»ØÔ­ÀàĞÍ£¬²¢×Ô¶¯½Ø¶Ï³¬³ö[0,255]µÄÏñËØÖµ£¨Ìæ´úsaturate_cast£©
+	// è½¬æ¢å›åŸç±»å‹ï¼Œå¹¶è‡ªåŠ¨æˆªæ–­è¶…å‡º[0,255]çš„åƒç´ å€¼ï¼ˆæ›¿ä»£saturate_castï¼‰
 	dst.convertTo(dst, src.type(), 1.0, 0.0);
 
 	return dst;
@@ -212,31 +214,31 @@ cv::Mat CvTranslator::Whitening2(const cv::Mat &src) {
 	254, 254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 256 };
 	cv::Mat dst = src.clone();
-	// ×ª»»Îª¸¡µãĞÍÒÔ±ÜÃâÔËËãÒç³ö£¨ÖĞ¼ä¹ı³ÌÊ¹ÓÃ¸ü¸ß¾«¶È£©
+	// è½¬æ¢ä¸ºæµ®ç‚¹å‹ä»¥é¿å…è¿ç®—æº¢å‡ºï¼ˆä¸­é—´è¿‡ç¨‹ä½¿ç”¨æ›´é«˜ç²¾åº¦ï¼‰
 
 	if (Color_list.size() <= 255) {
-		std::cerr << "´íÎó£ºColor_list³¤¶È²»×ã£¬ÎŞ·¨¸²¸Ç0~255Ë÷Òı" << std::endl;
+		std::cerr << "é”™è¯¯ï¼šColor_listé•¿åº¦ä¸è¶³ï¼Œæ— æ³•è¦†ç›–0~255ç´¢å¼•" << std::endl;
 		return cv::Mat();
 	}
 
-	// ±éÀúÏñËØ½øĞĞÑÕÉ«Ó³Éä£¨Ê¹ÓÃÖ¸Õë·ÃÎÊÌáÉıĞ§ÂÊ£©
+	// éå†åƒç´ è¿›è¡Œé¢œè‰²æ˜ å°„ï¼ˆä½¿ç”¨æŒ‡é’ˆè®¿é—®æå‡æ•ˆç‡ï¼‰
 	for (int i = 0; i < dst.rows; ++i) {
-		// »ñÈ¡µÚiĞĞµÄÖ¸Õë£¨CV_8UC3¶ÔÓ¦cv::Vec3b£©
+		// è·å–ç¬¬iè¡Œçš„æŒ‡é’ˆï¼ˆCV_8UC3å¯¹åº”cv::Vec3bï¼‰
 		cv::Vec3b* row_ptr = dst.ptr<cv::Vec3b>(i);
 		for (int j = 0; j < dst.cols; ++j) {
-			// ·Ö±ğ¶ÔB¡¢G¡¢RÍ¨µÀ½øĞĞÓ³Éä£¨×¢ÒâOpenCVÄ¬ÈÏÊÇBGRË³Ğò£©
-			int b = row_ptr[j][0];  // Ô­BÍ¨µÀÖµ£¨0~255£©
-			int g = row_ptr[j][1];  // Ô­GÍ¨µÀÖµ
-			int r = row_ptr[j][2];  // Ô­RÍ¨µÀÖµ
+			// åˆ†åˆ«å¯¹Bã€Gã€Ré€šé“è¿›è¡Œæ˜ å°„ï¼ˆæ³¨æ„OpenCVé»˜è®¤æ˜¯BGRé¡ºåºï¼‰
+			int b = row_ptr[j][0];  // åŸBé€šé“å€¼ï¼ˆ0~255ï¼‰
+			int g = row_ptr[j][1];  // åŸGé€šé“å€¼
+			int r = row_ptr[j][2];  // åŸRé€šé“å€¼
 
-			// Ó³Éäµ½Color_listÖĞµÄÖµ£¨È·±£Ë÷ÒıÔÚÓĞĞ§·¶Î§£©
-			row_ptr[j][0] = static_cast<uchar>(Color_list[b]);  // ĞÂBÍ¨µÀ
-			row_ptr[j][1] = static_cast<uchar>(Color_list[g]);  // ĞÂGÍ¨µÀ
-			row_ptr[j][2] = static_cast<uchar>(Color_list[r]);  // ĞÂRÍ¨µÀ
+			// æ˜ å°„åˆ°Color_listä¸­çš„å€¼ï¼ˆç¡®ä¿ç´¢å¼•åœ¨æœ‰æ•ˆèŒƒå›´ï¼‰
+			row_ptr[j][0] = static_cast<uchar>(Color_list[b]);  // æ–°Bé€šé“
+			row_ptr[j][1] = static_cast<uchar>(Color_list[g]);  // æ–°Gé€šé“
+			row_ptr[j][2] = static_cast<uchar>(Color_list[r]);  // æ–°Ré€šé“
 		}
 	}
 
-	// ×ª»»»ØÔ­ÀàĞÍ£¬²¢×Ô¶¯½Ø¶Ï³¬³ö[0,255]µÄÏñËØÖµ£¨Ìæ´úsaturate_cast£©
+	// è½¬æ¢å›åŸç±»å‹ï¼Œå¹¶è‡ªåŠ¨æˆªæ–­è¶…å‡º[0,255]çš„åƒç´ å€¼ï¼ˆæ›¿ä»£saturate_castï¼‰
 
 	return dst;
 }
@@ -245,15 +247,15 @@ cv::Mat CvTranslator::Whitening2(const cv::Mat &src) {
 cv::Mat CvTranslator::addTextWatermark(const cv::Mat& src, const std::string& text,
 	const cv::Point& pos ,
 	double fontScale,
-	cv::Scalar color ,  // BGR¸ñÊ½£¬Ä¬ÈÏºìÉ«
+	cv::Scalar color ,  // BGRæ ¼å¼ï¼Œé»˜è®¤çº¢è‰²
 	int thickness ,
 	int lineType ) {
-	cv::Mat dst = src.clone();  // ¿ËÂ¡Ô­Í¼£¬±ÜÃâĞŞ¸ÄÔ­Í¼
+	cv::Mat dst = src.clone();  // å…‹éš†åŸå›¾ï¼Œé¿å…ä¿®æ”¹åŸå›¾
 
-	// ÉèÖÃ×ÖÌå£¨OpenCVÖ§³ÖµÄ×ÖÌå£©
-	int fontFace = cv::FONT_HERSHEY_SIMPLEX;  // ³£ÓÃ×ÖÌå
+	// è®¾ç½®å­—ä½“ï¼ˆOpenCVæ”¯æŒçš„å­—ä½“ï¼‰
+	int fontFace = cv::FONT_HERSHEY_SIMPLEX;  // å¸¸ç”¨å­—ä½“
 
-	// »æÖÆÎÄ×ÖË®Ó¡
+	// ç»˜åˆ¶æ–‡å­—æ°´å°
 	cv::putText(dst, text, pos, fontFace, fontScale, color, thickness, lineType);
 
 	return dst;
@@ -261,8 +263,181 @@ cv::Mat CvTranslator::addTextWatermark(const cv::Mat& src, const std::string& te
 
 cv::Mat CvTranslator::invertImage(cv::Mat src)
 {
-	// Í¼ÏñÈ¡·´
+	// å›¾åƒå–å
 	cv::Mat invertedImage;
 	cv::bitwise_not(src, invertedImage);
 	return invertedImage;
 }
+
+// -------------------- CvTranslator C API --------------------
+static bool cvtranslator_imread(const char* path, cv::Mat& out)
+{
+	if (!path || !*path) {
+		return false;
+	}
+	out = cv::imread(path, cv::IMREAD_COLOR);
+	return !out.empty();
+}
+
+static bool cvtranslator_imwrite(const char* path, const cv::Mat& img)
+{
+	if (!path || !*path || img.empty()) {
+		return false;
+	}
+	return cv::imwrite(path, img);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void* CvTranslator_Create()
+{
+	return new CvTranslator();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void CvTranslator_Destroy(void* translator)
+{
+	delete static_cast<CvTranslator*>(translator);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_GrayImage_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->grayImage(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_Invert_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->invertImage(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_FrostedGlass_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->FrostedGlass(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_SkinSmoothing_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->simpleSkinSmoothing(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_Whitening_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->Whitening(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_Whitening2_File(void* translator, const char* input_path, const char* output_path)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->Whitening2(src);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_OilPainting_File(void* translator, const char* input_path, const char* output_path, int radius, double sigma_color)
+{
+	try {
+		if (!translator) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->applyOilPainting(src, radius, sigma_color);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_Mosaic_File(void* translator, const char* input_path, const char* output_path, int x, int y, int w, int h, int cellSize)
+{
+	try {
+		if (!translator) return false;
+		if (cellSize <= 0) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Rect region(x, y, w, h);
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->applyMosaic(src, region, cellSize);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermark_File(void* translator, const char* input_path, const char* output_path, const char* text)
+{
+	try {
+		if (!translator || !text) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->addTextWatermark(src, std::string(text));
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermarkEx_File(void* translator, const char* input_path, const char* output_path, const char* text, int x, int y, double fontScale, int b, int g, int r, int thickness)
+{
+	try {
+		if (!translator || !text) return false;
+		cv::Mat src;
+		if (!cvtranslator_imread(input_path, src)) return false;
+		cv::Point pos(x, y);
+		cv::Scalar color(b, g, r);
+		cv::Mat dst = static_cast<CvTranslator*>(translator)->addTextWatermark(src, std::string(text), pos, fontScale, color, thickness, cv::LINE_AA);
+		return cvtranslator_imwrite(output_path, dst);
+	}
+	catch (...) {
+		return false;
+	}
+}
+

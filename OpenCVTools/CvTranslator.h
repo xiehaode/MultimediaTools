@@ -70,7 +70,7 @@ public:
 	 * \param text
 	 * \return 
 	 */
-	cv::Mat addTextWatermark(const cv::Mat& src, const std::string& text);
+	//cv::Mat addTextWatermark(const cv::Mat& src, const std::string& text);
 
 
 	/**

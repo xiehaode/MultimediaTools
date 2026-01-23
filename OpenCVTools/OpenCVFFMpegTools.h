@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 
-// ---- C API（可用于 LoadLibrary/GetProcAddress，外部无需链接任何 .lib）----
+// 
 // C++/OpenCV 相关能力请包含 `COpenCVTools.h`
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +25,22 @@ OPENCVFFMPEGTOOLS_API int fnOpenCVTools(void);
 OPENCVFFMPEGTOOLS_API void* AvWorker_Create();
 OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker);
 OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);
+OPENCVFFMPEGTOOLS_API bool AvWorker_SpliceAV(void* worker, const char* input_url1, const char* input_url2, const char* output_url, bool is_rtsp);
+
+// ---- CvTranslator C API（基于文件输入输出，外部无需 OpenCV 头文件）----
+OPENCVFFMPEGTOOLS_API void* CvTranslator_Create();
+OPENCVFFMPEGTOOLS_API void CvTranslator_Destroy(void* translator);
+
+OPENCVFFMPEGTOOLS_API bool CvTranslator_GrayImage_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_Invert_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_FrostedGlass_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_SkinSmoothing_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_Whitening_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_Whitening2_File(void* translator, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_OilPainting_File(void* translator, const char* input_path, const char* output_path, int radius, double sigma_color);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_Mosaic_File(void* translator, const char* input_path, const char* output_path, int x, int y, int w, int h, int cellSize);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermark_File(void* translator, const char* input_path, const char* output_path, const char* text);
+OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermarkEx_File(void* translator, const char* input_path, const char* output_path, const char* text, int x, int y, double fontScale, int b, int g, int r, int thickness);
 
 #ifdef __cplusplus
 } // extern "C"
