@@ -23,7 +23,7 @@
     <ProjectGuid>{67D8DEDA-AA2F-4069-8172-33EB5B8D1689}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>OpenCVTools</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <ProjectName>OpenCVFFMpegTools</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -178,7 +178,6 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="OpenCVFFMpegTools.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="VideoHandle.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AvWorker.cpp" />
