@@ -41,12 +41,12 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	};
 	//  参数合法性校验 - 前置检查，失败直接返回
 	if (input_path.empty() || output_path.empty()) {
-		std::cerr << "错误：输入或输出文件路径不能为空" << std::endl;
+		std::cerr << "input_path is empty" << std::endl;
 		return false;
 	}
 	if (dst_width <= 0 || dst_height <= 0 ||
 		dst_width % 2 != 0 || dst_height % 2 != 0) {
-		std::cerr << "错误：目标分辨率必须是正偶数（H264要求）" << std::endl;
+		std::cerr << "dst_width and dst_height must>0" << std::endl;
 		return false;
 	}
 
@@ -71,7 +71,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "打开输入文件失败: " << err_buf << std::endl;
+		std::cerr << "avformat_open_input fair: " << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -82,7 +82,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "获取流信息失败: " << err_buf << std::endl;
+		std::cerr << "avformat_find_stream_info fair " << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -97,7 +97,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 		}
 	}
 	if (video_stream_idx == -1) {
-		std::cerr << "未找到视频流" << std::endl;
+		std::cerr << "video_stream_idx is -1" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -107,7 +107,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	AVCodecParameters* in_codecpar = in_fmt_ctx->streams[video_stream_idx]->codecpar;
 	const AVCodec* in_codec = avcodec_find_decoder(in_codecpar->codec_id);
 	if (!in_codec) {
-		std::cerr << "找不到解码器" << std::endl;
+		std::cerr << "avcodec_find_decoder fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -115,7 +115,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 
 	in_codec_ctx = avcodec_alloc_context3(in_codec);
 	if (!in_codec_ctx) {
-		std::cerr << "分配解码器上下文失败" << std::endl;
+		std::cerr << "avcodec_alloc_context3 fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -125,7 +125,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "复制解码器参数失败: " << err_buf << std::endl;
+		std::cerr << "avcodec_parameters_to_context fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -135,7 +135,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "打开解码器失败: " << err_buf << std::endl;
+		std::cerr << "avcodec_open2 fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -146,7 +146,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "创建输出上下文失败: " << err_buf << std::endl;
+		std::cerr << "avformat_alloc_output_context2 fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -155,7 +155,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	//  初始化输出编码器
 	const AVCodec* out_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
 	if (!out_codec) {
-		std::cerr << "找不到H264编码器" << std::endl;
+		std::cerr << "avcodec_find_encoder fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -163,7 +163,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 
 	AVStream* out_stream = avformat_new_stream(out_fmt_ctx, out_codec);
 	if (!out_stream) {
-		std::cerr << "创建输出流失败" << std::endl;
+		std::cerr << "avformat_new_stream fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -175,7 +175,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 
 	out_codec_ctx = avcodec_alloc_context3(out_codec);
 	if (!out_codec_ctx) {
-		std::cerr << "分配编码器上下文失败" << std::endl;
+		std::cerr << "avcodec_alloc_context3 fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -214,7 +214,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "打开编码器失败: " << err_buf << std::endl;
+		std::cerr << "avcodec_open2 fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -225,7 +225,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "复制编码器参数到输出流失败: " << err_buf << std::endl;
+		std::cerr << "avcodec_parameters_from_context fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -237,7 +237,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 		if (ret < 0) {
 			char err_buf[1024] = { 0 };
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			std::cerr << "打开输出文件失败: " << err_buf << std::endl;
+			std::cerr << "avio_open fair" << err_buf << std::endl;
 			cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 			avformat_network_deinit();
 			return false;
@@ -249,7 +249,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "写入文件头失败: " << err_buf << std::endl;
+		std::cerr << "avformat_write_header fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -260,7 +260,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 		dst_width, dst_height, out_codec_ctx->pix_fmt,
 		SWS_BILINEAR, nullptr, nullptr, nullptr);
 	if (!sws_ctx) {
-		std::cerr << "创建缩放上下文失败" << std::endl;
+		std::cerr << "sws_getContext fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -269,7 +269,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	// 初始化帧
 	src_frame = av_frame_alloc();
 	if (!src_frame) {
-		std::cerr << "分配源帧失败" << std::endl;
+		std::cerr << "av_frame_alloc fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -277,7 +277,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 
 	dst_frame = av_frame_alloc();
 	if (!dst_frame) {
-		std::cerr << "分配目标帧失败" << std::endl;
+		std::cerr << "av_frame_alloc fair" << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -291,7 +291,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		std::cerr << "分配目标帧缓冲区失败: " << err_buf << std::endl;
+		std::cerr << "av_frame_get_buffer fair" << err_buf << std::endl;
 		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
 		avformat_network_deinit();
 		return false;
@@ -310,7 +310,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 		if (ret < 0) {
 			char err_buf[1024] = { 0 };
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			std::cerr << "发送数据包到解码器失败: " << err_buf << std::endl;
+			std::cerr << "avcodec_send_packet fair" << err_buf << std::endl;
 			av_packet_unref(&pkt);
 			process_success = false;
 			break;
@@ -342,7 +342,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 			if (ret < 0) {
 				char err_buf[1024] = { 0 };
 				av_strerror(ret, err_buf, sizeof(err_buf));
-				std::cerr << "发送帧到编码器失败: " << err_buf << std::endl;
+				std::cerr << "avcodec_send_frame fair" << err_buf << std::endl;
 				process_success = false;
 				break;
 			}
@@ -358,7 +358,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 				if (ret < 0) {
 					char err_buf[1024] = { 0 };
 					av_strerror(ret, err_buf, sizeof(err_buf));
-					std::cerr << "写入帧失败: " << err_buf << std::endl;
+					std::cerr << "av_interleaved_write_frame fair" << err_buf << std::endl;
 					process_success = false;
 					break;
 				}
@@ -383,7 +383,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 			if (ret < 0) {
 				char err_buf[1024] = { 0 };
 				av_strerror(ret, err_buf, sizeof(err_buf));
-				std::cerr << "刷新编码器写入帧失败: " << err_buf << std::endl;
+				std::cerr << "av_interleaved_write_frame fair" << err_buf << std::endl;
 				process_success = false;
 				break;
 			}
@@ -397,7 +397,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 		if (ret < 0) {
 			char err_buf[1024] = { 0 };
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			std::cerr << "写入文件尾失败: " << err_buf << std::endl;
+			std::cerr << "av_write_trailer fair" << err_buf << std::endl;
 			process_success = false;
 		}
 	}
@@ -1109,6 +1109,211 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 	return is_success;
 }
 
+/**
+ * @brief FFmpeg视频分割（避免空指针访问）
+ * @param input_path 输入视频路径（必须是本地可访问的MP4文件）
+ * @param output_path 输出视频路径
+ * @param start_seconds 起始时间（秒，>=0）
+ * @param duration_seconds 持续时长（秒，0表示到结尾）
+ * @return 0成功，-1失败
+ */
+int AvWorker::split_video(const std::string& input_path,
+	const std::string& output_path,
+	double start_seconds,
+	double duration_seconds) {
+	// 1. 参数合法性校验
+	if (input_path.empty() || output_path.empty()) {
+		std::cerr << "错误：输入或输出路径为空" << std::endl;
+		return -1;
+	}
+	if (start_seconds < 0) {
+		std::cerr << "错误：起始时间不能为负数" << std::endl;
+		return -1;
+	}
+	if (duration_seconds < 0) {
+		std::cerr << "错误：持续时长不能为负数" << std::endl;
+		return -1;
+	}
+
+	// 初始化FFmpeg相关变量，全部初始化为nullptr避免空指针
+	AVFormatContext *input_fmt_ctx = nullptr;
+	AVFormatContext *output_fmt_ctx = nullptr;
+	int ret = -1;
+
+	// 2. 打开输入文件
+	if (avformat_open_input(&input_fmt_ctx, input_path.c_str(), nullptr, nullptr) < 0) {
+		std::cerr << "错误：无法打开输入文件 " << input_path << std::endl;
+
+		if (output_fmt_ctx) {
+			if (!(output_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+				avio_closep(&output_fmt_ctx->pb);
+			}
+			avformat_free_context(output_fmt_ctx);
+		}
+		if (input_fmt_ctx) {
+			avformat_close_input(&input_fmt_ctx);
+		}
+		return -1;
+	}
+
+	// 3. 获取输入文件流信息
+	if (avformat_find_stream_info(input_fmt_ctx, nullptr) < 0) {
+		std::cerr << "错误：无法获取流信息" << std::endl;
+		avformat_close_input(&input_fmt_ctx);
+		return -1;
+	}
+
+	// 4. 创建输出格式上下文
+	if (avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, output_path.c_str()) < 0) {
+		std::cerr << "错误：无法创建输出格式上下文" << std::endl;
+		avformat_close_input(&input_fmt_ctx);
+		return -1;
+	}
+
+	// 5. 遍历输入流，创建对应的输出流
+	int video_stream_index = -1;
+	int audio_stream_index = -1;
+	for (unsigned int i = 0; i < input_fmt_ctx->nb_streams; i++) {
+		AVStream *in_stream = input_fmt_ctx->streams[i];
+		AVStream *out_stream = avformat_new_stream(output_fmt_ctx, nullptr);
+		if (!out_stream) {
+			std::cerr << "错误：无法创建输出流" << std::endl;
+			avformat_free_context(output_fmt_ctx);
+			avformat_close_input(&input_fmt_ctx);
+			return -1;
+		}
+
+		// 复制流参数
+		if (avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar) < 0) {
+			std::cerr << "错误：无法复制流参数" << std::endl;
+			avformat_free_context(output_fmt_ctx);
+			avformat_close_input(&input_fmt_ctx);
+			return -1;
+		}
+		out_stream->codecpar->codec_tag = 0;
+
+		// 记录视频/音频流索引
+		if (in_stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && video_stream_index == -1) {
+			video_stream_index = i;
+		}
+		else if (in_stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && audio_stream_index == -1) {
+			audio_stream_index = i;
+		}
+	}
+
+	// 检查是否找到视频流
+	if (video_stream_index == -1) {
+		std::cerr << "错误：输入文件中未找到视频流" << std::endl;
+		avformat_free_context(output_fmt_ctx);
+		avformat_close_input(&input_fmt_ctx);
+		return -1;
+	}
+
+	// 6. 打开输出文件
+	if (!(output_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+		if (avio_open(&output_fmt_ctx->pb, output_path.c_str(), AVIO_FLAG_WRITE) < 0) {
+			std::cerr << "错误：无法打开输出文件 " << output_path << std::endl;
+			avformat_free_context(output_fmt_ctx);
+			avformat_close_input(&input_fmt_ctx);
+			return -1;
+		}
+	}
+
+	// 7. 写入文件头
+	if (avformat_write_header(output_fmt_ctx, nullptr) < 0) {
+		std::cerr << "错误：无法写入文件头" << std::endl;
+		if (!(output_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+			avio_closep(&output_fmt_ctx->pb);
+		}
+		avformat_free_context(output_fmt_ctx);
+		avformat_close_input(&input_fmt_ctx);
+		return -1;
+	}
+
+	// 8. 计算时间戳
+	AVRational ration = { 1,AV_TIME_BASE };
+	int64_t start_ts = av_rescale_q(static_cast<int64_t>(start_seconds * AV_TIME_BASE),
+		ration,
+		input_fmt_ctx->streams[video_stream_index]->time_base);
+	int64_t end_ts = AV_NOPTS_VALUE;
+	if (duration_seconds > 0) {
+		end_ts = av_rescale_q(static_cast<int64_t>((start_seconds + duration_seconds) * AV_TIME_BASE),
+			ration,
+			input_fmt_ctx->streams[video_stream_index]->time_base);
+	}
+
+	// 9. 定位到起始时间位置
+	if (av_seek_frame(input_fmt_ctx, video_stream_index, start_ts, AVSEEK_FLAG_ANY) < 0) {
+		std::cerr << "av_seek_frame fair ,begin closest frame" << std::endl;
+	}
+
+	// 10. 读取并写入帧
+	AVPacket pkt = { 0 };
+	pkt.data = nullptr;
+	pkt.size = 0;
+
+	while (av_read_frame(input_fmt_ctx, &pkt) >= 0) {
+		AVStream *in_stream = input_fmt_ctx->streams[pkt.stream_index];
+		AVStream *out_stream = output_fmt_ctx->streams[pkt.stream_index];
+
+		// 检查是否超出结束时间
+		if (end_ts != AV_NOPTS_VALUE && pkt.pts != AV_NOPTS_VALUE) {
+			int64_t pkt_ts = av_rescale_q(pkt.pts, in_stream->time_base, input_fmt_ctx->streams[video_stream_index]->time_base);
+			if (pkt_ts > end_ts) {
+				av_packet_unref(&pkt);
+				break;
+			}
+		}
+
+		// 调整时间戳（相对起始时间）
+		if (pkt.pts != AV_NOPTS_VALUE) {
+			pkt.pts = av_rescale_q_rnd(pkt.pts - start_ts,
+				in_stream->time_base,
+				out_stream->time_base,
+				static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+		}
+		if (pkt.dts != AV_NOPTS_VALUE) {
+			pkt.dts = av_rescale_q_rnd(pkt.dts - start_ts,
+				in_stream->time_base,
+				out_stream->time_base,
+				static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+		}
+		if (pkt.duration > 0) {
+			pkt.duration = av_rescale_q(pkt.duration,
+				in_stream->time_base,
+				out_stream->time_base);
+		}
+		pkt.pos = -1;
+
+		// 写入数据包
+		if (av_interleaved_write_frame(output_fmt_ctx, &pkt) < 0) {
+			std::cerr << "错误：写入帧失败" << std::endl;
+			av_packet_unref(&pkt);
+			break;
+		}
+		av_packet_unref(&pkt);
+	}
+
+	// 11. 写入文件尾
+	av_write_trailer(output_fmt_ctx);
+	ret = 0; // 执行到这里表示成功
+
+
+
+	return ret;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 extern "C" OPENCVFFMPEGTOOLS_API void* AvWorker_Create()
 {
 	return new AvWorker();
@@ -1141,5 +1346,29 @@ extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_resize_video(void* worker, const 
 		return false;
 	}
 	return static_cast<AvWorker*>(worker)->resize_video(input_url,  output_url, dst_width,dst_height);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_split_video(
+	void* worker,
+	const char* input_url,
+	const char* output_url,
+	double start_seconds,
+	double duration_seconds)
+{
+	// 空指针校验（核心参数非空检查）
+	if (!worker || !input_url || !output_url) {
+		return false;
+	}
+
+	//转换 void* 为 AvWorker 指针，并调用成员方法
+	AvWorker* av_worker = static_cast<AvWorker*>(worker);
+	// 这里将 const char* 转换为 std::string 适配成员方法的参数类型
+	std::string input_path(input_url);
+	std::string output_path(output_url);
+
+	// 调用 split_video 方法
+	// 通常约定：返回 0 表示成功，非 0 表示失败；你可根据实际逻辑调整
+	int result = av_worker->split_video(input_path, output_path, start_seconds, duration_seconds);
+	return (result == 0);
 }
 
