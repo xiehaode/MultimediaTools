@@ -1,0 +1,3 @@
+[submodule "hplayer"]
+	path = hplayer
+	url = https://github.com/ithewei/hplayer.git

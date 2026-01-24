@@ -26,5 +26,10 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavutil/avutil.h>
 #include <libavutil/time.h>
+#include <libavdevice/avdevice.h>
+#include <libavutil/opt.h>
+#include <libavutil/frame.h>
+#include <libavutil/timestamp.h>
+#include <libavutil/mem.h>
 }
 #endif //PCH_H

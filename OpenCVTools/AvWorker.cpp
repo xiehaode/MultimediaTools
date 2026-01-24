@@ -20,6 +20,395 @@ void AvWorker::finishAv()
 
 }
 
+// 调整视频分辨率函数 - 修复时间戳导致的时长异常问题
+bool AvWorker::resize_video(const std::string& input_path, const std::string& output_path,
+	int dst_width, int dst_height) {
+
+	auto cleanup = [](AVFormatContext* in_fmt_ctx, AVFormatContext* out_fmt_ctx,
+		AVCodecContext* in_codec_ctx, AVCodecContext* out_codec_ctx,
+		SwsContext* sws_ctx, AVFrame* src_frame, AVFrame* dst_frame) {
+		if (src_frame) av_frame_free(&src_frame);
+		if (dst_frame) av_frame_free(&dst_frame);
+		if (sws_ctx) sws_freeContext(sws_ctx);
+		if (in_codec_ctx) avcodec_free_context(&in_codec_ctx);
+		if (out_codec_ctx) avcodec_free_context(&out_codec_ctx);
+		if (in_fmt_ctx) avformat_close_input(&in_fmt_ctx);
+		if (out_fmt_ctx) {
+			if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE))
+				avio_closep(&out_fmt_ctx->pb);
+			avformat_free_context(out_fmt_ctx);
+		}
+	};
+	//  参数合法性校验 - 前置检查，失败直接返回
+	if (input_path.empty() || output_path.empty()) {
+		std::cerr << "错误：输入或输出文件路径不能为空" << std::endl;
+		return false;
+	}
+	if (dst_width <= 0 || dst_height <= 0 ||
+		dst_width % 2 != 0 || dst_height % 2 != 0) {
+		std::cerr << "错误：目标分辨率必须是正偶数（H264要求）" << std::endl;
+		return false;
+	}
+
+	//  初始化变量 - 所有指针初始化为nullptr
+	avformat_network_init();
+	AVFormatContext *in_fmt_ctx = nullptr, *out_fmt_ctx = nullptr;
+	AVCodecContext *in_codec_ctx = nullptr, *out_codec_ctx = nullptr;
+	SwsContext* sws_ctx = nullptr;
+	AVFrame *src_frame = nullptr, *dst_frame = nullptr;
+	AVPacket pkt = { 0 };
+	pkt.data = nullptr;
+	pkt.size = 0;
+
+	int ret, video_stream_idx = -1;
+	// 新增：帧计数，用于生成备用时间戳
+	int64_t frame_index = 0;
+	AVRational in_time_base;  // 输入流时间基
+	AVRational out_time_base; // 输出流时间基
+
+	//  打开输入文件
+	ret = avformat_open_input(&in_fmt_ctx, input_path.c_str(), nullptr, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "打开输入文件失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	//  获取流信息
+	ret = avformat_find_stream_info(in_fmt_ctx, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "获取流信息失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 查找视频流索引
+	for (int i = 0; i < in_fmt_ctx->nb_streams; i++) {
+		if (in_fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+			video_stream_idx = i;
+			in_time_base = in_fmt_ctx->streams[video_stream_idx]->time_base; // 保存输入时间基
+			break;
+		}
+	}
+	if (video_stream_idx == -1) {
+		std::cerr << "未找到视频流" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	//  初始化输入解码器
+	AVCodecParameters* in_codecpar = in_fmt_ctx->streams[video_stream_idx]->codecpar;
+	const AVCodec* in_codec = avcodec_find_decoder(in_codecpar->codec_id);
+	if (!in_codec) {
+		std::cerr << "找不到解码器" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	in_codec_ctx = avcodec_alloc_context3(in_codec);
+	if (!in_codec_ctx) {
+		std::cerr << "分配解码器上下文失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	ret = avcodec_parameters_to_context(in_codec_ctx, in_codecpar);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "复制解码器参数失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	ret = avcodec_open2(in_codec_ctx, in_codec, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "打开解码器失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	//  创建输出上下文
+	ret = avformat_alloc_output_context2(&out_fmt_ctx, nullptr, nullptr, output_path.c_str());
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "创建输出上下文失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	//  初始化输出编码器
+	const AVCodec* out_codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+	if (!out_codec) {
+		std::cerr << "找不到H264编码器" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	AVStream* out_stream = avformat_new_stream(out_fmt_ctx, out_codec);
+	if (!out_stream) {
+		std::cerr << "创建输出流失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 输出流时间基直接复用输入流的时间基（避免帧率反推的精度问题）
+	out_time_base = in_time_base;
+	out_stream->time_base = out_time_base;
+
+	out_codec_ctx = avcodec_alloc_context3(out_codec);
+	if (!out_codec_ctx) {
+		std::cerr << "分配编码器上下文失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 配置输出编码器参数
+	out_codec_ctx->codec_id = out_codec->id;
+	out_codec_ctx->codec_type = AVMEDIA_TYPE_VIDEO;
+	out_codec_ctx->width = dst_width;
+	out_codec_ctx->height = dst_height;
+	out_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
+	// 编码器时间基和输出流对齐（使用1/帧率，而非av_inv_q）
+	AVRational frame_rate = in_fmt_ctx->streams[video_stream_idx]->r_frame_rate;
+	if (frame_rate.num == 0 || frame_rate.den == 0) {
+
+		frame_rate = { 30, 1 }; // 兜底：默认30fps
+	}
+	out_codec_ctx->time_base = av_inv_q(frame_rate);
+	out_codec_ctx->framerate = frame_rate;
+	out_codec_ctx->bit_rate = in_codec_ctx->bit_rate;
+	out_codec_ctx->gop_size = 10;
+	out_codec_ctx->max_b_frames = 1;
+
+	// 设置H264编码器参数（增加兼容性）
+	if (out_codec_ctx->codec_id == AV_CODEC_ID_H264) {
+		av_opt_set(out_codec_ctx->priv_data, "preset", "medium", 0);
+		av_opt_set(out_codec_ctx->priv_data, "tune", "zerolatency", 0);
+	}
+
+	if (out_fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER) {
+		out_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	}
+
+	// 打开编码器
+	ret = avcodec_open2(out_codec_ctx, out_codec, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "打开编码器失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 复制编码器参数到输出流
+	ret = avcodec_parameters_from_context(out_stream->codecpar, out_codec_ctx);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "复制编码器参数到输出流失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 打开输出文件
+	if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+		ret = avio_open(&out_fmt_ctx->pb, output_path.c_str(), AVIO_FLAG_WRITE);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "打开输出文件失败: " << err_buf << std::endl;
+			cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+			avformat_network_deinit();
+			return false;
+		}
+	}
+
+	// 写入文件头
+	ret = avformat_write_header(out_fmt_ctx, nullptr);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "写入文件头失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 初始化缩放上下文
+	sws_ctx = sws_getContext(in_codec_ctx->width, in_codec_ctx->height, in_codec_ctx->pix_fmt,
+		dst_width, dst_height, out_codec_ctx->pix_fmt,
+		SWS_BILINEAR, nullptr, nullptr, nullptr);
+	if (!sws_ctx) {
+		std::cerr << "创建缩放上下文失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 初始化帧
+	src_frame = av_frame_alloc();
+	if (!src_frame) {
+		std::cerr << "分配源帧失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	dst_frame = av_frame_alloc();
+	if (!dst_frame) {
+		std::cerr << "分配目标帧失败" << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	dst_frame->width = dst_width;
+	dst_frame->height = dst_height;
+	dst_frame->format = out_codec_ctx->pix_fmt;
+
+	ret = av_frame_get_buffer(dst_frame, 32);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "分配目标帧缓冲区失败: " << err_buf << std::endl;
+		cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+		avformat_network_deinit();
+		return false;
+	}
+
+	// 处理视频帧（解码→缩放→编码→写入）
+	bool process_success = true;
+	while (av_read_frame(in_fmt_ctx, &pkt) >= 0) {
+		if (pkt.stream_index != video_stream_idx) {
+			av_packet_unref(&pkt);
+			continue;
+		}
+
+		// 解码帧
+		ret = avcodec_send_packet(in_codec_ctx, &pkt);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "发送数据包到解码器失败: " << err_buf << std::endl;
+			av_packet_unref(&pkt);
+			process_success = false;
+			break;
+		}
+
+		while (avcodec_receive_frame(in_codec_ctx, src_frame) >= 0) {
+			// 缩放帧
+			sws_scale(sws_ctx, src_frame->data, src_frame->linesize, 0,
+				in_codec_ctx->height, dst_frame->data, dst_frame->linesize);
+
+			// PTS时间戳处理（增加边界校验，避免无效值）
+			int64_t pts = src_frame->pts;
+			if (pts == AV_NOPTS_VALUE) {
+				// 无有效PTS时，用帧计数生成（frame_index * 时间基）
+				pts = frame_index * av_q2d(out_codec_ctx->time_base) * AV_TIME_BASE;
+				AVRational av_time_base_q = { 1, AV_TIME_BASE }; // 显式定义结构体变量
+				pts = av_rescale_q(pts, av_time_base_q, out_codec_ctx->time_base);
+			}
+			else {
+				// 有有效PTS时，正确转换到编码器时间基
+				pts = av_rescale_q(pts, in_time_base, out_codec_ctx->time_base);
+			}
+			dst_frame->pts = pts;
+			dst_frame->pkt_dts = dst_frame->pts; // DTS和PTS对齐（避免B帧导致的时序问题）
+			frame_index++;
+
+			// 编码帧
+			ret = avcodec_send_frame(out_codec_ctx, dst_frame);
+			if (ret < 0) {
+				char err_buf[1024] = { 0 };
+				av_strerror(ret, err_buf, sizeof(err_buf));
+				std::cerr << "发送帧到编码器失败: " << err_buf << std::endl;
+				process_success = false;
+				break;
+			}
+
+			while (avcodec_receive_packet(out_codec_ctx, &pkt) >= 0) {
+				pkt.stream_index = out_stream->index;
+				// 数据包PTS/DTS转换到输出流时间基
+				av_packet_rescale_ts(&pkt, out_codec_ctx->time_base, out_stream->time_base);
+				pkt.dts = pkt.pts; // 兜底：DTS和PTS一致
+				pkt.duration = av_rescale_q(1, out_codec_ctx->time_base, out_stream->time_base); // 设置帧时长
+
+				ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
+				if (ret < 0) {
+					char err_buf[1024] = { 0 };
+					av_strerror(ret, err_buf, sizeof(err_buf));
+					std::cerr << "写入帧失败: " << err_buf << std::endl;
+					process_success = false;
+					break;
+				}
+				av_packet_unref(&pkt);
+			}
+			if (!process_success) break;
+		}
+		av_packet_unref(&pkt);
+		if (!process_success) break;
+	}
+
+	//  刷新编码器
+	if (process_success) {
+		avcodec_send_frame(out_codec_ctx, nullptr);
+		while (avcodec_receive_packet(out_codec_ctx, &pkt) >= 0) {
+			pkt.stream_index = out_stream->index;
+			av_packet_rescale_ts(&pkt, out_codec_ctx->time_base, out_stream->time_base);
+			pkt.dts = pkt.pts;
+			pkt.duration = av_rescale_q(1, out_codec_ctx->time_base, out_stream->time_base);
+
+			ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
+			if (ret < 0) {
+				char err_buf[1024] = { 0 };
+				av_strerror(ret, err_buf, sizeof(err_buf));
+				std::cerr << "刷新编码器写入帧失败: " << err_buf << std::endl;
+				process_success = false;
+				break;
+			}
+			av_packet_unref(&pkt);
+		}
+	}
+
+	// 写入文件尾
+	if (process_success) {
+		ret = av_write_trailer(out_fmt_ctx);
+		if (ret < 0) {
+			char err_buf[1024] = { 0 };
+			av_strerror(ret, err_buf, sizeof(err_buf));
+			std::cerr << "写入文件尾失败: " << err_buf << std::endl;
+			process_success = false;
+		}
+	}
+
+	// 统一清理资源
+	cleanup(in_fmt_ctx, out_fmt_ctx, in_codec_ctx, out_codec_ctx, sws_ctx, src_frame, dst_frame);
+	avformat_network_deinit();
+
+	return process_success;
+}
+
 // 保存RGB数据为BMP图片（修复头格式问题，兼容ImageMagick）
 bool AvWorker::SaveFrameToBmp(const uint8_t* rgb_data, int width, int height, const std::string& output_path) {
 	// 严格按照BMP标准定义结构体（禁用编译器对齐）
@@ -417,7 +806,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		}
 	}
 
-	// 8. 写入文件头
+	//  写入文件头
 	ret = avformat_write_header(out_fmt_ctx, nullptr);
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
@@ -437,11 +826,11 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return false;
 	}
 
-	// 9. 处理第一个视频的音视频帧
+	// 处理第一个视频的音视频帧
 	AVPacket pkt = {};
 	av_packet_unref(&pkt);
 
-	// 关键修复：定义AVRounding枚举变量，解决类型不兼容问题
+	// 定义AVRounding枚举变量，解决类型不兼容问题
 	AVRounding rounding = static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX);
 
 	// 关键：按“每个输出流”累计结束时间戳 + 最后一帧的DTS/PTS（用于单调性校验）
@@ -624,12 +1013,12 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 			break;
 		}
 
-		// 1. 转换到输出时基
+		// 转换到输出时基
 		int64_t new_pts = rescale_ts(pkt.pts, in_stream->time_base, out_stream->time_base);
 		int64_t new_dts = rescale_ts(pkt.dts, in_stream->time_base, out_stream->time_base);
 		int64_t new_duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
 
-		// 2. 第二个视频自身起点归零（按流独立）
+		// 第二个视频自身起点归零（按流独立）
 		if (new_pts != AV_NOPTS_VALUE && in2_first_pts[in_index] == AV_NOPTS_VALUE) {
 			in2_first_pts[in_index] = new_pts;
 		}
@@ -643,22 +1032,22 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 			new_dts -= in2_first_dts[in_index];
 		}
 
-		// 3. 加上第一个视频的结束偏移（核心修复：按输出流独立偏移）
+		// 加上第一个视频的结束偏移（核心修复：按输出流独立偏移）
 		int64_t offset = out_stream_end_ts[out_index];
 		if (new_pts != AV_NOPTS_VALUE) new_pts += offset;
 		if (new_dts != AV_NOPTS_VALUE) new_dts += offset;
 
-		// 4. 强制修正时间戳单调性（解决核心错误）
+		// 强制修正时间戳单调性（解决核心错误）
 		fix_timestamp_monotonic(out_index, new_pts, new_dts);
 
-		// 5. 赋值给packet
+		// 赋值给packet
 		pkt.stream_index = out_index;
 		pkt.pts = new_pts;
 		pkt.dts = new_dts;
 		pkt.duration = new_duration;
 		pkt.pos = -1;
 
-		// 6. 写入帧（忽略单帧错误，继续处理）
+		// 写入帧（忽略单帧错误，继续处理）
 		ret = av_interleaved_write_frame(out_fmt_ctx, &pkt);
 		if (ret < 0) {
 			char err_buf[1024] = { 0 };
@@ -692,7 +1081,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		avio_flush(out_fmt_ctx->pb);
 	}
 
-	// 11. 写入文件尾
+	// 写入文件尾
 	ret = av_write_trailer(out_fmt_ctx);
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
@@ -704,7 +1093,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		is_success = true;
 	}
 
-	// 12. 释放资源
+	// 释放资源
 	if (fmt_ctx1) avformat_close_input(&fmt_ctx1);
 	if (fmt_ctx2) avformat_close_input(&fmt_ctx2);
 
@@ -744,5 +1133,13 @@ extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_SpliceAV(void* worker, const char
 		return false;
 	}
 	return static_cast<AvWorker*>(worker)->SpliceAV(input_url1, input_url2, output_url, is_rtsp);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API bool AvWorker_resize_video(void* worker, const char* input_url, const char* output_url, int dst_width, int dst_height)
+{
+	if (!worker || !input_url  || !output_url) {
+		return false;
+	}
+	return static_cast<AvWorker*>(worker)->resize_video(input_url,  output_url, dst_width,dst_height);
 }
 
