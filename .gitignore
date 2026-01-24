@@ -46,6 +46,7 @@ ipch/
 
 # ===================== 第三方库/依赖 =====================
 ## OpenCV/FFmpeg 二进制文件（只保留源码/头文件，忽略二进制）
+OpenCVTools/3rd
 OpenCVTools/3rd/ffmpeg/bin/
 OpenCVTools/3rd/ffmpeg/lib/
 OpenCVTools/3rd/opencv/bin/
