@@ -1,18 +1,23 @@
 #include "application.h"
 #include "src/gui/page/videopage.h"
+#include "src/gui/page/effact.h"
+#include "src/gui/page/word.h"
+#include "src/gui/page/picture.h"
 MainWindow::MainWindow(QWidget *parent)
     : basewindow(parent)
 {
     // 创建QStackedWidget控件 用于存放多个页面
         qStackedWidget = new QStackedWidget;
         qStackedWidget->setObjectName("BaseContentWidget");
-        auto *videoP = new videoPage;
-        auto *newPage2 = new videoPage;
-        auto *newPage3 = new videoPage;
+        auto *videoP1 = new videoPage;
+        auto *wordP2 = new word;
+        auto *pictureP3 = new picture;
+        auto *effactP4 = new effact;
 
-        qStackedWidget->addWidget(videoP);
-        qStackedWidget->addWidget(newPage2);
-        qStackedWidget->addWidget(newPage3);
+        qStackedWidget->addWidget(videoP1);
+        qStackedWidget->addWidget(wordP2);
+        qStackedWidget->addWidget(pictureP3);
+        qStackedWidget->addWidget(effactP4);
 
         this->createleftNavigationBar();
 

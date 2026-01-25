@@ -39,9 +39,10 @@ private:
 
     // 成员变量声明（修复未初始化问题）
 
-    QPushButton *newPage1Btn;
-    QPushButton *newPage2Btn;
-    QPushButton *newPage3Btn;
+    QPushButton *newPage1BtnVideo;
+    QPushButton *newPage2BtnWord;
+    QPushButton *newPage3BtnVideoEffact;
+    QPushButton *newPage4BtnPicture;
     QButtonGroup buttonGroup;
     bool isMinimized = false; // 侧边栏最小化状态标记
 };
