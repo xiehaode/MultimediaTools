@@ -12,7 +12,7 @@
     <Name>WordToPdf</Name>
     <RootNamespace>WordToPdf</RootNamespace>
     <IsWindowsApplication>True</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|3.14</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.7-32</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
   </PropertyGroup>
@@ -28,7 +28,7 @@
     <Compile Include="WordToPdf.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|3.14" />
+    <InterpreterReference Include="Global|PythonCore|3.7-32" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

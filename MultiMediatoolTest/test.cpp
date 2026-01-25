@@ -63,11 +63,10 @@ TEST(OpenCVFFMpegToolsDll, GetVideoFirstFrame_GeneratesBmp) {
 	const std::string exe_dir = GetExeDir();
 	ASSERT_FALSE(exe_dir.empty());
 
-	// 注意：`MultiMediatoolTest.vcxproj` 的 `OutDir` 是 `../bin`，
-	// 所以测试运行目录通常就是仓库的 `bin`。
+
 	const std::string input_mp4 = JoinPath(exe_dir, "1.mp4");
 	if (!FileExists(input_mp4)) {
-		GTEST_SKIP() << "缺少测试输入文件: " << input_mp4;
+		//GTEST_SKIP() << "缺少测试输入文件: " << input_mp4;
 	}
 
 	const std::string out_bmp = JoinPath(exe_dir, "_test_first_frame.bmp");
@@ -91,7 +90,7 @@ TEST(OpenCVFFMpegToolsDll, SpliceAV_GeneratesMp4) {
 	const std::string input1 = JoinPath(exe_dir, "1.mp4");
 	const std::string input2 = JoinPath(exe_dir, "2.mp4");
 	if (!FileExists(input1) || !FileExists(input2)) {
-		GTEST_SKIP() << "缺少测试输入文件: " << input1 << " 或 " << input2;
+		//GTEST_SKIP() << "缺少测试输入文件: " << input1 << " 或 " << input2;
 	}
 
 	const std::string out_mp4 = JoinPath(exe_dir, "_test_splice_out.mp4");
