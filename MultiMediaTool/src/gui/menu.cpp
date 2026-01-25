@@ -8,9 +8,9 @@ Menu::Menu(QWidget *parent) :
     this->setAttribute(Qt::WA_StyledBackground, true);  // 启用样式表对窗口背景的控制
 
     // 设置样式表，包括背景颜色
-    QString styleSheet = "background-color: #A0A083;"
-                         "border-radius: 7px;";
-    this->setStyleSheet(styleSheet);
+//    QString styleSheet = "background-color: #A0A083;"
+//                         "border-radius: 7px;";
+//    this->setStyleSheet(styleSheet);
 
     init();
 
@@ -34,9 +34,9 @@ void Menu::init()
     layout->addLayout(titleLayout);
 
     // 创建菜单栏按钮控件
-    setPushButton(newPage1Btn, QString::fromUtf8(":/res/taxi.svg"), tr("First page"));
-    setPushButton(newPage2Btn, QString::fromUtf8(":/res/RetroStingyCar.svg"), tr("Second page"));
-    setPushButton(newPage3Btn, QString::fromUtf8(":/res/CartoonTaxi.svg"), tr("Third page"));
+//    setPushButton(newPage1Btn, QString::fromUtf8(":/res/taxi.svg"), tr("First page"));
+//    setPushButton(newPage2Btn, QString::fromUtf8(":/res/RetroStingyCar.svg"), tr("Second page"));
+//    setPushButton(newPage3Btn, QString::fromUtf8(":/res/CartoonTaxi.svg"), tr("Third page"));
 
     // 创建按钮组
     buttonGroup.addButton(newPage1Btn, 1);

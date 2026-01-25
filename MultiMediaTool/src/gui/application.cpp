@@ -5,7 +5,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // 创建QStackedWidget控件 用于存放多个页面
         qStackedWidget = new QStackedWidget;
-
+        qStackedWidget->setObjectName("BaseContentWidget");
 //        auto *newPage1 = new NewPage1;
 //        auto *newPage2 = new NewPage2;
 //        auto *newPage3 = new NewPage3;
@@ -30,7 +30,7 @@ bool MainWindow::createleftNavigationBar()
         this->setWindowTitle(tr("demo_menu"));
 
         // 设置窗口的样式表为蓝色背景
-        QString styleSheet = QString("background-color: #2177B8");
+        QString styleSheet = QString("#BaseContentWidget{background-color: #2177B8}");
         this->setStyleSheet(styleSheet);
 
         /* 侧边栏设置 */
@@ -61,7 +61,9 @@ bool MainWindow::createleftNavigationBar()
         layout->addWidget(splitter);
 
         // 设置整个窗口的布局为主布局
-        this->setLayout(layout);
+        //获取内容区的窗口
+        QWidget* Conten =  getContentWidget();
+        Conten->setLayout(layout);
         return true;
 }
 
