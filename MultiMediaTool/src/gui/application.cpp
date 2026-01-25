@@ -1,16 +1,16 @@
 #include "application.h"
-
+#include "src/gui/page/videopage.h"
 MainWindow::MainWindow(QWidget *parent)
     : basewindow(parent)
 {
     // 创建QStackedWidget控件 用于存放多个页面
         qStackedWidget = new QStackedWidget;
         qStackedWidget->setObjectName("BaseContentWidget");
-//        auto *newPage1 = new NewPage1;
+        auto *videoP = new videoPage;
 //        auto *newPage2 = new NewPage2;
 //        auto *newPage3 = new NewPage3;
 
-//        qStackedWidget->addWidget(newPage1);
+        qStackedWidget->addWidget(videoP);
 //        qStackedWidget->addWidget(newPage2);
 //        qStackedWidget->addWidget(newPage3);
 
@@ -22,9 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 bool MainWindow::createleftNavigationBar()
 {
-    // 设置窗口最小大小为1000x700
         this->setMinimumSize(QSize(1000, 700));
-        // 启用样式表对窗口背景的控制
         this->setAttribute(Qt::WA_StyledBackground, true);
         // 设置窗口标题为"musicPlayer"
         this->setWindowTitle(tr("demo_menu"));

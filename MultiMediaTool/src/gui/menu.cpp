@@ -7,6 +7,10 @@ Menu::Menu(QWidget *parent) :
     this->setMaximumWidth(300);
     this->setAttribute(Qt::WA_StyledBackground, true);  // 启用样式表对窗口背景的控制
 
+    newPage1Btn = new QPushButton(this);
+    newPage2Btn = new QPushButton(this);
+    newPage3Btn = new QPushButton(this);
+
     // 设置样式表，包括背景颜色
 //    QString styleSheet = "background-color: #A0A083;"
 //                         "border-radius: 7px;";
@@ -18,6 +22,21 @@ Menu::Menu(QWidget *parent) :
 
     // 连接信号与槽，当按钮选中时调用自定义的槽函数
     //connect(&buttonGroup, QOverload<int>::of(&QButtonGroup::idClicked), this, &Menu::onButtonClicked);
+    connect(newPage1Btn, &QPushButton::clicked, this, [this]() {
+        for(QAbstractButton *b : buttonGroup.buttons()) {
+            if (b != newPage1Btn) {
+                b->setStyleSheet("background-color: transparent;"
+                                    "opacity: 0;"
+                                    "border-radius: 7px;");
+            }
+        }
+
+        // 更改选中按钮的样式
+        if (newPage1Btn) {
+            newPage1Btn->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
+                                  "border-radius: 7px;");
+        }
+    });
 
 
 }

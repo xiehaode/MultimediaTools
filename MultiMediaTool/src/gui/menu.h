@@ -37,9 +37,9 @@ private:
 
     // 成员变量声明（修复未初始化问题）
 
-    QPushButton *newPage1Btn = new QPushButton(this);
-    QPushButton *newPage2Btn = new QPushButton(this);
-    QPushButton *newPage3Btn = new QPushButton(this);
+    QPushButton *newPage1Btn;
+    QPushButton *newPage2Btn;
+    QPushButton *newPage3Btn;
     QButtonGroup buttonGroup;
     bool isMinimized = false; // 侧边栏最小化状态标记
 };
