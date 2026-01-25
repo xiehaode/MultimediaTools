@@ -53,9 +53,10 @@ void Menu::init()
     layout->addLayout(titleLayout);
 
     // 创建菜单栏按钮控件
-//    setPushButton(newPage1Btn, QString::fromUtf8(":/res/taxi.svg"), tr("First page"));
-//    setPushButton(newPage2Btn, QString::fromUtf8(":/res/RetroStingyCar.svg"), tr("Second page"));
-//    setPushButton(newPage3Btn, QString::fromUtf8(":/res/CartoonTaxi.svg"), tr("Third page"));
+    QString video = GBK2QString("视频");
+    setPushButton(newPage1Btn, QString::fromUtf8(":/rc/video.svg"), video);
+    //setPushButton(newPage2Btn, QString::fromUtf8(":/res/RetroStingyCar.svg"), tr("Second page"));
+    //setPushButton(newPage3Btn, QString::fromUtf8(":/res/CartoonTaxi.svg"), tr("Third page"));
 
     // 创建按钮组
     buttonGroup.addButton(newPage1Btn, 1);
@@ -150,7 +151,7 @@ void Menu::setMenu(bool isMini)
         this->setMinimumWidth(50);
         this->setMaximumWidth(50);
 
-        newPage1Btn->setText("");
+        newPage1Btn->setText("视频");
         newPage2Btn->setText("");
         newPage3Btn->setText("");
 

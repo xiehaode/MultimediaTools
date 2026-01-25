@@ -4,5 +4,9 @@
         <file>rc/min.svg</file>
         <file>rc/quit.svg</file>
         <file>rc/recover.svg</file>
+        <file>rc/effact.svg</file>
+        <file>rc/picture.svg</file>
+        <file>rc/video.svg</file>
+        <file>rc/word.svg</file>
     </qresource>
 </RCC>

@@ -14,17 +14,26 @@ SOURCES += \
     src/gui/mytitlebar.cpp \
     src/main.cpp \
     src/gui/page/videopage.cpp \
-    src/gui/menu.cpp
+    src/gui/menu.cpp \
+    src/gui/page/word.cpp \
+    src/gui/page/effact.cpp \
+    src/utils/encodinghelper.cpp
+
 
 HEADERS += \
     src/gui/application.h \
     src/gui/basewindow.h \
     src/gui/mytitlebar.h \
     src/gui/page/videopage.h \
-    src/gui/menu.h
+    src/gui/menu.h \
+    src/gui/page/word.h \
+    src/gui/page/effact.h \
+    src/utils/encodinghelper.h
 
 FORMS += \
-    src/gui/ui/videopage.ui
+    src/gui/ui/videopage.ui\
+    src/gui/ui/word.ui \
+    src/gui/ui/effact.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

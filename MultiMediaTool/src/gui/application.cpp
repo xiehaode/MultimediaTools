@@ -7,12 +7,12 @@ MainWindow::MainWindow(QWidget *parent)
         qStackedWidget = new QStackedWidget;
         qStackedWidget->setObjectName("BaseContentWidget");
         auto *videoP = new videoPage;
-//        auto *newPage2 = new NewPage2;
-//        auto *newPage3 = new NewPage3;
+        auto *newPage2 = new videoPage;
+        auto *newPage3 = new videoPage;
 
         qStackedWidget->addWidget(videoP);
-//        qStackedWidget->addWidget(newPage2);
-//        qStackedWidget->addWidget(newPage3);
+        qStackedWidget->addWidget(newPage2);
+        qStackedWidget->addWidget(newPage3);
 
         this->createleftNavigationBar();
 

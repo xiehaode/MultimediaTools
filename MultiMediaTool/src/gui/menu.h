@@ -1,6 +1,8 @@
 #ifndef MENU_H
 #define MENU_H
 
+
+#include "src/utils/encodinghelper.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QButtonGroup>
