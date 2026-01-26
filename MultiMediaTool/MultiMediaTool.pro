@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,6 +9,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/base/ipcmgrbase.cpp \
     src/gui/application.cpp \
     src/gui/basewindow.cpp \
     src/gui/mytitlebar.cpp \
@@ -18,10 +19,14 @@ SOURCES += \
     src/gui/page/word.cpp \
     src/gui/page/effact.cpp \
     src/utils/encodinghelper.cpp \
-    src/gui/page/picture.cpp
+    src/gui/page/picture.cpp \
+    src/base/cmdexecutor.cpp \
+    src/base/pageBase.cpp \
+    src/base/timedcmdexecutor.cpp
 
 
 HEADERS += \
+    src/base/ipcmgrbase.h \
     src/gui/application.h \
     src/gui/basewindow.h \
     src/gui/mytitlebar.h \
@@ -30,7 +35,10 @@ HEADERS += \
     src/gui/page/word.h \
     src/gui/page/effact.h \
     src/utils/encodinghelper.h \
-    src/gui/page/picture.h
+    src/gui/page/picture.h \
+    src/base/cmdexecutor.h \
+    src/base/pageBase.h \
+    src/base/timedcmdexecutor.h
 
 FORMS += \
     src/gui/ui/videopage.ui\
@@ -43,8 +51,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-# OpenCVFFMpegTools 工程的 TargetName 固定为 OPENCVTOOLS（Debug/Release 都一样），
-# 因此这里不要链接 OPENCVTOOLSd。
+
 win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS
 
 
@@ -53,3 +60,7 @@ DEPENDPATH += $$PWD/../OpenCVTools
 
 RESOURCES += \
     icon.qrc
+
+unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS
+
+DESTDIR = ../bin

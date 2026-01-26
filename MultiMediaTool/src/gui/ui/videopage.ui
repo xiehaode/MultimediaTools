@@ -6,52 +6,57 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
-    <height>404</height>
+    <width>755</width>
+    <height>606</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>30</y>
-     <width>95</width>
-     <height>135</height>
+     <x>50</x>
+     <y>20</y>
+     <width>481</width>
+     <height>51</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QLabel" name="recordLabel">
       <property name="text">
-       <string>PushButton</string>
+       <string>选择录制功能</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_2">
-      <property name="text">
-       <string>PushButton</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_3">
-      <property name="text">
-       <string>PushButton</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_4">
-      <property name="text">
-       <string>PushButton</string>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="recordComboBox"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>20</y>
+     <width>91</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>开始</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>90</y>
+     <width>611</width>
+     <height>491</height>
+    </rect>
+   </property>
   </widget>
  </widget>
  <resources/>

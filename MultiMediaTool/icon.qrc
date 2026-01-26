@@ -8,5 +8,8 @@
         <file>rc/picture.svg</file>
         <file>rc/video.svg</file>
         <file>rc/word.svg</file>
+        <file>rc/record.svg</file>
+        <file>rc/camere.svg</file>
+        <file>rc/network.svg</file>
     </qresource>
 </RCC>

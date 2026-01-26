@@ -37,6 +37,7 @@ Menu::Menu(QWidget *parent) :
             newPage1BtnVideo->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
         }
+        emit buttonClicked(1);
     });
 
     connect(newPage2BtnWord, &QPushButton::clicked, this, [this]() {
@@ -53,6 +54,7 @@ Menu::Menu(QWidget *parent) :
             newPage2BtnWord->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
         }
+        emit buttonClicked(2);
     });
 
     connect(newPage3BtnVideoEffact, &QPushButton::clicked, this, [this]() {
@@ -69,6 +71,7 @@ Menu::Menu(QWidget *parent) :
             newPage3BtnVideoEffact->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
         }
+        emit buttonClicked(3);
     });
 
     connect(newPage4BtnPicture, &QPushButton::clicked, this, [this]() {
@@ -85,6 +88,7 @@ Menu::Menu(QWidget *parent) :
             newPage4BtnPicture->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
         }
+        emit buttonClicked(4);
     });
 }
 
@@ -100,9 +104,9 @@ void Menu::init()
     layout->addLayout(titleLayout);
 
     // 创建菜单栏按钮控件
-    QString video = GBK2QString("视频");
+    QString video = GBK2QString("    视频");
     setPushButton(newPage1BtnVideo, QString::fromUtf8(":/rc/video.svg"), video);
-    QString word = GBK2QString("文档");
+    QString word = GBK2QString("    文档");
     setPushButton(newPage2BtnWord, QString::fromUtf8(":/rc/word.svg"), word);
     QString effact = GBK2QString("视频特效");
     setPushButton(newPage3BtnVideoEffact, QString::fromUtf8(":/rc/effact.svg"), effact);

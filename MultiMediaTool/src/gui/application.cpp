@@ -33,7 +33,7 @@ bool MainWindow::createleftNavigationBar()
         this->setWindowTitle(tr("demo_menu"));
 
         // 设置窗口的样式表为蓝色背景
-        QString styleSheet = QString("#BaseContentWidget{background-color: #2177B8}");
+        QString styleSheet = QString("QStackedWidget#BaseContentWidget{background-color: #2177B8}");
         this->setStyleSheet(styleSheet);
 
         /* 侧边栏设置 */

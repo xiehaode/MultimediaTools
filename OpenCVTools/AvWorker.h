@@ -64,5 +64,6 @@ public :
 		const std::string& output_path,
 		double start_seconds,
 		double duration_seconds);
+	double getDuration(const std::string& input_path);
 };
 

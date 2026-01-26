@@ -1303,20 +1303,54 @@ int AvWorker::split_video(const std::string& input_path,
 	return ret;
 }
 
+double AvWorker::getDuration(const std::string & input_path)
+{
 
+	AVFormatContext *formatContext = NULL;
 
+	// 打开视频文件
+	if (avformat_open_input(&formatContext, input_path.c_str(), NULL, NULL) != 0) {
+		std::cerr << "open file fair getDuration" << std::endl;
+		return -1;
+	}
 
+	// 查找流信息
+	if (avformat_find_stream_info(formatContext, NULL) < 0) {
+		std::cerr << "avformat_find_stream_info fair getDuration" << std::endl;
+		return -1;
+	}
 
+	// 获取时长（以秒为单位）
+	int durationInSeconds = formatContext->duration / AV_TIME_BASE;
+	std::cout << "video duration :" << durationInSeconds << std::endl;
+	//printf("视频时长: %d 秒\n", durationInSeconds);
 
-
-
-
-
-
+	// 关闭文件
+	avformat_close_input(&formatContext);
+	return 0.0;
+}
 
 extern "C" OPENCVFFMPEGTOOLS_API void* AvWorker_Create()
 {
 	return new AvWorker();
+}
+
+
+
+
+
+
+
+
+
+
+extern "C" OPENCVFFMPEGTOOLS_API double AvWorker_getDuration(void* worker, const char* input_url)
+{
+	if (!worker || !input_url) {
+		return -1;
+	}
+	std::string input_path = input_url;
+	return static_cast<AvWorker*>(worker)->getDuration(input_path);
 }
 
 extern "C" OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker)

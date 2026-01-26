@@ -34,7 +34,7 @@ OPENCVFFMPEGTOOLS_API bool AvWorker_split_video(
 	const char* output_url,
 	double start_seconds,
 	double duration_seconds);
-
+OPENCVFFMPEGTOOLS_API double AvWorker_getDuration(void* worker, const char* input_url);
 
 // ---- CvTranslator C API（基于文件输入输出，外部无需 OpenCV 头文件）----
 OPENCVFFMPEGTOOLS_API void* CvTranslator_Create();
