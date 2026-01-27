@@ -21,51 +21,27 @@
     <ClInclude Include="framework.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="VideoCapture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="OpenCVFFMpegTools.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="COpenCVTools.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CvTranslator.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AvWorker.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LogStreamBuf.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="FFmpegDecoder.h">
+    <ClInclude Include="IRecordStrategy.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="VideoCapture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="OpenCVFFMpegTools.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="COpenCVTools.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CvTranslator.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AvWorker.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LogStreamBuf.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FFmpegDecoder.cpp">
+    <ClCompile Include="IRecordStrategy.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

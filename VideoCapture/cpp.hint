@@ -1,0 +1,2 @@
+#define VIDEOCAPTURE_API __declspec(dllexport)
+#define VIDEOCAPTURE_API __declspec(dllimport)

@@ -2,12 +2,13 @@
 #define WORD_H
 
 #include <QWidget>
+#include "src/base/pagebase.h"
 
 namespace Ui {
 class word;
 }
 
-class word : public QWidget
+class word : public QWidget ,pageBase
 {
     Q_OBJECT
 

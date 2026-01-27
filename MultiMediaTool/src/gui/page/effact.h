@@ -1,13 +1,13 @@
 #ifndef EFFACT_H
 #define EFFACT_H
-
+#include "src/base/pagebase.h"
 #include <QWidget>
 
 namespace Ui {
 class effact;
 }
 
-class effact : public QWidget
+class effact : public QWidget ,pageBase
 {
     Q_OBJECT
 

@@ -48,6 +48,7 @@ ipch/
 ## OpenCV/FFmpeg 二进制文件（只保留源码/头文件，忽略二进制）
 OpenCVTools/3rd
 build-MultiMediaTool-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug
+build-myPlayer-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug
 OpenCVTools/3rd/ffmpeg/bin/
 OpenCVTools/3rd/ffmpeg/lib/
 OpenCVTools/3rd/opencv/bin/

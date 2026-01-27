@@ -7,37 +7,13 @@
 #ifndef PCH_H
 #define PCH_H
 
-
-
-
-
 // 添加要在此处预编译的标头
 #include "framework.h"
+#include <Windows.h>
 #include <iostream>
 #include <string>
-#include <cerrno>
-#include <cstring>
-#include <opencv2/opencv.hpp>
-#include <atomic>
-#include <mutex>
-#include <queue>
-#include <string>
-#include <thread>
-#include <condition_variable>
-
-
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-#include <libavutil/pixfmt.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/avutil.h>
-#include <libavutil/time.h>
-#include <libavdevice/avdevice.h>
-#include <libavutil/opt.h>
-#include <libavutil/frame.h>
-#include <libavutil/timestamp.h>
-#include <libavutil/mem.h>
 }
 #endif //PCH_H

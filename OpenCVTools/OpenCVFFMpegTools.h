@@ -10,6 +10,20 @@
 
 #include <cstddef>
 #include <cstdint>
+// C 语言下的结构体前向声明（兼容C编译）
+typedef enum MediaType MediaType;
+typedef enum PixelFormat PixelFormat;
+typedef enum DecodeMode DecodeMode;
+typedef struct PlayerConfig PlayerConfig;
+typedef struct DecodedFrame DecodedFrame;
+
+
+
+
+
+
+
+
 
 // 
 // C++/OpenCV 相关能力请包含 `COpenCVTools.h`
@@ -19,9 +33,30 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
+
+
+
+// ---- AvWorker C API（基于文件输入输出，外部无需 OpenCV 头文件）----
+OPENCVFFMPEGTOOLS_API void* FFmpegDecoder_Create();
+OPENCVFFMPEGTOOLS_API void FFmpegDecoder_Destroy(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Init(void* decoder, const PlayerConfig* config);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Start(void* decoder);
+OPENCVFFMPEGTOOLS_API void FFmpegDecoder_Stop(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetFrame(void* decoder, DecodedFrame* frame);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Seek(void* decoder, int64_t ms);
+OPENCVFFMPEGTOOLS_API int64_t FFmpegDecoder_GetDuration(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetWidth(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetHeight(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetFps(void* decoder);
+OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetErrorCode(void* decoder);
+OPENCVFFMPEGTOOLS_API void FFmpegDecoder_ClearFrames(void* decoder);
+OPENCVFFMPEGTOOLS_API void FFmpegDecoder_FreeFrameData(DecodedFrame* frame);
+
+
+// ----  C API（基于文件输入输出，外部无需 OpenCV 头文件）----
 extern OPENCVFFMPEGTOOLS_API int nOpenCVTools;
 OPENCVFFMPEGTOOLS_API int fnOpenCVTools(void);
-
+// ---- AvWorker C API（基于文件输入输出，外部无需 OpenCV 头文件）----
 OPENCVFFMPEGTOOLS_API void* AvWorker_Create();
 OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker);
 OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);

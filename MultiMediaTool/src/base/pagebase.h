@@ -9,6 +9,10 @@ public:
     pageBase(QWidget *parent = nullptr);
     void onMessageReceived(const QString& msg) override;
     void onChildProcessExited(int exitCode) override;
+
+    void onConnectSuccess()override;
+
+    void onConnectFailed()override ;
 };
 
 #endif // PAGEBASE_H

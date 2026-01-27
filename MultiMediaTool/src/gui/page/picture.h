@@ -1,13 +1,13 @@
 #ifndef PICTURE_H
 #define PICTURE_H
-
+#include "src/base/pagebase.h"
 #include <QWidget>
 
 namespace Ui {
 class picture;
 }
 
-class picture : public QWidget
+class picture : public QWidget ,pageBase
 {
     Q_OBJECT
 

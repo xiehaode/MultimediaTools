@@ -8,6 +8,11 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+#CONFIG += console
+# 禁用 Qt 对标准输出的重定向
+# DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
+
+
 SOURCES += \
     src/base/ipcmgrbase.cpp \
     src/gui/application.cpp \

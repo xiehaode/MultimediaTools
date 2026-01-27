@@ -3,11 +3,12 @@
 
 #include <algorithm>
 #include <vector>
-
-
+#include "LogStreamBuf.h"
+static LogStreamBuf log1("app.log");
 AvWorker::AvWorker()
 {
-
+	
+	log1.redirect();
 }
 
 void AvWorker::initAv()
@@ -1302,7 +1303,7 @@ int AvWorker::split_video(const std::string& input_path,
 
 	return ret;
 }
-
+/*
 double AvWorker::getDuration(const std::string & input_path)
 {
 
@@ -1327,19 +1328,79 @@ double AvWorker::getDuration(const std::string & input_path)
 
 	// 关闭文件
 	avformat_close_input(&formatContext);
-	return 0.0;
+	return durationInSeconds;
 }
+*/
+
+
+double AvWorker::getDuration(const std::string & input_path)
+{
+
+	avformat_network_init();
+	AVFormatContext *formatContext = NULL;
+	double duration = -1.0;
+
+	// 封装清理资源的局部函数（C++11及以上支持，也可直接写代码块）
+	auto cleanupResources = [&]() {
+		if (formatContext) {
+			avformat_close_input(&formatContext);
+			formatContext = NULL; // 置空，避免野指针
+		}
+	};
+
+	// 1. 打开视频文件（带错误处理，失败则清理资源并返回）
+	int ret = avformat_open_input(&formatContext, input_path.c_str(), NULL, NULL);
+	if (ret != 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "getDuration fair | path:" << input_path
+			<< " | errorcode:" << ret
+			<< " | info:" << err_buf << std::endl;
+
+		cleanupResources(); // 清理资源
+		return -1.0;        // 提前返回
+	}
+
+	// 2. 查找流信息（带错误日志，失败则清理资源并返回）
+	ret = avformat_find_stream_info(formatContext, NULL);
+	if (ret < 0) {
+		char err_buf[1024] = { 0 };
+		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cerr << "avformat_find_stream_info | path:" << input_path
+			<< " | errorcode:" << ret
+			<< " | info:" << err_buf << std::endl;
+
+		cleanupResources(); // 清理资源
+		return -1.0;        // 提前返回
+	}
+
+	// 3. 计算时长（保留毫秒级精度，避免取整丢失）
+	if (formatContext->duration != AV_NOPTS_VALUE) { // 确保时长有效
+		duration = static_cast<double>(formatContext->duration) / AV_TIME_BASE;
+		std::cout << "duration | path:" << input_path
+			<< " | seconds:" << duration
+			<< " | time format:" << static_cast<int>(duration) / 3600 << ":"
+			<< (static_cast<int>(duration) % 3600) / 60 << ":"
+			<< static_cast<int>(duration) % 60 << std::endl;
+	}
+	else {
+		std::cerr << "[getDuration] 无法获取时长 | path:" << input_path
+			<< " (duration = AV_NOPTS_VALUE)" << std::endl;
+		duration = -1.0;
+	}
+
+	// 4. 正常流程的资源清理
+	cleanupResources();
+
+	// 5. 返回时长（成功返回实际值，失败返回-1.0）
+	return duration;
+}
+
 
 extern "C" OPENCVFFMPEGTOOLS_API void* AvWorker_Create()
 {
 	return new AvWorker();
 }
-
-
-
-
-
-
 
 
 
