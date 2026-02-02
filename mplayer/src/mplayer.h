@@ -12,6 +12,7 @@ class mpalyer : public QWidget
 public:
     explicit mpalyer(QWidget *parent = nullptr);
     bool controlInit();
+    void playVideo(const QString& path);
 private:
     mGLWidget window;
     player p;

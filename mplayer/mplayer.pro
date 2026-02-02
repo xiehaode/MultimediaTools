@@ -1,7 +1,7 @@
 TARGET = mplayer
 TEMPLATE = app
 
-QT += core gui widgets opengl
+QT += core gui widgets opengl network
 
 
 CONFIG += c++11
@@ -9,19 +9,23 @@ CONFIG += c++11
 DESTDIR = ../bin
 
 SOURCES += \
+    src/ipcmgrbase.cpp \
     src/main.cpp \
     src/mdevice.cpp \
     src/mglwidget.cpp \
     src/mplayer.cpp \
+    src/myipcmgr.cpp \
     src/player.cpp
 
 HEADERS += \
     src/ffmpeg_util.h \
+    src/ipcmgrbase.h \
     src/lan_util.h \
     src/mdevice.h \
     src/mframe.h \
     src/mglwidget.h \
     src/mplayer.h \
+    src/myipcmgr.h \
     src/player.h
 
 

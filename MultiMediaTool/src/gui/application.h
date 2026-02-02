@@ -9,12 +9,16 @@
 #include <QVBoxLayout>
 #include <QGraphicsOpacityEffect>
 
+class MyIPCMgr;
+
 class MainWindow : public basewindow
 {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+
+    MyIPCMgr* getIPCMgr() const { return m_ipcMgr; }
 
 private slots:
     void onButtonClicked(int buttonId);
@@ -24,8 +28,8 @@ private:
     QSplitter* createVerticalSplitter(QWidget *parent, QWidget *content1, QWidget *content2,
                                       Qt::Orientation orientation, int size1, int size2);
 
-    // 成员变量声明
-
+    // 鎴愬憳鍙橀噺澹版槑
+    MyIPCMgr *m_ipcMgr = nullptr;
     QStackedWidget *qStackedWidget = nullptr;
     Menu *sidebarWidget = nullptr;
     QWidget *content = nullptr;

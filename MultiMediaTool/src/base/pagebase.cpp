@@ -1,15 +1,13 @@
 #include "src/base/pagebase.h"
 #include <QDebug>
 
-pageBase::pageBase(QWidget *parent)
-    : QWidget(parent)
+pageBase::pageBase(QObject *parent)
+    : QObject(parent)
 {
     // 初始化组件
     m_cmdExecutor = new TimedCmdExecutor(this);
     m_ipcMgr = new IPCMgrBase(IPCRole::Server, "MyApp_Unique_Pipe", this);
 
-    // 设置 IPC 窗口
-    m_ipcMgr->setCurrentWindow(this);
 
     // 连接 IPC 信号到虚拟函数槽
     connect(m_ipcMgr, SIGNAL(messageReceived(QString)), this, SLOT(onMessageReceived(QString)));

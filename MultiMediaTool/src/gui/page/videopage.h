@@ -10,6 +10,8 @@ namespace Ui {
 class videoPage;
 }
 
+class MyIPCMgr;
+
 class videoPage : public QWidget
 {
     Q_OBJECT
@@ -19,9 +21,11 @@ public:
     ~videoPage();
     bool init();
     bool initableWidget();
+    void setIPCMgr(MyIPCMgr *mgr) { m_ipcMgr = mgr; }
 
 private slots:
     void on_begin_clicked();
+
 
 
     void on_import_2_clicked();
@@ -29,6 +33,8 @@ private slots:
 private:
     void *worker = NULL;
     Ui::videoPage *ui;
+    MyIPCMgr *m_ipcMgr = nullptr;
 };
+
 
 #endif // VIDEOPAGE_H

@@ -4,11 +4,11 @@
 #include "src/base/timedcmdexecutor.h"
 #include "src/base/ipcmgrbase.h"
 
-class pageBase : public QWidget
+class pageBase : public QObject
 {
     Q_OBJECT
 public:
-    pageBase(QWidget *parent = nullptr);
+    pageBase(QObject *parent);
     virtual ~pageBase();
 
     // IPC 接口封装

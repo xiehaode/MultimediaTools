@@ -2,7 +2,7 @@
 #include <QCoreApplication>
 #include <QMessageBox>
 #include <QDebug>
-// 新增：包含QAbstractSocket头文件（解决SocketError枚举问题）
+
 #include <QAbstractSocket>
 
 IPCMgrBase::IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent)
