@@ -7,7 +7,7 @@ namespace Ui {
 class picture;
 }
 
-class picture : public QWidget ,pageBase
+class picture : public QWidget
 {
     Q_OBJECT
 

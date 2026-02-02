@@ -8,7 +8,7 @@ namespace Ui {
 class word;
 }
 
-class word : public QWidget ,pageBase
+class word : public QWidget
 {
     Q_OBJECT
 

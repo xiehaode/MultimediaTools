@@ -1,21 +1,70 @@
-#include "pagebase.h"
+#include "src/base/pagebase.h"
+#include <QDebug>
 
 pageBase::pageBase(QWidget *parent)
-    : IPCMgrBase(IPCRole::Server, "MyApp_Unique_Pipe", parent) // ¹Ø¼ü£º³õÊ¼»¯¸¸Àà
+    : QWidget(parent)
 {
-    // ×ÓÀà×ÔÉíµÄ³õÊ¼»¯Âß¼­
-    this->setCurrentWindow(parent); // ÈôparentÊÇ´°¿Ú£¬ÉèÖÃ¼¤»î´°¿Ú
+    // åˆå§‹åŒ–ç»„ä»¶
+    m_cmdExecutor = new TimedCmdExecutor(this);
+    m_ipcMgr = new IPCMgrBase(IPCRole::Server, "MyApp_Unique_Pipe", this);
+
+    // è®¾ç½® IPC çª—å£
+    m_ipcMgr->setCurrentWindow(this);
+
+    // è¿žæŽ¥ IPC ä¿¡å·åˆ°è™šæ‹Ÿå‡½æ•°æ§½
+    connect(m_ipcMgr, SIGNAL(messageReceived(QString)), this, SLOT(onMessageReceived(QString)));
+    connect(m_ipcMgr, SIGNAL(childProcessExited(int)), this, SLOT(onChildProcessExited(int)));
+    connect(m_ipcMgr, SIGNAL(connectSuccess()), this, SLOT(onConnectSuccess()));
+    connect(m_ipcMgr, SIGNAL(connectFailed()), this, SLOT(onConnectFailed()));
+}
+
+pageBase::~pageBase()
+{
+}
+
+bool pageBase::sendMessage(const QString &msg)
+{
+    return m_ipcMgr->sendMessage(msg);
+}
+
+bool pageBase::startChildProcess(const QString &exePath, bool hideCurrentWindow)
+{
+    return m_ipcMgr->startChildProcess(exePath, hideCurrentWindow);
+}
+
+void pageBase::setCurrentWindow(QWidget *window)
+{
+    m_ipcMgr->setCurrentWindow(window);
+}
+
+QVariantMap pageBase::executeCmdSyncWithTime(const QString &cmd, int timeout)
+{
+    return m_cmdExecutor->executeCmdSyncWithTime(cmd, timeout);
+}
+
+void pageBase::executeCmdAsyncWithTime(const QString &cmd)
+{
+    m_cmdExecutor->executeCmdAsyncWithTime(cmd);
 }
 
 void pageBase::onMessageReceived(const QString& msg)
 {
     qDebug() << "pageBase received msg:" << msg;
-    // ÀýÈç£º´¦Àí×Ó½ø³ÌµÄÍË³öÍ¨Öª
+    // ä¾‹å¦‚ï¼šå¤„ç†å­è¿›ç¨‹çš„é€€å‡ºé€šçŸ¥
     if (msg == "FuncExe_Exit") {
-        this->activateWindow();
+        m_ipcMgr->activateWindow();
     }
 }
+
 void pageBase::onChildProcessExited(int exitCode)
 {
-    qDebug() << "×Ó½ø³ÌÍË³ö£¬Âë£º" << exitCode;
+    qDebug() << "å­è¿›ç¨‹é€€å‡ºï¼Œç ï¼š" << exitCode;
+}
+
+void pageBase::onConnectSuccess()
+{
+}
+
+void pageBase::onConnectFailed()
+{
 }

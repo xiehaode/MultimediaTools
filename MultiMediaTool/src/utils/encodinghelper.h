@@ -6,14 +6,14 @@
 #include <QTextCodec>
 
 #ifdef Q_OS_WIN
-// GBK字节转QString（Windows专用）
+// GBK字节转QString，windows下可用
 inline QString GBK2QString(const QByteArray &gbkData)
 {
     static QTextCodec *gbkCodec = QTextCodec::codecForName("GBK");
     return gbkCodec ? gbkCodec->toUnicode(gbkData) : QString::fromLocal8Bit(gbkData);
 }
 
-// QString转GBK字节（Windows专用）
+// QString转GBK字节
 inline QByteArray QString2GBK(const QString &text)
 {
     static QTextCodec *gbkCodec = QTextCodec::codecForName("GBK");

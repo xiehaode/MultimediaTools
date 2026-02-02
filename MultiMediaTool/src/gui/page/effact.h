@@ -7,7 +7,7 @@ namespace Ui {
 class effact;
 }
 
-class effact : public QWidget ,pageBase
+class effact : public QWidget
 {
     Q_OBJECT
 

@@ -10,7 +10,7 @@ namespace Ui {
 class videoPage;
 }
 
-class videoPage : public QWidget ,pageBase
+class videoPage : public QWidget
 {
     Q_OBJECT
 

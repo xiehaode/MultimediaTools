@@ -10,104 +10,114 @@
 #include <QThread>
 #include <QWidget>
 
-// ½ø³Ì½ÇÉ«Ã¶¾Ù£¨·şÎñ¶Ë=Ö÷EXE£¬¿Í»§¶Ë=¹¦ÄÜEXE£©
+// è¿›ç¨‹è§’è‰²æšä¸¾ï¼ˆæœåŠ¡ç«¯=ä¸»EXEï¼Œå®¢æˆ·ç«¯=åŠŸèƒ½EXEï¼‰
 enum class IPCRole {
-    Server,  // ·şÎñ¶Ë£¨¼àÌıÁ¬½Ó¡¢Æô¶¯×Ó½ø³Ì£©
-    Client   // ¿Í»§¶Ë£¨Ö÷¶¯Á¬½Ó·şÎñ¶Ë£©
+    Server,  // æœåŠ¡ç«¯ï¼ˆç›‘å¬è¿æ¥ã€å¯åŠ¨å­è¿›ç¨‹ï¼‰
+    Client   // å®¢æˆ·ç«¯ï¼ˆä¸»åŠ¨è¿æ¥æœåŠ¡ç«¯ï¼‰
 };
 
-// ½ø³ÌÍ¨ĞÅ»ùÀà£¨¿É¼Ì³Ğ£©
+// è¿›ç¨‹é€šä¿¡åŸºç±»ï¼ˆå¯ç»§æ‰¿ï¼‰
 class IPCMgrBase : public QObject
 {
     Q_OBJECT
 public:
+
+    // ========== å·¥å…·å‡½æ•°ï¼ˆå­ç±»å¯è°ƒç”¨ï¼‰ ==========
     /**
-     * @brief ¹¹Ôìº¯Êı
-     * @param role ½ø³Ì½ÇÉ«£¨Server/Client£©
-     * @param pipeName Í¨ĞÅ¹ÜµÀÃû³Æ£¨È«¾ÖÎ¨Ò»£¬Çø·Ö²»Í¬Ó¦ÓÃ£©
-     * @param parent ¸¸¶ÔÏó
+     * @brief æ¿€æ´»å½“å‰çª—å£ï¼ˆè·¨å¹³å°ï¼‰
+     */
+    void activateWindow();
+
+    /**
+     * @brief æ„é€ å‡½æ•°
+     * @param role è¿›ç¨‹è§’è‰²ï¼ˆServer/Clientï¼‰
+     * @param pipeName é€šä¿¡ç®¡é“åç§°ï¼ˆå…¨å±€å”¯ä¸€ï¼ŒåŒºåˆ†ä¸åŒåº”ç”¨ï¼‰
+     * @param parent çˆ¶å¯¹è±¡
      */
     explicit IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent = nullptr);
     virtual ~IPCMgrBase();
 
-    // ========== Í¨ÓÃ½Ó¿Ú£¨×ÓÀàÖ±½Óµ÷ÓÃ£© ==========
+    // ========== é€šç”¨æ¥å£ï¼ˆå­ç±»ç›´æ¥è°ƒç”¨ï¼‰ ==========
     /**
-     * @brief Æô¶¯×Ó½ø³Ì£¨½öServer½ÇÉ«¿ÉÓÃ£©
-     * @param exePath ×ÓEXEÂ·¾¶
-     * @param hideCurrentWindow Æô¶¯ºóÊÇ·ñÒş²Øµ±Ç°´°¿Ú
-     * @return ÊÇ·ñÆô¶¯³É¹¦
+     * @brief å¯åŠ¨å­è¿›ç¨‹ï¼ˆä»…Serverè§’è‰²å¯ç”¨ï¼‰
+     * @param exePath å­EXEè·¯å¾„
+     * @param hideCurrentWindow å¯åŠ¨åæ˜¯å¦éšè—å½“å‰çª—å£
+     * @return æ˜¯å¦å¯åŠ¨æˆåŠŸ
      */
     bool startChildProcess(const QString& exePath, bool hideCurrentWindow = true);
 
     /**
-     * @brief ·¢ËÍÏûÏ¢£¨Server/Client¾ù¿ÉÓÃ£©
-     * @param msg Òª·¢ËÍµÄÏûÏ¢
-     * @return ÊÇ·ñ·¢ËÍ³É¹¦
+     * @brief å‘é€æ¶ˆæ¯ï¼ˆServer/Clientå‡å¯ç”¨ï¼‰
+     * @param msg è¦å‘é€çš„æ¶ˆæ¯
+     * @return æ˜¯å¦å‘é€æˆåŠŸ
      */
     bool sendMessage(const QString& msg);
 
     /**
-     * @brief Á¬½Ó·şÎñ¶Ë£¨½öClient½ÇÉ«¿ÉÓÃ£©
-     * @return ÊÇ·ñÁ¬½Ó³É¹¦
+     * @brief è¿æ¥æœåŠ¡ç«¯ï¼ˆä»…Clientè§’è‰²å¯ç”¨ï¼‰
+     * @return æ˜¯å¦è¿æ¥æˆåŠŸ
      */
     bool connectToServer();
 
     /**
-     * @brief ÉèÖÃµ±Ç°´°¿Ú£¨ÓÃÓÚ¼¤»î/ÏÔÊ¾£©
-     * @param window ´°¿ÚÖ¸Õë
+     * @brief è®¾ç½®å½“å‰çª—å£ï¼ˆç”¨äºæ¿€æ´»/æ˜¾ç¤ºï¼‰
+     * @param window çª—å£æŒ‡é’ˆ
      */
     void setCurrentWindow(QWidget* window) { m_currentWindow = window; }
 
     void onSocketError(QAbstractSocket::SocketError error);
+signals:
+    void messageReceived(const QString& msg);
+    void childProcessExited(int exitCode);
+    void connectSuccess();
+    void connectFailed();
+
+protected slots:
+    // ========== é’©å­å‡½æ•°ï¼ˆå­ç±»é‡å†™å®ç°ä¸šåŠ¡é€»è¾‘ï¼‰ ==========
+    /**
+     * @brief æ¥æ”¶æ¶ˆæ¯å›è°ƒï¼ˆå­ç±»é‡å†™è§£ææ¶ˆæ¯ï¼‰
+     * @param msg æ”¶åˆ°çš„æ¶ˆæ¯
+     */
+    virtual void onMessageReceived(const QString& msg) { emit messageReceived(msg); }
+
+    /**
+     * @brief å­è¿›ç¨‹é€€å‡ºå›è°ƒï¼ˆä»…Serverè§’è‰²ï¼Œå­ç±»é‡å†™å¤„ç†ï¼‰
+     * @param exitCode é€€å‡ºç 
+     */
+    virtual void onChildProcessExited(int exitCode) { emit childProcessExited(exitCode); }
+
+    /**
+     * @brief è¿æ¥æˆåŠŸå›è°ƒï¼ˆå­ç±»é‡å†™ï¼‰
+     */
+    virtual void onConnectSuccess() { emit connectSuccess(); }
+
+    /**
+     * @brief è¿æ¥å¤±è´¥å›è°ƒï¼ˆå­ç±»é‡å†™ï¼‰
+     */
+    virtual void onConnectFailed() { emit connectFailed(); }
+
 protected:
-    // ========== ¹³×Óº¯Êı£¨×ÓÀàÖØĞ´ÊµÏÖÒµÎñÂß¼­£© ==========
-    /**
-     * @brief ½ÓÊÕÏûÏ¢»Øµ÷£¨×ÓÀàÖØĞ´½âÎöÏûÏ¢£©
-     * @param msg ÊÕµ½µÄÏûÏ¢
-     */
-    virtual void onMessageReceived(const QString& msg) {}
 
-    /**
-     * @brief ×Ó½ø³ÌÍË³ö»Øµ÷£¨½öServer½ÇÉ«£¬×ÓÀàÖØĞ´´¦Àí£©
-     * @param exitCode ÍË³öÂë
-     */
-    virtual void onChildProcessExited(int exitCode) {}
-
-    /**
-     * @brief Á¬½Ó³É¹¦»Øµ÷£¨×ÓÀàÖØĞ´£©
-     */
-    virtual void onConnectSuccess() {}
-
-    /**
-     * @brief Á¬½ÓÊ§°Ü»Øµ÷£¨×ÓÀàÖØĞ´£©
-     */
-    virtual void onConnectFailed() {}
-
-    // ========== ¹¤¾ßº¯Êı£¨×ÓÀà¿Éµ÷ÓÃ£© ==========
-    /**
-     * @brief ¼¤»îµ±Ç°´°¿Ú£¨¿çÆ½Ì¨£©
-     */
-    void activateWindow();
 
 private slots:
-    // ========== ÄÚ²¿²Ûº¯Êı£¨»ùÀàÊµÏÖÍ¨ÓÃÂß¼­£© ==========
-    // Server£ºĞÂ¿Í»§¶ËÁ¬½Ó
+    // ========== å†…éƒ¨æ§½å‡½æ•°ï¼ˆåŸºç±»å®ç°é€šç”¨é€»è¾‘ï¼‰ ==========
+    // Serverï¼šæ–°å®¢æˆ·ç«¯è¿æ¥
     void onNewClientConnected();
-    // ½ÓÊÕÏûÏ¢£¨Server/Client£©
+    // æ¥æ”¶æ¶ˆæ¯ï¼ˆServer/Clientï¼‰
     void onReadyRead();
-    // Á¬½Ó¶Ï¿ª
+    // è¿æ¥æ–­å¼€
 
     void onDisconnected();
-    // Server£º×Ó½ø³ÌÍË³ö
+    // Serverï¼šå­è¿›ç¨‹é€€å‡º
     void onChildProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
-    IPCRole m_role;                  // ½ø³Ì½ÇÉ«
-    QString m_pipeName;              // Í¨ĞÅ¹ÜµÀÃû³Æ£¨È«¾ÖÎ¨Ò»£©
-    QLocalServer* m_localServer;     // Server£º±¾µØÍ¨ĞÅ·şÎñÆ÷
-    QLocalSocket* m_localSocket;     // Server/Client£ºÍ¨ĞÅÌ×½Ó×Ö
-    QProcess* m_childProcess;        // Server£º×Ó½ø³Ì¶ÔÏó
-    QWidget* m_currentWindow = nullptr; // µ±Ç°´°¿Ú£¨ÓÃÓÚ¼¤»î/ÏÔÊ¾£©
+    IPCRole m_role;                  // è¿›ç¨‹è§’è‰²
+    QString m_pipeName;              // é€šä¿¡ç®¡é“åç§°ï¼ˆå…¨å±€å”¯ä¸€ï¼‰
+    QLocalServer* m_localServer;     // Serverï¼šæœ¬åœ°é€šä¿¡æœåŠ¡å™¨
+    QLocalSocket* m_localSocket;     // Server/Clientï¼šé€šä¿¡å¥—æ¥å­—
+    QProcess* m_childProcess;        // Serverï¼šå­è¿›ç¨‹å¯¹è±¡
+    QWidget* m_currentWindow = nullptr; // å½“å‰çª—å£ï¼ˆç”¨äºæ¿€æ´»/æ˜¾ç¤ºï¼‰
 };
 
 #endif // IPCMGRBASE_H
