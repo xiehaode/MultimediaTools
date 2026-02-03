@@ -45,7 +45,7 @@ bool videoPage::init()
     QString network = GBK2QString("");
     ui->recordComboBox->addItem(QIcon(":/rc/video.svg"), vedio);
     ui->recordComboBox->addItem(QIcon(":/rc/camere.svg"), camere);
-    ui->recordComboBox->addItem(QIcon(":/rc/network.svg"), network);
+    //ui->recordComboBox->addItem(QIcon(":/rc/network.svg"), network);
 
     ui->recordLabel->setObjectName("recordlabel");
     QString styleSheet =
@@ -283,7 +283,7 @@ void videoPage::on_begin_clicked()
         ui->begin->setDisabled(true);
     }
     else{
-        QMessageBox::critical(NULL, "critical", "×§°", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        QMessageBox::critical(NULL, "critical", "打开播放器失败", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     }
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [=](){

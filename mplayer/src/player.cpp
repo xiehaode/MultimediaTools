@@ -23,9 +23,15 @@ int player::ffplayer_open(const QString& inputPath, bool isDevice)
     QString path = inputPath;
     
     if (isDevice) {
-        ifmt = av_find_input_format("dshow");
-        path = "video=" + inputPath;
+        if (inputPath == "desktop") {
+            ifmt = av_find_input_format("gdigrab");
+            path = "desktop";
+        } else {
+            ifmt = av_find_input_format("dshow");
+            path = "video=" + inputPath;
+        }
     }
+
     
     if (avformat_open_input(&ctx->fmt_ctx, path.toUtf8().data(), ifmt, nullptr) < 0) {
         qDebug() << "Failed to open input:" << path;
@@ -113,8 +119,52 @@ void player::ffplayer_read_frame()
                     }
 
                     emit frameReady(dw, dh, 1, 32);
+
+                    // --- 录制逻辑 ---
+                    {
+                        std::lock_guard<std::mutex> lock(m_record_mtx);
+                        if (m_recording && m_outFmtCtx) {
+                            AVFrame* outFrame = av_frame_alloc();
+                            outFrame->format = AV_PIX_FMT_YUV420P;
+                            outFrame->width = dw;
+                            outFrame->height = dh;
+                            av_frame_get_buffer(outFrame, 32);
+
+                            // RGBA -> YUV420P 转换 (录制通常需要 YUV)
+                            static struct SwsContext* record_sws = nullptr;
+                            record_sws = sws_getCachedContext(record_sws, dw, dh, AV_PIX_FMT_RGBA,
+                                                              dw, dh, AV_PIX_FMT_YUV420P,
+                                                              SWS_BILINEAR, nullptr, nullptr, nullptr);
+                            
+                            uint8_t* src_data[4] = { ctx->shared_buf.buf.data(), nullptr, nullptr, nullptr };
+                            int src_linesize[4] = { dw * 4, 0, 0, 0 };
+                            sws_scale(record_sws, src_data, src_linesize, 0, dh, outFrame->data, outFrame->linesize);
+
+                            outFrame->pts = m_frame_count++;
+                            
+                            // 检查编码器上下文是否存在且已打开
+                            if (m_outStream && m_outStream->codec && avcodec_is_open(m_outStream->codec)) {
+                                if (avcodec_send_frame(m_outStream->codec, outFrame) == 0) {
+                                    AVPacket outPkt;
+                                    av_init_packet(&outPkt);
+                                    outPkt.data = nullptr;
+                                    outPkt.size = 0;
+                                    if (avcodec_receive_packet(m_outStream->codec, &outPkt) == 0) {
+                                        av_packet_rescale_ts(&outPkt, m_outStream->codec->time_base, m_outStream->time_base);
+                                        outPkt.stream_index = m_outStream->index;
+                                        av_interleaved_write_frame(m_outFmtCtx, &outPkt);
+                                        av_packet_unref(&outPkt);
+                                    }
+                                }
+                            }
+                            av_frame_free(&outFrame);
+
+                        }
+                    }
+                    // --- 录制逻辑结束 ---
                     
                     // 发送进度信号
+
                     if (ctx->fmt_ctx && ctx->video_index != -1) {
                         int64_t pts = ctx->frame->pts;
                         if (pts == AV_NOPTS_VALUE) pts = ctx->frame->pkt_dts;
@@ -168,4 +218,61 @@ void player::seek(int64_t timestamp_ms)
     m_seek_target = timestamp_ms;
     m_seek_req = true;
 }
+
+int player::startRecord(const QString &outputPath)
+{
+    std::lock_guard<std::mutex> lock(m_record_mtx);
+    if (m_recording) return -1;
+
+    // 创建输出上下文
+    avformat_alloc_output_context2(&m_outFmtCtx, nullptr, nullptr, outputPath.toUtf8().data());
+    if (!m_outFmtCtx) return -1;
+
+    // 添加视频流
+    AVCodec* codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+    m_outStream = avformat_new_stream(m_outFmtCtx, codec);
+    
+    AVCodecContext* c = avcodec_alloc_context3(codec);
+    c->width = ctx->video_decode_ctx->width;
+    c->height = ctx->video_decode_ctx->height;
+    c->time_base = {1, 25}; // 假设25帧
+    c->pix_fmt = AV_PIX_FMT_YUV420P;
+    if (m_outFmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
+        c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+    avcodec_open2(c, codec, nullptr);
+    m_outStream->codec = c; // 注意：旧版FFmpeg写法，新版应使用codecpar
+
+    if (!(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
+        avio_open(&m_outFmtCtx->pb, outputPath.toUtf8().data(), AVIO_FLAG_WRITE);
+    }
+
+    avformat_write_header(m_outFmtCtx, nullptr);
+
+    m_recording = true;
+    m_frame_count = 0;
+    return 0;
+}
+
+void player::stopRecord()
+{
+    std::lock_guard<std::mutex> lock(m_record_mtx);
+    if (!m_recording) return;
+
+    m_recording = false;
+    av_write_trailer(m_outFmtCtx);
+    
+    if (m_outStream && m_outStream->codec) {
+        avcodec_close(m_outStream->codec);
+    }
+    
+    if (m_outFmtCtx && !(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
+        avio_closep(&m_outFmtCtx->pb);
+    }
+    
+    avformat_free_context(m_outFmtCtx);
+    m_outFmtCtx = nullptr;
+    m_outStream = nullptr;
+}
+
 

@@ -16,21 +16,21 @@ int main(int argc, char *argv[])
     mpalyer mp;
     
     // 创建Client角色的IPC实例
-    MyIPCMgr ipcClient(IPCRole::Client, pipeName, &mp);
+//    MyIPCMgr ipcClient(IPCRole::Client, pipeName, &mp);
     
-    // 连接到主进程
-    QObject::connect(&ipcClient, &MyIPCMgr::messageReceived, [&](const QString& msg){
-        if (msg.startsWith("play_video:")) {
-            QString path = msg.mid(11);
-            mp.playVideo(path);
-        }
-    });
+//    // 连接到主进程
+//    QObject::connect(&ipcClient, &MyIPCMgr::messageReceived, [&](const QString& msg){
+//        if (msg.startsWith("play_video:")) {
+//            QString path = msg.mid(11);
+//            mp.playVideo(path);
+//        }
+//    });
 
-    if (ipcClient.connectToServer()) {
-        qDebug() << "MPlayer connected to server successfully";
-    } else {
-        qDebug() << "MPlayer failed to connect to server, maybe started independently";
-    }
+//    if (ipcClient.connectToServer()) {
+//        qDebug() << "MPlayer connected to server successfully";
+//    } else {
+//        qDebug() << "MPlayer failed to connect to server, maybe started independently";
+//    }
 
     mp.show();
 

@@ -1,4 +1,7 @@
+#include <QApplication>
+#include <QDesktopWidget>
 #include "mplayer.h"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QString>
@@ -15,7 +18,7 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         qDebug()<<"initControl Fair";
     }
 
-    // è®¾ç½®glwidgetæ’­æ”¾
+    // ÉèÖÃglwidget²¥·Å
     window.setPlayer(&p);
 
     connect(play, &QPushButton::clicked, this, [=]() {
@@ -26,7 +29,57 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         p.pause(true);
     });
 
+    connect(record, &QPushButton::clicked, this, [=]() {
+        if (!p.isRecording()) {
+            QString path = QFileDialog::getSaveFileName(this, "ÊÓÆµÂ¼ÖÆ", "recorded.mp4", "ÊÓÆµÎÄ¼þ(*.mp4)");
+            if (!path.isEmpty()) {
+                if (p.startRecord(path) == 0) {
+                    record->setText("Í£Ö¹Â¼ÖÆ");
+                    record->setStyleSheet("background-color: #D32F2F;"); // ºìÉ«±íÊ¾Â¼ÖÆÖÐ
+                }
+            }
+        } else {
+            p.stopRecord();
+            record->setText("Â¼ÖÆ");
+            record->setStyleSheet(""); // »Ö¸´Ä¬ÈÏÑùÊ½
+        }
+    });
+
+    connect(pipBtn, &QPushButton::clicked, this, [=]() {
+        if (!m_isPipMode) {
+            // ½øÈë»­ÖÐ»­Ä£Ê½
+            window.setParent(nullptr); // ÍÑÀëÖ÷´°¿Ú
+            window.setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+            
+            // ÉèÖÃÒ»¸ö½ÏÐ¡µÄ³ß´ç²¢ÒÆ¶¯µ½ÓÒÏÂ½Ç
+            QRect screenRect = QApplication::desktop()->screenGeometry();
+            int w = 320;
+            int h = 180;
+            window.setGeometry(screenRect.width() - w - 20, screenRect.height() - h - 50, w, h);
+            window.show();
+            
+            pipBtn->setText(tr("ÍË³ö»­ÖÐ»­"));
+            m_isPipMode = true;
+        } else {
+            // ÍË³ö»­ÖÐ»­Ä£Ê½£¬»¹Ô­µ½Ö÷²¼¾Ö
+            window.setParent(this);
+            window.setWindowFlags(Qt::Widget);
+            
+            // ÖØÐÂ²åÈë²¼¾Ö
+            QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(layout());
+            if (mainLayout) {
+                mainLayout->insertWidget(0, &window, 5);
+            }
+            window.show();
+            
+            pipBtn->setText(tr("»­ÖÐ»­"));
+            m_isPipMode = false;
+        }
+    });
+
     connect(selectMode, &QPushButton::clicked, this, [=]() {
+
+
          Mode m = box->currentData().value<Mode>();
          select_Mode(m);
     });
@@ -35,18 +88,12 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         if (total_ms > 0) {
             int val = (int)(ms * 100 / total_ms);
             videoProcessBar->setValue(val);
-            // æ›´æ–°è¿›åº¦æ¡ä¸Šçš„æ–‡å­—æ˜¾ç¤º (å½“å‰ç§’æ•° / æ€»ç§’æ•°)
+            // ¸üÐÂ½ø¶ÈÌõÉÏµÄÎÄ×ÖÏÔÊ¾ (µ±Ç°ÃëÊý / ×ÜÃëÊý)
             videoProcessBar->setFormat(QString("%1s / %2s").arg(ms/1000).arg(total_ms/1000));
         }
     });
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> 598de255f5feea8a06bc1b6944b20507c32379a5
 }
+
 void mpalyer::playVideo(const QString& path)
 {
     qDebug() << "Playing video:" << path;
@@ -73,140 +120,154 @@ void mpalyer::playVideo(const QString& path)
 
 bool mpalyer::controlInit()
 {
-    // åˆå§‹åŒ–æ‰€æœ‰æŽ§ä»¶ï¼Œè®¾ç½®åŸºç¡€æ–‡æœ¬/å±žæ€§
-    play = new QPushButton(tr("æ’­æ”¾"), this);
-    selectMode = new QPushButton(tr("é€‰æ‹©æ¨¡å¼"), this);
-    pause = new QPushButton(tr("æš‚åœ"), this);
+    // ³õÊ¼»¯ËùÓÐ¿Ø¼þ£¬ÉèÖÃ»ù´¡ÎÄ±¾/ÊôÐÔ
+    play = new QPushButton(tr("²¥·Å"), this);
+    selectMode = new QPushButton(tr("Ñ¡ÔñÄ£Ê½"), this);
+    pause = new QPushButton(tr("ÔÝÍ£"), this);
     box = new QComboBox(this);
     QVariant capture(CAPTURE);
     QVariant video(VIDEO);
     box->addItem("camera",capture);
     box->addItem("video",video);
+    box->addItem("screen", QVariant::fromValue(SCREEN));
     box->setCurrentIndex(0);
 
+
+    record = new QPushButton(tr("Â¼ÖÆ"), this);
+    pipBtn = new QPushButton(tr("»­ÖÐ»­"), this);
     videoProcessBar = new QProgressBar(this);
 
-    // è¿›åº¦æ¡åŸºç¡€è®¾ç½®ï¼šèŒƒå›´0-100ï¼Œåˆå§‹å€¼0ï¼Œæ˜¾ç¤ºç™¾åˆ†æ¯”
+
+
+    // ½ø¶ÈÌõ»ù´¡ÉèÖÃ£º·¶Î§0-100£¬³õÊ¼Öµ0£¬ÏÔÊ¾°Ù·Ö±È
     videoProcessBar->setRange(0, 100);
     videoProcessBar->setValue(0);//
     videoProcessBar->setFormat("current process: %p");
 
 
-    // ä¸»å¸ƒå±€ï¼šåž‚ç›´å¸ƒå±€ï¼ˆæ•´ä¸ªæ’­æ”¾å™¨ç•Œé¢ï¼‰
+    // Ö÷²¼¾Ö£º´¹Ö±²¼¾Ö£¨Õû¸ö²¥·ÅÆ÷½çÃæ£©
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(15, 15, 15, 15); // æ•´ä½“è¾¹è·ï¼šä¸Šä¸‹å·¦å³15px
-    mainLayout->setSpacing(12); // æŽ§ä»¶ä¹‹é—´çš„åž‚ç›´é—´è·12px
+    mainLayout->setContentsMargins(15, 15, 15, 15); // ÕûÌå±ß¾à£ºÉÏÏÂ×óÓÒ15px
+    mainLayout->setSpacing(12); // ¿Ø¼þÖ®¼äµÄ´¹Ö±¼ä¾à12px
 
-    // æŽ§åˆ¶æŒ‰é’®å¸ƒå±€ï¼šæ°´å¹³å¸ƒå±€ï¼ˆæ’­æ”¾/æš‚åœ/åœæ­¢ï¼‰
+    // ¿ØÖÆ°´Å¥²¼¾Ö£ºË®Æ½²¼¾Ö£¨²¥·Å/ÔÝÍ£/Í£Ö¹£©
     QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->setSpacing(10); // æŒ‰é’®ä¹‹é—´çš„æ°´å¹³é—´è·10px
-    // æ·»åŠ æŒ‰é’®åˆ°æ°´å¹³å¸ƒå±€
+    btnLayout->setSpacing(10); // °´Å¥Ö®¼äµÄË®Æ½¼ä¾à10px
+    // Ìí¼Ó°´Å¥µ½Ë®Æ½²¼¾Ö
     btnLayout->addWidget(play);
     btnLayout->addWidget(pause);
+    btnLayout->addWidget(record);
+    btnLayout->addWidget(pipBtn);
     btnLayout->addWidget(selectMode);
+
     btnLayout->addWidget(box);
-    // æŒ‰é’®åŒºå·¦å³æ·»åŠ å¼¹æ€§ç©ºé—´ï¼Œè®©æŒ‰é’®å±…ä¸­æ˜¾ç¤º
+
+    // °´Å¥Çø×óÓÒÌí¼Óµ¯ÐÔ¿Õ¼ä£¬ÈÃ°´Å¥¾ÓÖÐÏÔÊ¾
     btnLayout->addStretch();
     btnLayout->insertStretch(0);
 
-    // å‘ä¸»å¸ƒå±€æ·»åŠ æŽ§ä»¶/å­å¸ƒå±€ï¼ˆæŒ‰ä»Žä¸Šåˆ°ä¸‹é¡ºåºï¼‰
-    mainLayout->addWidget(&window, 5); // OpenGLçª—å£å 5ä»½ç©ºé—´ï¼ˆæ ¸å¿ƒåŒºï¼Œå æ¯”æœ€å¤§ï¼‰
-    mainLayout->addWidget(videoProcessBar); // æ’­æ”¾è¿›åº¦æ¡
-    mainLayout->addLayout(btnLayout);   // æŽ§åˆ¶æŒ‰é’®ç»„
+    // ÏòÖ÷²¼¾ÖÌí¼Ó¿Ø¼þ/×Ó²¼¾Ö£¨°´´ÓÉÏµ½ÏÂË³Ðò£©
+    mainLayout->addWidget(&window, 5); // OpenGL´°¿ÚÕ¼5·Ý¿Õ¼ä£¨ºËÐÄÇø£¬Õ¼±È×î´ó£©
+    mainLayout->addWidget(videoProcessBar); // ²¥·Å½ø¶ÈÌõ
+    mainLayout->addLayout(btnLayout);   // ¿ØÖÆ°´Å¥×é
 
-    // OpenGLçª—å£ï¼šç¼©æ”¾æ—¶ä¼˜å…ˆæ‹‰ä¼¸ï¼ˆå æ¯”æœ€å¤§ï¼‰
+    // OpenGL´°¿Ú£ºËõ·ÅÊ±ÓÅÏÈÀ­Éì£¨Õ¼±È×î´ó£©
     window.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    // æŒ‰é’®ï¼šå›ºå®šå®½é«˜ï¼Œä¸éšçª—å£ç¼©æ”¾å˜åŒ–
+    // °´Å¥£º¹Ì¶¨¿í¸ß£¬²»Ëæ´°¿ÚËõ·Å±ä»¯
     play->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     pause->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     selectMode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    // æŒ‰é’®è®¾ç½®å›ºå®šå¤§å°ï¼ˆç»Ÿä¸€å°ºå¯¸ï¼Œç¾Žè§‚ï¼‰
+    // °´Å¥ÉèÖÃ¹Ì¶¨´óÐ¡£¨Í³Ò»³ß´ç£¬ÃÀ¹Û£©
     QSize btnSize(80, 36);
     play->setFixedSize(btnSize);
     pause->setFixedSize(btnSize);
+    record->setFixedSize(btnSize);
+    pipBtn->setFixedSize(btnSize);
     selectMode->setFixedSize(btnSize);
 
-    // æ‹¼æŽ¥QSSæ ·å¼å­—ç¬¦ä¸²ï¼Œæ”¯æŒæ¢è¡Œ/æ³¨é‡Šï¼Œä¾¿äºŽç»´æŠ¤
+
+
+    // Æ´½ÓQSSÑùÊ½×Ö·û´®£¬Ö§³Ö»»ÐÐ/×¢ÊÍ£¬±ãÓÚÎ¬»¤
     QString qss = R"(
-        /* ------------- å…¨å±€åŸºç¡€æ ·å¼ ------------- */
+        /* ------------- È«¾Ö»ù´¡ÑùÊ½ ------------- */
         QWidget {
-            font-family: "Microsoft YaHei"; /* å¾®è½¯é›…é»‘ï¼Œé€‚é…ä¸­æ–‡ */
-            font-size: 14px;                /* å…¨å±€å­—ä½“å¤§å° */
-            background-color: #F5F5F5;      /* æ•´ä½“èƒŒæ™¯è‰²ï¼šæµ…ç°è‰² */
+            font-family: "Microsoft YaHei"; /* Î¢ÈíÑÅºÚ£¬ÊÊÅäÖÐÎÄ */
+            font-size: 14px;                /* È«¾Ö×ÖÌå´óÐ¡ */
+            background-color: #F5F5F5;      /* ÕûÌå±³¾°É«£ºÇ³»ÒÉ« */
         }
 
-        /* ------------- æ’­æ”¾/æš‚åœ/åœæ­¢æŒ‰é’® ------------- */
+        /* ------------- ²¥·Å/ÔÝÍ£/Í£Ö¹°´Å¥ ------------- */
         QPushButton {
-            color: #FFFFFF;                 /* æ–‡å­—ç™½è‰² */
-            background-color: #2E86AB;      /* ä¸»è‰²è°ƒï¼šæ·±è“è‰² */
-            border: none;                   /* éšè—é»˜è®¤è¾¹æ¡† */
-            border-radius: 12px;             /* åœ†è§’6px */
-            font-weight: bold;              /* æ–‡å­—åŠ ç²— */
+            color: #FFFFFF;                 /* ÎÄ×Ö°×É« */
+            background-color: #2E86AB;      /* Ö÷É«µ÷£ºÉîÀ¶É« */
+            border: none;                   /* Òþ²ØÄ¬ÈÏ±ß¿ò */
+            border-radius: 12px;             /* Ô²½Ç6px */
+            font-weight: bold;              /* ÎÄ×Ö¼Ó´Ö */
         }
         QPushButton:hover {
-            background-color: #4A90E2;      /* é¼ æ ‡æ‚¬æµ®ï¼šæµ…ä¸€ç‚¹çš„è“è‰² */
+            background-color: #4A90E2;      /* Êó±êÐü¸¡£ºÇ³Ò»µãµÄÀ¶É« */
         }
         QPushButton:pressed {
-            background-color: #1F618D;      /* é¼ æ ‡æŒ‰ä¸‹ï¼šæ·±ä¸€ç‚¹çš„è“è‰² */
-            padding-left: 2px;              /* æŒ‰ä¸‹è½»å¾®åç§»ï¼Œæ¨¡æ‹ŸæŒ‰åŽ‹æ„Ÿ */
+            background-color: #1F618D;      /* Êó±ê°´ÏÂ£ºÉîÒ»µãµÄÀ¶É« */
+            padding-left: 2px;              /* °´ÏÂÇáÎ¢Æ«ÒÆ£¬Ä£Äâ°´Ñ¹¸Ð */
             padding-top: 2px;
         }
         QPushButton:disabled {
-            background-color: #B0BEC5;      /* ç¦ç”¨çŠ¶æ€ï¼šç°è‰² */
+            background-color: #B0BEC5;      /* ½ûÓÃ×´Ì¬£º»ÒÉ« */
             color: #EEEEEE;
         }
 
-        /* ------------- æ’­æ”¾è¿›åº¦æ¡ ------------- */
+        /* ------------- ²¥·Å½ø¶ÈÌõ ------------- */
         QProgressBar {
-            height: 8px;                    /* è¿›åº¦æ¡é«˜åº¦ */
-            border-radius: 4px;             /* åœ†è§’4pxï¼Œä¸Žé«˜åº¦åŒ¹é… */
-            background-color: #E0E0E0;      /* è¿›åº¦æ¡èƒŒæ™¯ï¼ˆæœªå®Œæˆéƒ¨åˆ†ï¼‰ */
-            text-align: center;             /* è¿›åº¦æ–‡å­—å±…ä¸­ */
-            color: #666666;                 /* è¿›åº¦æ–‡å­—é¢œè‰² */
-            font-size: 12px;                /* è¿›åº¦æ–‡å­—å¤§å° */
+            height: 8px;                    /* ½ø¶ÈÌõ¸ß¶È */
+            border-radius: 4px;             /* Ô²½Ç4px£¬Óë¸ß¶ÈÆ¥Åä */
+            background-color: #E0E0E0;      /* ½ø¶ÈÌõ±³¾°£¨Î´Íê³É²¿·Ö£© */
+            text-align: center;             /* ½ø¶ÈÎÄ×Ö¾ÓÖÐ */
+            color: #666666;                 /* ½ø¶ÈÎÄ×ÖÑÕÉ« */
+            font-size: 12px;                /* ½ø¶ÈÎÄ×Ö´óÐ¡ */
         }
         QProgressBar::chunk {
-            border-radius: 4px;             /* è¿›åº¦å—åœ†è§’ï¼Œä¸Žæ•´ä½“ä¸€è‡´ */
-            background-color: #2E86AB;      /* è¿›åº¦å—é¢œè‰²ï¼šä¸ŽæŒ‰é’®ä¸»è‰²è°ƒä¸€è‡´ */
+            border-radius: 4px;             /* ½ø¶È¿éÔ²½Ç£¬ÓëÕûÌåÒ»ÖÂ */
+            background-color: #2E86AB;      /* ½ø¶È¿éÑÕÉ«£ºÓë°´Å¥Ö÷É«µ÷Ò»ÖÂ */
         }
 
-        /* ------------- æ—¥å¿—è¾“å‡ºæ–‡æœ¬æ¡† ------------- */
+        /* ------------- ÈÕÖ¾Êä³öÎÄ±¾¿ò ------------- */
         QTextEdit {
-            background-color: #FFFFFF;      /* ç™½è‰²èƒŒæ™¯ */
-            border: 1px solid #DDDDDD;      /* æµ…ç°è‰²è¾¹æ¡† */
-            border-radius: 6px;             /* åœ†è§’6px */
-            padding: 8px;                   /* å†…è¾¹è·ï¼Œé¿å…æ–‡å­—è´´è¾¹ */
-            color: #333333;                 /* æ–‡å­—é¢œè‰²ï¼šæ·±ç°è‰² */
-            font-size: 13px;                /* æ—¥å¿—æ–‡å­—ç¨å° */
+            background-color: #FFFFFF;      /* °×É«±³¾° */
+            border: 1px solid #DDDDDD;      /* Ç³»ÒÉ«±ß¿ò */
+            border-radius: 6px;             /* Ô²½Ç6px */
+            padding: 8px;                   /* ÄÚ±ß¾à£¬±ÜÃâÎÄ×ÖÌù±ß */
+            color: #333333;                 /* ÎÄ×ÖÑÕÉ«£ºÉî»ÒÉ« */
+            font-size: 13px;                /* ÈÕÖ¾ÎÄ×ÖÉÔÐ¡ */
         }
         QTextEdit:focus {
-            border-color: #2E86AB;          /* èšç„¦æ—¶è¾¹æ¡†å˜ä¸»è‰²è°ƒï¼Œæç¤ºç„¦ç‚¹ */
-            outline: none;                  /* éšè—é»˜è®¤èšç„¦å¤–æ¡† */
+            border-color: #2E86AB;          /* ¾Û½¹Ê±±ß¿ò±äÖ÷É«µ÷£¬ÌáÊ¾½¹µã */
+            outline: none;                  /* Òþ²ØÄ¬ÈÏ¾Û½¹Íâ¿ò */
         }
 
-        /* ------------- OpenGLè§†é¢‘æ¸²æŸ“çª—å£ ------------- */
+        /* ------------- OpenGLÊÓÆµäÖÈ¾´°¿Ú ------------- */
         mGLWidget {
-            background-color: #000000;      /* é»‘è‰²èƒŒæ™¯ï¼Œé€‚é…è§†é¢‘æ¸²æŸ“ï¼ˆæ— è§†é¢‘æ—¶ä¸çªå…€ï¼‰ */
-            border: 2px solid #CCCCCC;      /* æµ…ç°è‰²è¾¹æ¡†ï¼ŒåŒºåˆ†è§†é¢‘åŒº */
-            border-radius: 8px;             /* åœ†è§’8pxï¼Œæå‡ç¾Žè§‚ */
+            background-color: #000000;      /* ºÚÉ«±³¾°£¬ÊÊÅäÊÓÆµäÖÈ¾£¨ÎÞÊÓÆµÊ±²»Í»Ø££© */
+            border: 2px solid #CCCCCC;      /* Ç³»ÒÉ«±ß¿ò£¬Çø·ÖÊÓÆµÇø */
+            border-radius: 8px;             /* Ô²½Ç8px£¬ÌáÉýÃÀ¹Û */
         }
     )";
 
-    // ç»™å½“å‰æ’­æ”¾å™¨çª—å£è®¾ç½®QSSæ ·å¼ï¼ˆæ‰€æœ‰å­æŽ§ä»¶ç»§æ‰¿ç”Ÿæ•ˆï¼‰
+    // ¸øµ±Ç°²¥·ÅÆ÷´°¿ÚÉèÖÃQSSÑùÊ½£¨ËùÓÐ×Ó¿Ø¼þ¼Ì³ÐÉúÐ§£©
     this->setStyleSheet(qss);
 
 
     this->setLayout(mainLayout);
     window.show();
-    // åˆå§‹åŒ–æˆåŠŸè¿”å›žtrue
+    // ³õÊ¼»¯³É¹¦·µ»Øtrue
     return true;
 }
 
 bool mpalyer::select_Mode(Mode m)
 {
     if(m ==CAPTURE){
-        // æœç´¢æ‘„åƒå¤´å¹¶å¯åŠ¨è§£ç çº¿ç¨‹
+        // ËÑË÷ÉãÏñÍ·²¢Æô¶¯½âÂëÏß³Ì
 
         auto devices = getVideoDevices();
         if (!devices.empty()) {
@@ -228,7 +289,7 @@ bool mpalyer::select_Mode(Mode m)
         }
     }
     else if(m == VIDEO){
-        QString file_name = QFileDialog::getOpenFileName(NULL, "æ ‡é¢˜", ".", "è§†é¢‘æ–‡ä»¶(*.mp4 *.avi *.mkv *.mov)");
+        QString file_name = QFileDialog::getOpenFileName(NULL, "±êÌâ", ".", "ÊÓÆµÎÄ¼þ(*.mp4 *.avi *.mkv *.mov)");
         if (p.ffplayer_open(file_name,false) == 0) {
             //if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
             QThread* thread = new QThread();
@@ -246,6 +307,23 @@ bool mpalyer::select_Mode(Mode m)
             }
 
     }
+    else if (m == SCREEN) { // SCREEN Ä£Ê½
+
+        // FFmpeg Ê¹ÓÃ gdigrab Â¼ÖÆ Windows ÆÁÄ»
+        if (p.ffplayer_open("desktop", true) == 0) {
+            QThread* thread = new QThread();
+            p.moveToThread(thread);
+            QObject::connect(thread, &QThread::started, [=]() {
+                while (!p.isQuit()) {
+                    p.ffplayer_read_frame();
+                    QThread::msleep(10);
+                }
+            });
+            QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
+            thread->start();
+        }
+    }
     selectMode->setDisabled(true);
+
     return true;
 }

@@ -15,16 +15,15 @@ class mpalyer : public QWidget
 public:
     enum Mode{
         VIDEO,
-        CAPTURE
+        CAPTURE,
+        SCREEN
     };
+
 
     explicit mpalyer(QWidget *parent = nullptr);
     bool controlInit();
-<<<<<<< HEAD
     bool select_Mode(Mode m);
-=======
     void playVideo(const QString& path);
->>>>>>> 598de255f5feea8a06bc1b6944b20507c32379a5
 private:
     mGLWidget window;
     player p;
@@ -32,7 +31,13 @@ private:
     QPushButton * play=NULL;
     QPushButton* selectMode=NULL;
     QPushButton* pause=NULL;
+    QPushButton* record=NULL;
+    QPushButton* pipBtn=NULL;
     QProgressBar *videoProcessBar=NULL;
+    bool m_isPipMode = false;
+
+    bool m_isRecording = false;
+
 signals:
 
 };

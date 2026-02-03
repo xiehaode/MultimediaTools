@@ -45,6 +45,10 @@ public:
     void pause(bool pause);
     void seek(int64_t timestamp_ms);
     
+    int startRecord(const QString& outputPath);
+    void stopRecord();
+    bool isRecording() const { return m_recording; }
+
     bool isPaused() const { return m_paused; }
     
     SharedFrameBuffer* getSharedBuffer() { return &ctx->shared_buf; }
@@ -55,13 +59,20 @@ signals:
     void frameReady(int w, int h, int type, int bpp);
     void positionChanged(int64_t ms, int64_t total_ms);
 
-
 private:
     FFPlayerContext *ctx;
     bool m_paused = false;
     bool m_seek_req = false;
     int64_t m_seek_target = 0;
     std::mutex m_ctrl_mtx;
+
+    // 录制相关
+    AVFormatContext* m_outFmtCtx = nullptr;
+    AVStream* m_outStream = nullptr;
+    bool m_recording = false;
+    int64_t m_frame_count = 0;
+    std::mutex m_record_mtx;
 };
+
 
 #endif // PLAYER_H

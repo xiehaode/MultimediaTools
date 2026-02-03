@@ -679,6 +679,21 @@ release\moc_mplayer.cpp: ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qicon.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QComboBox \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qcombobox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractitemdelegate.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyleoption.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractspinbox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qvalidator.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qregularexpression.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyle.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
 		release\moc_predefs.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\bin\moc.exe
 	D:\5.12\5.12.11\msvc2017_64\bin\moc.exe $(DEFINES) --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/build-mplayer-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -I. -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\ATLMFC\include -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\include -I"D:\Windows Kits\10\include\10.0.26100.0\ucrt" -I"D:\Windows Kits\10\include\10.0.26100.0\shared" -I"D:\Windows Kits\10\include\10.0.26100.0\um" -I"D:\Windows Kits\10\include\10.0.26100.0\winrt" -I"D:\Windows Kits\10\include\10.0.26100.0\cppwinrt" -ID:\masm32\include ..\mplayer\src\mplayer.h -o release\moc_mplayer.cpp
@@ -1238,6 +1253,21 @@ release\main.obj: ..\mplayer\src\main.cpp ..\..\..\5.12\5.12.11\msvc2017_64\incl
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qicon.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QComboBox \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qcombobox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractitemdelegate.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyleoption.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractspinbox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qvalidator.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qregularexpression.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyle.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
 		..\mplayer\src\myipcmgr.h \
 		..\mplayer\src\ipcmgrbase.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtNetwork\QLocalServer \
@@ -1502,10 +1532,8 @@ release\mglwidget.obj: ..\mplayer\src\mglwidget.cpp ..\mplayer\src\mglwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qmessagebox.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qdialog.h
 
-release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
-		..\mplayer\src\mglwidget.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QOpenGLWidget \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qopenglwidget.h \
+release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QApplication \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qapplication.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtwidgetsglobal.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtguiglobal.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qglobal.h \
@@ -1531,23 +1559,20 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qversiontagging.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtgui-config.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtwidgets-config.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QWidget \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qwidget.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qwindowdefs.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobjectdefs.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qnamespace.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobjectdefs_impl.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qwindowdefs_win.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobject.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qcoreapplication.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qstring.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qchar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qbytearray.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qrefcount.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qnamespace.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qarraydata.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qstringliteral.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qstringalgorithms.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qstringview.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qstringbuilder.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobject.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobjectdefs.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobjectdefs_impl.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qlist.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qalgorithms.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qiterator.h \
@@ -1563,11 +1588,17 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qvarlengtharray.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qcontainerfwd.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qobject_impl.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qeventloop.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qwindowdefs.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qwindowdefs_win.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qpoint.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qsize.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qcursor.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qdesktopwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qmargins.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qpaintdevice.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qrect.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qsize.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qpoint.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qpalette.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qcolor.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qrgb.h \
@@ -1593,7 +1624,6 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qfontmetrics.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qfontinfo.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qsizepolicy.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qcursor.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qkeysequence.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qevent.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qvariant.h \
@@ -1609,6 +1639,14 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qfiledevice.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qvector2d.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtouchdevice.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qguiapplication.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qinputmethod.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QDesktopWidget \
+		..\mplayer\src\mplayer.h \
+		..\mplayer\src\mglwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QOpenGLWidget \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qopenglwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QWidget \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\QSurfaceFormat \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qsurfaceformat.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qopengl.h \
@@ -1685,6 +1723,21 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qicon.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QComboBox \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qcombobox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractitemdelegate.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyleoption.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractspinbox.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qvalidator.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qregularexpression.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractslider.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qstyle.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
@@ -1693,7 +1746,13 @@ release\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QVBoxLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QString \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QThread \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qthread.h
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qthread.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QVariant \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QFileDialog \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qfiledialog.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qdir.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qfileinfo.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qdialog.h
 
 release\myipcmgr.obj: ..\mplayer\src\myipcmgr.cpp ..\mplayer\src\myipcmgr.h \
 		..\mplayer\src\ipcmgrbase.h \
