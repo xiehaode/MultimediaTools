@@ -145,17 +145,25 @@ void player::ffplayer_read_frame()
 
                     emit frameReady(dw, dh, 1, 32);
 
-                    // --- 录制逻辑 ---
+                    // --- 优化后的录制逻辑：缩小锁粒度，防止卡死 ---
+                    bool is_rec = false;
+                    AVCodecContext* out_codec = nullptr;
+                    AVStream* out_stream = nullptr;
+                    AVFormatContext* out_fmt = nullptr;
                     {
                         std::lock_guard<std::mutex> lock(m_record_mtx);
-                        if (m_recording && m_outFmtCtx) {
-                            AVFrame* outFrame = av_frame_alloc();
-                            outFrame->format = AV_PIX_FMT_YUV420P;
-                            outFrame->width = dw;
-                            outFrame->height = dh;
-                            av_frame_get_buffer(outFrame, 32);
+                        is_rec = m_recording;
+                        out_codec = m_outCodecCtx;
+                        out_stream = m_outStream;
+                        out_fmt = m_outFmtCtx;
+                    }
 
-                            // RGBA -> YUV420P 转换 (录制通常需要 YUV)
+                    if (is_rec && out_codec && out_fmt) {
+                        AVFrame* outFrame = av_frame_alloc();
+                        outFrame->format = AV_PIX_FMT_YUV420P;
+                        outFrame->width = dw;
+                        outFrame->height = dh;
+                        if (av_frame_get_buffer(outFrame, 32) == 0) {
                             static struct SwsContext* record_sws = nullptr;
                             record_sws = sws_getCachedContext(record_sws, dw, dh, AV_PIX_FMT_RGBA,
                                                               dw, dh, AV_PIX_FMT_YUV420P,
@@ -165,29 +173,27 @@ void player::ffplayer_read_frame()
                             int src_linesize[4] = { dw * 4, 0, 0, 0 };
                             sws_scale(record_sws, src_data, src_linesize, 0, dh, outFrame->data, outFrame->linesize);
 
-                            outFrame->pts = m_frame_count++;
-                            
-                            // 检查编码器上下文是否存在且已打开
-                            if (m_outStream && m_outCodecCtx) {
-                                if (avcodec_send_frame(m_outCodecCtx, outFrame) == 0) {
-                                    AVPacket outPkt;
-                                    av_init_packet(&outPkt);
-                                    outPkt.data = nullptr;
-                                    outPkt.size = 0;
-                                    if (avcodec_receive_packet(m_outCodecCtx, &outPkt) == 0) {
-                                        av_packet_rescale_ts(&outPkt, m_outCodecCtx->time_base, m_outStream->time_base);
-                                        outPkt.stream_index = m_outStream->index;
-                                        av_interleaved_write_frame(m_outFmtCtx, &outPkt);
-                                        av_packet_unref(&outPkt);
+                            {
+                                std::lock_guard<std::mutex> lock(m_record_mtx);
+                                if (m_recording) { // 再次检查确保没被停止
+                                    outFrame->pts = m_frame_count++;
+                                    if (avcodec_send_frame(out_codec, outFrame) == 0) {
+                                        AVPacket outPkt;
+                                        av_init_packet(&outPkt);
+                                        while (avcodec_receive_packet(out_codec, &outPkt) == 0) {
+                                            av_packet_rescale_ts(&outPkt, out_codec->time_base, out_stream->time_base);
+                                            outPkt.stream_index = out_stream->index;
+                                            av_interleaved_write_frame(out_fmt, &outPkt);
+                                            av_packet_unref(&outPkt);
+                                        }
                                     }
                                 }
                             }
-                            av_frame_free(&outFrame);
-
-
                         }
+                        av_frame_free(&outFrame);
                     }
                     // --- 录制逻辑结束 ---
+
                     
                     // 发送进度信号
                     if (ctx->fmt_ctx && ctx->video_index != -1) {
@@ -256,40 +262,79 @@ void player::seek(int64_t timestamp_ms)
 int player::startRecord(const QString &outputPath)
 {
     std::lock_guard<std::mutex> lock(m_record_mtx);
-    if (m_recording) return -1;
+    if (m_recording) return -5;
+
+
+    // 关键修复：确保分辨率可用（优先解码器，其次流参数）
+    if (!ctx || !ctx->fmt_ctx || ctx->video_index < 0) {
+        qDebug() << "Start record failed: context not ready";
+        return -1;
+    }
+
+    int w = ctx->video_decode_ctx ? ctx->video_decode_ctx->width : 0;
+    int h = ctx->video_decode_ctx ? ctx->video_decode_ctx->height : 0;
+    if (w <= 0 || h <= 0) {
+        AVCodecParameters* par = ctx->fmt_ctx->streams[ctx->video_index]->codecpar;
+        w = par ? par->width : 0;
+        h = par ? par->height : 0;
+    }
+    if (w <= 0 || h <= 0) {
+        qDebug() << "Start record failed: size not ready";
+        return -2; // 需要等待第一帧
+    }
 
     // 创建输出上下文
     avformat_alloc_output_context2(&m_outFmtCtx, nullptr, nullptr, outputPath.toUtf8().data());
     if (!m_outFmtCtx) return -1;
 
-    // 添加视频流
-    AVCodec* codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    if (!codec) return -1;
+
+    // 添加视频流（优先 libx264，避免 h264_mf 的 COM STA 问题）
+    AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+    AVCodecID codec_id = AV_CODEC_ID_NONE;
+    if (codec) {
+        codec_id = AV_CODEC_ID_H264;
+    } else {
+        codec = avcodec_find_encoder(AV_CODEC_ID_MPEG4);
+        if (codec) {
+            codec_id = AV_CODEC_ID_MPEG4;
+        } else {
+            codec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+            if (codec) {
+                codec_id = AV_CODEC_ID_MJPEG;
+            }
+        }
+    }
+    if (!codec) return -6; // 没有可用编码器
+
+
     m_outStream = avformat_new_stream(m_outFmtCtx, nullptr);
-    
+
     AVCodecContext* c = avcodec_alloc_context3(codec);
-    c->width = ctx->video_decode_ctx->width;
-    c->height = ctx->video_decode_ctx->height;
-    c->time_base = {1, 30}; 
+    c->width = w;
+    c->height = h;
+
+    c->time_base = {1, 30};
     c->framerate = {30, 1};
     c->pix_fmt = AV_PIX_FMT_YUV420P;
     c->gop_size = 30;
-    c->bit_rate = 4000000; // 提高码率到 4Mbps 解决模糊
-    c->max_b_frames = 0;   // 禁用 B 帧减少延迟和残影
-    
-    // 设置 H.264 编码预设
+    c->bit_rate = 4000000;
+    c->max_b_frames = 0;
+
     AVDictionary* opts = nullptr;
-    av_dict_set(&opts, "preset", "ultrafast", 0); // 最快速度，减少 CPU 占用
-    av_dict_set(&opts, "tune", "zerolatency", 0); // 零延迟模式，减少残影
-    
+    if (codec_id == AV_CODEC_ID_H264) {
+        av_dict_set(&opts, "preset", "ultrafast", 0);
+        av_dict_set(&opts, "tune", "zerolatency", 0);
+    }
+
     if (m_outFmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
         c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     if (avcodec_open2(c, codec, &opts) < 0) {
         av_dict_free(&opts);
-        return -1;
+        return -7; // 编码器打开失败
     }
     av_dict_free(&opts);
+
 
     m_outCodecCtx = c;
     avcodec_parameters_from_context(m_outStream->codecpar, c);
@@ -298,10 +343,26 @@ int player::startRecord(const QString &outputPath)
 
 
     if (!(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
-        avio_open(&m_outFmtCtx->pb, outputPath.toUtf8().data(), AVIO_FLAG_WRITE);
+        if (avio_open(&m_outFmtCtx->pb, outputPath.toUtf8().data(), AVIO_FLAG_WRITE) < 0) {
+            avcodec_free_context(&m_outCodecCtx);
+            avformat_free_context(m_outFmtCtx);
+            m_outFmtCtx = nullptr;
+            m_outStream = nullptr;
+            return -3;
+        }
     }
 
-    avformat_write_header(m_outFmtCtx, nullptr);
+    if (avformat_write_header(m_outFmtCtx, nullptr) < 0) {
+        if (m_outFmtCtx && !(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
+            avio_closep(&m_outFmtCtx->pb);
+        }
+        avcodec_free_context(&m_outCodecCtx);
+        avformat_free_context(m_outFmtCtx);
+        m_outFmtCtx = nullptr;
+        m_outStream = nullptr;
+        return -4;
+    }
+
 
     m_recording = true;
     m_frame_count = 0;

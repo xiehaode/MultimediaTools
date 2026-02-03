@@ -20,6 +20,12 @@ void mGLWidget::onFrameReady(int w, int h, int type, int bpp)
     if (shared_buf->state != BUFFER_FILLED) return;
 
     makeCurrent();
+    if (texture && (texture->width() != w || texture->height() != h)) {
+        texture->destroy();
+        delete texture;
+        texture = nullptr;
+    }
+
     if (!texture) {
         texture = new QOpenGLTexture(QOpenGLTexture::Target2D);
         texture->create();
@@ -27,6 +33,7 @@ void mGLWidget::onFrameReady(int w, int h, int type, int bpp)
         texture->setMagnificationFilter(QOpenGLTexture::Linear);
         texture->setWrapMode(QOpenGLTexture::ClampToEdge);
     }
+
 
     // 零拷贝更新纹理
     QImage glImage(shared_buf->buf.data(), w, h, QImage::Format_RGBA8888);

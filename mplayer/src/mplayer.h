@@ -10,6 +10,7 @@
 #include <QMetaType>
 #include <QSlider>
 #include <QLabel>
+#include <QString>
 class mpalyer : public QWidget
 {
 
@@ -40,6 +41,10 @@ private:
     bool m_isPipMode = false;
     bool m_isRecording = false;
     bool m_isUserSeeking = false;
+    bool m_isVideoReady = false;
+    bool m_pendingRecord = false;
+    QString m_pendingRecordPath;
+
 
 signals:
 

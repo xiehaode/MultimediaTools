@@ -695,6 +695,9 @@ debug\moc_mplayer.cpp: ..\mplayer\src\mplayer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QSlider \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
 		debug\moc_predefs.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\bin\moc.exe
 	D:\5.12\5.12.11\msvc2017_64\bin\moc.exe $(DEFINES) --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/build-mplayer-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -I. -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\ATLMFC\include -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\include -I"D:\Windows Kits\10\include\10.0.26100.0\ucrt" -I"D:\Windows Kits\10\include\10.0.26100.0\shared" -I"D:\Windows Kits\10\include\10.0.26100.0\um" -I"D:\Windows Kits\10\include\10.0.26100.0\winrt" -I"D:\Windows Kits\10\include\10.0.26100.0\cppwinrt" -ID:\masm32\include ..\mplayer\src\mplayer.h -o debug\moc_mplayer.cpp
@@ -1269,6 +1272,9 @@ debug\main.obj: ..\mplayer\src\main.cpp ..\..\..\5.12\5.12.11\msvc2017_64\includ
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QSlider \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
 		..\mplayer\src\myipcmgr.h \
 		..\mplayer\src\ipcmgrbase.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtNetwork\QLocalServer \
@@ -1739,6 +1745,9 @@ debug\mplayer.obj: ..\mplayer\src\mplayer.cpp ..\..\..\5.12\5.12.11\msvc2017_64\
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qabstractitemmodel.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QMetaType \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QSlider \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \

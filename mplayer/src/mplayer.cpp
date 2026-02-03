@@ -4,11 +4,14 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QMessageBox>
 #include <QString>
 #include <QThread>
 #include <QVariant>
 #include <QFileDialog>
+#include <QFileInfo>
 #include "mglwidget.h"
+
 #include "player.h"
 #include "mdevice.h"
 mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
@@ -33,20 +36,63 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         if (!p.isRecording()) {
             QString path = QFileDialog::getSaveFileName(this, tr("视频录制"), "recorded.mp4", tr("视频文件(*.mp4)"));
             if (path.isEmpty()) return;
-            
-            // 确保在录制前重置状态（防止旧的录制状态残留）
-            if (p.startRecord(path) == 0) {
+
+            QFileInfo info(path);
+            if (info.exists() && !info.isWritable()) {
+                QMessageBox::warning(this, tr("录制错误"), tr("录制失败：文件只读，无法写入"));
+                return;
+            }
+
+            // 如果画面未就绪，先挂起，等第一帧到达后自动开始
+            if (!m_isVideoReady) {
+                m_pendingRecord = true;
+                m_pendingRecordPath = path;
+                record->setText(tr("等待画面..."));
+                record->setEnabled(false);
+                return;
+            }
+
+
+            record->setEnabled(false); // 暂时禁用，防止重复点击
+            int ret = p.startRecord(path);
+            if (ret == 0) {
                 record->setText(tr("停止录制"));
                 record->setStyleSheet("background-color: #D32F2F; color: white;"); 
             } else {
-                qDebug() << "Start record failed!";
+                QString msg;
+                if (ret == -2) {
+                    msg = tr("录制失败：画面未就绪，请稍等画面出来后再试");
+                } else if (ret == -1) {
+                    msg = tr("录制失败：播放器未就绪或参数错误");
+                } else if (ret == -3) {
+                    msg = tr("录制失败：无法打开输出文件");
+                } else if (ret == -4) {
+                    msg = tr("录制失败：写入文件头失败");
+                } else if (ret == -5) {
+                    msg = tr("录制失败：已在录制中");
+                } else if (ret == -6) {
+                    msg = tr("录制失败：系统没有可用编码器（缺少 libx264/mpeg4）");
+                } else if (ret == -7) {
+                    msg = tr("录制失败：编码器打开失败");
+                } else {
+                    msg = tr("录制失败：未知错误");
+                }
+
+                QMessageBox::warning(this, tr("录制错误"), msg);
+                qDebug() << "Start record failed! code:" << ret;
             }
+
+            record->setEnabled(true);
         } else {
+            m_pendingRecord = false;
+            m_pendingRecordPath.clear();
             p.stopRecord();
             record->setText(tr("录制"));
             record->setStyleSheet(""); 
         }
     });
+
+
 
 
     connect(pipBtn, &QPushButton::clicked, this, [=]() {
@@ -85,6 +131,29 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
          Mode m = box->currentData().value<Mode>();
          select_Mode(m);
     });
+
+    // 首帧到达后标记就绪，并处理挂起的录制请求
+    connect(&p, &player::frameReady, this, [=](int /*w*/, int /*h*/, int /*type*/, int /*bpp*/) {
+        if (!m_isVideoReady) {
+            m_isVideoReady = true;
+        }
+
+        if (m_pendingRecord && !m_pendingRecordPath.isEmpty()) {
+            int ret = p.startRecord(m_pendingRecordPath);
+            if (ret == 0) {
+                record->setText(tr("停止录制"));
+                record->setStyleSheet("background-color: #D32F2F; color: white;");
+            } else {
+                QMessageBox::warning(this, tr("录制错误"), tr("录制失败：画面未就绪或参数错误"));
+                record->setText(tr("录制"));
+            }
+            record->setEnabled(true);
+            m_pendingRecord = false;
+            m_pendingRecordPath.clear();
+        }
+    });
+
+
 
     connect(&p, &player::positionChanged, this, [=](long long ms, long long total_ms) {
         if (!m_isUserSeeking) {
@@ -171,7 +240,7 @@ bool mpalyer::controlInit()
 
 
 
-    // 主布局：垂直布局（整个播放器界面）
+
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(15, 15, 15, 15); // 整体边距：上下左右15px
     mainLayout->setSpacing(12); // 控件之间的垂直间距12px
@@ -179,7 +248,7 @@ bool mpalyer::controlInit()
     // 控制按钮布局：水平布局（播放/暂停/停止）
     QHBoxLayout *btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(10); // 按钮之间的水平间距10px
-    // 添加按钮到水平布局
+
     btnLayout->addWidget(play);
     btnLayout->addWidget(pause);
     btnLayout->addWidget(record);
@@ -224,7 +293,6 @@ bool mpalyer::controlInit()
 
 
 
-    // 拼接QSS样式字符串，支持换行/注释，便于维护
     QString qss = R"(
         /* ------------- 全局基础样式 ------------- */
         QWidget {
@@ -308,10 +376,17 @@ bool mpalyer::controlInit()
 
 bool mpalyer::select_Mode(Mode m)
 {
+    m_isVideoReady = false;
+    m_pendingRecord = false;
+    m_pendingRecordPath.clear();
+    record->setText(tr("录制"));
+    record->setStyleSheet("");
+
     play->setDisabled(false);
     pause->setDisabled(false);
     record->setDisabled(false);
     pipBtn->setDisabled(false);
+
     if(m ==CAPTURE){
         // 搜索摄像头并启动解码线程
         play->setDisabled(true);
