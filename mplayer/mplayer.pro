@@ -3,6 +3,16 @@ TEMPLATE = app
 
 QT += core gui widgets opengl network
 
+# 针对MSVC编译器，强制UTF-8编码编译（核心配置）
+win32-msvc* {
+    QMAKE_CFLAGS += /utf-8
+    QMAKE_CXXFLAGS += /utf-8
+}
+
+# 统一Qt的翻译/源码编码为UTF-8（兜底，配合tr()函数）
+CODECFORTR = UTF-8
+CODECFORSRC = UTF-8
+
 
 CONFIG += c++11
 

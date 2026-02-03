@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_player_t {
-    QByteArrayData data[11];
-    char stringdata0[68];
+    QByteArrayData data[10];
+    char stringdata0[60];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -39,13 +39,12 @@ QT_MOC_LITERAL(4, 21, 1), // "h"
 QT_MOC_LITERAL(5, 23, 4), // "type"
 QT_MOC_LITERAL(6, 28, 3), // "bpp"
 QT_MOC_LITERAL(7, 32, 15), // "positionChanged"
-QT_MOC_LITERAL(8, 48, 7), // "int64_t"
-QT_MOC_LITERAL(9, 56, 2), // "ms"
-QT_MOC_LITERAL(10, 59, 8) // "total_ms"
+QT_MOC_LITERAL(8, 48, 2), // "ms"
+QT_MOC_LITERAL(9, 51, 8) // "total_ms"
 
     },
     "player\0frameReady\0\0w\0h\0type\0bpp\0"
-    "positionChanged\0int64_t\0ms\0total_ms"
+    "positionChanged\0ms\0total_ms"
 };
 #undef QT_MOC_LITERAL
 
@@ -68,7 +67,7 @@ static const uint qt_meta_data_player[] = {
 
  // signals: parameters
     QMetaType::Void, QMetaType::Int, QMetaType::Int, QMetaType::Int, QMetaType::Int,    3,    4,    5,    6,
-    QMetaType::Void, 0x80000000 | 8, 0x80000000 | 8,    9,   10,
+    QMetaType::Void, QMetaType::LongLong, QMetaType::LongLong,    8,    9,
 
        0        // eod
 };
@@ -80,7 +79,7 @@ void player::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->frameReady((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2])),(*reinterpret_cast< int(*)>(_a[3])),(*reinterpret_cast< int(*)>(_a[4]))); break;
-        case 1: _t->positionChanged((*reinterpret_cast< int64_t(*)>(_a[1])),(*reinterpret_cast< int64_t(*)>(_a[2]))); break;
+        case 1: _t->positionChanged((*reinterpret_cast< long long(*)>(_a[1])),(*reinterpret_cast< long long(*)>(_a[2]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -93,7 +92,7 @@ void player::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void
             }
         }
         {
-            using _t = void (player::*)(int64_t , int64_t );
+            using _t = void (player::*)(long long , long long );
             if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&player::positionChanged)) {
                 *result = 1;
                 return;
@@ -150,7 +149,7 @@ void player::frameReady(int _t1, int _t2, int _t3, int _t4)
 }
 
 // SIGNAL 1
-void player::positionChanged(int64_t _t1, int64_t _t2)
+void player::positionChanged(long long _t1, long long _t2)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
     QMetaObject::activate(this, &staticMetaObject, 1, _a);

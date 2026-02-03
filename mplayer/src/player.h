@@ -57,7 +57,8 @@ public:
 
 signals:
     void frameReady(int w, int h, int type, int bpp);
-    void positionChanged(int64_t ms, int64_t total_ms);
+    void positionChanged(long long ms, long long total_ms);
+
 
 private:
     FFPlayerContext *ctx;
@@ -69,7 +70,9 @@ private:
     // 录制相关
     AVFormatContext* m_outFmtCtx = nullptr;
     AVStream* m_outStream = nullptr;
+    AVCodecContext* m_outCodecCtx = nullptr;
     bool m_recording = false;
+
     int64_t m_frame_count = 0;
     std::mutex m_record_mtx;
 };

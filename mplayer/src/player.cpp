@@ -26,17 +26,42 @@ int player::ffplayer_open(const QString& inputPath, bool isDevice)
         if (inputPath == "desktop") {
             ifmt = av_find_input_format("gdigrab");
             path = "desktop";
+            
+            // 设置屏幕抓取参数
+            AVDictionary* options = nullptr;
+            av_dict_set(&options, "framerate", "30", 0);
+            av_dict_set(&options, "draw_mouse", "1", 0);
+            
+            if (avformat_open_input(&ctx->fmt_ctx, path.toUtf8().data(), ifmt, &options) < 0) {
+                qDebug() << "Failed to open screen capture";
+                av_dict_free(&options);
+                return -1;
+            }
+            av_dict_free(&options);
         } else {
             ifmt = av_find_input_format("dshow");
             path = "video=" + inputPath;
+            
+            // 设置摄像头抓取参数，解决残影/模糊
+            AVDictionary* options = nullptr;
+            av_dict_set(&options, "framerate", "30", 0);
+            // 移除 video_size 强制设置，由摄像头默认决定，防止因不支持导致卡死
+            
+            if (avformat_open_input(&ctx->fmt_ctx, path.toUtf8().data(), ifmt, &options) < 0) {
+                qDebug() << "Failed to open camera:" << path;
+                av_dict_free(&options);
+                return -1;
+            }
+            av_dict_free(&options);
+        }
+    }
+ else {
+        if (avformat_open_input(&ctx->fmt_ctx, path.toUtf8().data(), ifmt, nullptr) < 0) {
+            qDebug() << "Failed to open input file:" << path;
+            return -1;
         }
     }
 
-    
-    if (avformat_open_input(&ctx->fmt_ctx, path.toUtf8().data(), ifmt, nullptr) < 0) {
-        qDebug() << "Failed to open input:" << path;
-        return -1;
-    }
 
 
     if (avformat_find_stream_info(ctx->fmt_ctx, nullptr) < 0) return -1;
@@ -143,14 +168,14 @@ void player::ffplayer_read_frame()
                             outFrame->pts = m_frame_count++;
                             
                             // 检查编码器上下文是否存在且已打开
-                            if (m_outStream && m_outStream->codec && avcodec_is_open(m_outStream->codec)) {
-                                if (avcodec_send_frame(m_outStream->codec, outFrame) == 0) {
+                            if (m_outStream && m_outCodecCtx) {
+                                if (avcodec_send_frame(m_outCodecCtx, outFrame) == 0) {
                                     AVPacket outPkt;
                                     av_init_packet(&outPkt);
                                     outPkt.data = nullptr;
                                     outPkt.size = 0;
-                                    if (avcodec_receive_packet(m_outStream->codec, &outPkt) == 0) {
-                                        av_packet_rescale_ts(&outPkt, m_outStream->codec->time_base, m_outStream->time_base);
+                                    if (avcodec_receive_packet(m_outCodecCtx, &outPkt) == 0) {
+                                        av_packet_rescale_ts(&outPkt, m_outCodecCtx->time_base, m_outStream->time_base);
                                         outPkt.stream_index = m_outStream->index;
                                         av_interleaved_write_frame(m_outFmtCtx, &outPkt);
                                         av_packet_unref(&outPkt);
@@ -159,24 +184,31 @@ void player::ffplayer_read_frame()
                             }
                             av_frame_free(&outFrame);
 
+
                         }
                     }
                     // --- 录制逻辑结束 ---
                     
                     // 发送进度信号
-
                     if (ctx->fmt_ctx && ctx->video_index != -1) {
-                        int64_t pts = ctx->frame->pts;
+                        AVStream* v_stream = ctx->fmt_ctx->streams[ctx->video_index];
+                        int64_t pts = ctx->frame->best_effort_timestamp;
+                        if (pts == AV_NOPTS_VALUE) pts = ctx->frame->pts;
                         if (pts == AV_NOPTS_VALUE) pts = ctx->frame->pkt_dts;
+                        
                         int64_t ms = 0;
                         if (pts != AV_NOPTS_VALUE) {
-                            ms = av_rescale_q(pts, ctx->fmt_ctx->streams[ctx->video_index]->time_base, {1, 1000});
+                            int64_t start_time = (v_stream->start_time != AV_NOPTS_VALUE) ? v_stream->start_time : 0;
+                            ms = av_rescale_q(pts - start_time, v_stream->time_base, {1, 1000});
                         }
                         int64_t total_ms = getDuration();
                         emit positionChanged(ms, total_ms);
                     }
+
                 }
             }
+
+
         }
         av_packet_unref(&pkt);
     }
@@ -205,7 +237,9 @@ void player::ffplayer_close()
 void player::stop()
 {
     ctx->is_quit = true;
+    stopRecord(); // 停止播放时自动停止录制
 }
+
 
 void player::pause(bool p)
 {
@@ -230,18 +264,38 @@ int player::startRecord(const QString &outputPath)
 
     // 添加视频流
     AVCodec* codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-    m_outStream = avformat_new_stream(m_outFmtCtx, codec);
+    if (!codec) return -1;
+    m_outStream = avformat_new_stream(m_outFmtCtx, nullptr);
     
     AVCodecContext* c = avcodec_alloc_context3(codec);
     c->width = ctx->video_decode_ctx->width;
     c->height = ctx->video_decode_ctx->height;
-    c->time_base = {1, 25}; // 假设25帧
+    c->time_base = {1, 30}; 
+    c->framerate = {30, 1};
     c->pix_fmt = AV_PIX_FMT_YUV420P;
+    c->gop_size = 30;
+    c->bit_rate = 4000000; // 提高码率到 4Mbps 解决模糊
+    c->max_b_frames = 0;   // 禁用 B 帧减少延迟和残影
+    
+    // 设置 H.264 编码预设
+    AVDictionary* opts = nullptr;
+    av_dict_set(&opts, "preset", "ultrafast", 0); // 最快速度，减少 CPU 占用
+    av_dict_set(&opts, "tune", "zerolatency", 0); // 零延迟模式，减少残影
+    
     if (m_outFmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
         c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    avcodec_open2(c, codec, nullptr);
-    m_outStream->codec = c; // 注意：旧版FFmpeg写法，新版应使用codecpar
+    if (avcodec_open2(c, codec, &opts) < 0) {
+        av_dict_free(&opts);
+        return -1;
+    }
+    av_dict_free(&opts);
+
+    m_outCodecCtx = c;
+    avcodec_parameters_from_context(m_outStream->codecpar, c);
+    m_outStream->time_base = c->time_base;
+
+
 
     if (!(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
         avio_open(&m_outFmtCtx->pb, outputPath.toUtf8().data(), AVIO_FLAG_WRITE);
@@ -262,11 +316,12 @@ void player::stopRecord()
     m_recording = false;
     av_write_trailer(m_outFmtCtx);
     
-    if (m_outStream && m_outStream->codec) {
-        avcodec_close(m_outStream->codec);
+    if (m_outCodecCtx) {
+        avcodec_free_context(&m_outCodecCtx);
     }
     
     if (m_outFmtCtx && !(m_outFmtCtx->oformat->flags & AVFMT_NOFILE)) {
+
         avio_closep(&m_outFmtCtx->pb);
     }
     

@@ -8,6 +8,8 @@
 #include <QProgressBar>
 #include <QComboBox>
 #include <QMetaType>
+#include <QSlider>
+#include <QLabel>
 class mpalyer : public QWidget
 {
 
@@ -33,13 +35,15 @@ private:
     QPushButton* pause=NULL;
     QPushButton* record=NULL;
     QPushButton* pipBtn=NULL;
-    QProgressBar *videoProcessBar=NULL;
+    QSlider *videoSlider=NULL;
+    QLabel *timeLabel=NULL;
     bool m_isPipMode = false;
-
     bool m_isRecording = false;
+    bool m_isUserSeeking = false;
 
 signals:
 
 };
+
 Q_DECLARE_METATYPE(mpalyer::Mode)
 #endif // MPLAYER_H
