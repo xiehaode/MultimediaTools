@@ -27,7 +27,8 @@ SOURCES += \
     src/gui/page/picture.cpp \
     src/base/cmdexecutor.cpp \
     src/base/pageBase.cpp \
-    src/base/timedcmdexecutor.cpp
+    src/base/timedcmdexecutor.cpp \
+    src/utils/myipcmgr.cpp
 
 
 HEADERS += \
@@ -43,13 +44,15 @@ HEADERS += \
     src/gui/page/picture.h \
     src/base/cmdexecutor.h \
     src/base/pageBase.h \
-    src/base/timedcmdexecutor.h
+    src/base/timedcmdexecutor.h \
+    src/utils/myipcmgr.h
 
 FORMS += \
     src/gui/ui/videopage.ui\
     src/gui/ui/word.ui \
     src/gui/ui/effact.ui \
     src/gui/ui/picture.ui
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -20,7 +20,11 @@ public:
 
     explicit mpalyer(QWidget *parent = nullptr);
     bool controlInit();
+<<<<<<< HEAD
     bool select_Mode(Mode m);
+=======
+    void playVideo(const QString& path);
+>>>>>>> 598de255f5feea8a06bc1b6944b20507c32379a5
 private:
     mGLWidget window;
     player p;

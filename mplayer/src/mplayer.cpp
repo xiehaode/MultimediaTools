@@ -39,11 +39,37 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
             videoProcessBar->setFormat(QString("%1s / %2s").arg(ms/1000).arg(total_ms/1000));
         }
     });
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 598de255f5feea8a06bc1b6944b20507c32379a5
 }
+void mpalyer::playVideo(const QString& path)
+{
+    qDebug() << "Playing video:" << path;
+    p.stop();
+    if (p.ffplayer_open(path.toStdString().c_str(), false) == 0) {
+        QThread* thread = new QThread();
+        p.moveToThread(thread);
+
+        QObject::connect(thread, &QThread::started, [=]() {
+            while (!p.isQuit()) {
+                p.ffplayer_read_frame();
+                QThread::msleep(10);
+            }
+        });
+
+        QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
+        thread->start();
+    }
+}
+
+
+
+
 
 bool mpalyer::controlInit()
 {

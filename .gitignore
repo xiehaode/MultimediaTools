@@ -46,6 +46,8 @@ ipch/
 
 # ===================== 第三方库/依赖 =====================
 ## OpenCV/FFmpeg 二进制文件（只保留源码/头文件，忽略二进制）
+mplayer/3rd
+
 OpenCVTools/3rd
 build-MultiMediaTool-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug
 build-myPlayer-Desktop_Qt_5_12_11_MSVC2017_64bit-Debug

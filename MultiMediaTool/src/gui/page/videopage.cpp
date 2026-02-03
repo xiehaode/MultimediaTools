@@ -1,7 +1,10 @@
 #include <src/utils/encodinghelper.h>
 #include "videopage.h"
 #include "ui_videopage.h"
+#include "src/utils/myipcmgr.h"
+#include "src/base/mplayermanager.h"
 #include <QString>
+
 #include <QStyle>
 #include <qdebug.h>
 #include <QDir>
@@ -23,6 +26,7 @@ videoPage::videoPage(QWidget *parent) :
 {
     ui->setupUi(this);
     init();
+
     worker = AvWorker_Create();
     initableWidget();
 
@@ -46,14 +50,14 @@ bool videoPage::init()
     ui->recordLabel->setObjectName("recordlabel");
     QString styleSheet =
             "QLabel#recordlabel {"
-            "   background: none;          /* §Ö/ */"
-            "   background-color: #808080; /*  */"
-            "   border: none;              /* §Ö */"
-            "   border: 1px solid #E0E0E0; /*  */"
-            "   border-radius: 20px;       /*  */"
-            "   color: white;              /*  */"
-            "   font: unset;               /* I */"
-            "   min-height: 30px;          /* Label */"
+            "   background: none;          "
+            "   background-color: #808080; "
+            "   border: none;              "
+            "   border: 1px solid #E0E0E0; "
+            "   border-radius: 20px;       "
+            "   color: white;              "
+            "   font: unset;               "
+            "   min-height: 30px;          "
             "}";
     ui->recordLabel->setStyleSheet(styleSheet);
     return true;
@@ -70,7 +74,7 @@ bool videoPage::initableWidget()
 
     if (!videoDir.mkpath(videoDirPath)) { // mkpatha/b/cmkdir
         QMessageBox::warning(this, GBK2QString(""),
-                             GBK2QString("video¡¤") + videoDirPath);
+                             GBK2QString("videoÂ·") + videoDirPath);
         return false;
     }
 
@@ -83,25 +87,27 @@ bool videoPage::initableWidget()
 
 
     QStringList tableHeaders;
-    tableHeaders << GBK2QString("ÊÓÆµÃû")
-                 << GBK2QString("Ê±³¤")
-                 << GBK2QString("´óÐ¡(MB)")
-                 << GBK2QString("´«½¨/µ±Ç°Ê±¼ä")
-                 << GBK2QString("±à¼­");
+
+    tableHeaders << GBK2QString("Video")
+                 << GBK2QString("Duration")
+                 << GBK2QString("Size(MB)")
+                 << GBK2QString("CreateTime")
+                 << GBK2QString("Edit");
+
 
 
     ui->tableWidget->setColumnCount(tableHeaders.size());
     ui->tableWidget->setHorizontalHeaderLabels(tableHeaders);
 
 
-    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); // 
-    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers); // 
-    ui->tableWidget->horizontalHeader()->setStretchLastSection(true); // 
+    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
 
-    ui->tableWidget->setColumnWidth(0, 200); // 
-    ui->tableWidget->setColumnWidth(1, 100); // 
-    ui->tableWidget->setColumnWidth(2, 100); // §³
-    ui->tableWidget->setColumnWidth(3, 180); // 
+    ui->tableWidget->setColumnWidth(0, 200);
+    ui->tableWidget->setColumnWidth(1, 100);
+    ui->tableWidget->setColumnWidth(2, 100);
+    ui->tableWidget->setColumnWidth(3, 180);
 
 
     QStringList videoFilters;
@@ -124,27 +130,26 @@ bool videoPage::initableWidget()
 
 //            AvWorker_GetVideoFirstFrame(worker,"1.mp4","1.bmp",false);
 
-            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMP¡¤
+            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMPÂ·
             bool getFrameOk = AvWorker_GetVideoFirstFrame(
                 worker,
-                QString2GBK(videoPath).toStdString().c_str(),  // ¡¤GBK
-                QString2GBK(bmpPath).toStdString().c_str(),    // BMP¡¤GBK
+                QString2GBK(videoPath).toStdString().c_str(),  // Â·GBK
+                QString2GBK(bmpPath).toStdString().c_str(),    // BMPÂ·GBK
                 false                            // RTSP
             );
 
 
             QWidget* nameWidget = new QWidget();
             QHBoxLayout* nameLayout = new QHBoxLayout(nameWidget);
-            nameLayout->setContentsMargins(5, 2, 5, 2); // §³
+            nameLayout->setContentsMargins(5, 2, 5, 2); // 
             nameLayout->setSpacing(8);                  // 
 
 
             QLabel* imgLabel = new QLabel();
-            imgLabel->setFixedSize(60, 40); // §³§Ú
-            imgLabel->setScaledContents(true); // Label§³
+            imgLabel->setFixedSize(60, 40);
+            imgLabel->setScaledContents(true);
             if (getFrameOk && QFile::exists(bmpPath)) {
                 imgLabel->setPixmap(QPixmap(bmpPath).scaled(imgLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
                 QFile::remove(bmpPath);
             } else {
                 // 
@@ -168,11 +173,11 @@ bool videoPage::initableWidget()
             ui->tableWidget->setRowHeight(i, 45);
 
 
+            qDebug() << "Â¤" << videoPath << " | " << QFile::exists(videoPath);
 
-            qDebug() << "¡¤" << videoPath << " | " << QFile::exists(videoPath);
             double duration = AvWorker_getDuration(worker,QString2GBK(videoPath).toStdString().c_str());
 
-            ///  :  3.716   "0:04"21.27   "0:21"
+            //  :  3.716   "0:04"21.27   "0:21"
             int minutes = static_cast<int>(duration) / 60;
             int seconds = static_cast<int>(duration) % 60;
             QString durationStr = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
@@ -209,8 +214,8 @@ bool videoPage::initableWidget()
 
 
             QWidget *btnWidget = new QWidget();
-            QPushButton *openBtn = new QPushButton(GBK2QString("´ò¿ª"));
-            QPushButton *delBtn = new QPushButton(GBK2QString("É¾³ý"));
+            QPushButton *openBtn = new QPushButton(GBK2QString(""));
+            QPushButton *delBtn = new QPushButton(GBK2QString(""));
             // 
             openBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#409EFF; color:white;}");
             delBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#F56C6C; color:white;}");
@@ -223,10 +228,27 @@ bool videoPage::initableWidget()
             btnWidget->setLayout(btnLayout);
             ui->tableWidget->setCellWidget(i, 4, btnWidget);
 
-            // 
             connect(openBtn, &QPushButton::clicked, this, [=]() {
-                QProcess::startDetached("explorer.exe", QStringList() << "/select," << videoPath);
+                if (!m_ipcMgr) {
+                    QProcess::startDetached("explorer.exe", QStringList() << "/select," << videoPath);
+                    return;
+                }
+
+                QString mplayerPath = QDir::currentPath();
+                if (!QFile::exists(mplayerPath)) {
+                    QMessageBox::warning(this, GBK2QString("error"), GBK2QString("not found mplayer") + mplayerPath);
+                    return;
+                }
+
+
+
+                m_ipcMgr->startChildProcess(mplayerPath, false); // Ã©Ã¨â€”â€”
+                
+
+                m_ipcMgr->sendMessage("play_video:" + videoPath);
+                m_ipcMgr->activateWindow();
             });
+
             connect(delBtn, &QPushButton::clicked, this, [=]() {
                 int ret = QMessageBox::question(this, GBK2QString(""),
                                                GBK2QString("") + fileInfo.fileName());
@@ -237,6 +259,7 @@ bool videoPage::initableWidget()
             });
         }
     }
+
     else {
 
         ui->tableWidget->setRowCount(1);
@@ -244,7 +267,6 @@ bool videoPage::initableWidget()
         emptyItem->setForeground(Qt::gray);
         emptyItem->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget->setItem(0, 0, emptyItem);
-
         ui->tableWidget->setSpan(0, 0, 1, tableHeaders.size());
     }
 
@@ -261,10 +283,8 @@ void videoPage::on_begin_clicked()
         ui->begin->setDisabled(true);
     }
     else{
-        QMessageBox::critical(NULL, "critical", "´ò¿ª×Ó½ø³ÌÊ§°Ü", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        QMessageBox::critical(NULL, "critical", "Ã—Â§Â°", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     }
-    // Ò»´ÎÐÔÁ¬½ÓfinishedÐÅºÅ£¬½ø³Ì½áÊøºóÍ³Ò»´¦Àí£¨ÎÞÐèÔÚon_begin_clickedÖÐÖØ¸´Á¬½Ó£©
-    // ÍÆ¼öµÄÁ¬½Ó·½Ê½ (Qt 5 ÒÔºóµÄº¯ÊýÖ¸ÕëÓï·¨)
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [=](){
         ui->begin->setDisabled(false);
@@ -311,7 +331,7 @@ void videoPage::on_import_2_clicked()
     QString baseName = srcFileInfo.baseName();
     QString suffix = srcFileInfo.suffix();
     while (QFile::exists(dstFilePath)) {
-        // »Çtest.mp4  test(1).mp4
+        // test.mp4  test(1).mp4
         dstFileName = QString("%1(%2).%3").arg(baseName).arg(fileIndex++).arg(suffix);
         dstFilePath = videoDirPath + "/" + dstFileName;
     }
@@ -328,7 +348,6 @@ void videoPage::on_import_2_clicked()
 
     QMessageBox::information(this, GBK2QString(""),
                              GBK2QString("") + dstFilePath);
-
 
     initableWidget();
 }

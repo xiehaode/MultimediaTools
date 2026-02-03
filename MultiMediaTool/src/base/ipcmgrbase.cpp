@@ -9,8 +9,8 @@ IPCMgrBase::IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent)
     , m_role(role)
     , m_pipeName(pipeName)
     , m_childProcess(new QProcess(this))
-    , m_localServer(nullptr)  // 修复：显式初始化Server指针
-    , m_localSocket(nullptr)  // 修复：显式初始化Socket指针
+    , m_localServer(nullptr)
+    , m_localSocket(nullptr)
 {
 
     if (m_role == IPCRole::Server) {
@@ -39,6 +39,8 @@ IPCMgrBase::IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent)
     }
 }
 
+
+//Socket错误处理槽函数
 
 void IPCMgrBase::onSocketError(QAbstractSocket::SocketError error)
 {
@@ -72,6 +74,8 @@ bool IPCMgrBase::startChildProcess(const QString& exePath, bool hideCurrentWindo
         return false;
     }
 
+    // 传递管道名称给子进程,让子进程知道连接哪个管道
+
     QStringList args;
     args << m_pipeName;
 
@@ -80,6 +84,9 @@ bool IPCMgrBase::startChildProcess(const QString& exePath, bool hideCurrentWindo
     }
 
     m_childProcess->start(exePath, args);
+
+    // 等待启动
+
     if (!m_childProcess->waitForStarted(3000)) {
         qDebug() << "Start child process failed:" << m_childProcess->errorString();
         return false;

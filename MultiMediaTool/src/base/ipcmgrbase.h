@@ -16,7 +16,7 @@ enum class IPCRole {
     Client   // 客户端（主动连接服务端）
 };
 
-// 进程通信基类（可继承）
+// 进程通信基类
 class IPCMgrBase : public QObject
 {
     Q_OBJECT

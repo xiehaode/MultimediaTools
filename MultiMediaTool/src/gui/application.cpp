@@ -3,14 +3,23 @@
 #include "src/gui/page/effact.h"
 #include "src/gui/page/word.h"
 #include "src/gui/page/picture.h"
+#include "src/utils/myipcmgr.h"
+
+extern const QString IPC_PIPE_NAME;
+
 MainWindow::MainWindow(QWidget *parent)
     : basewindow(parent)
 {
+    // 初始化IPC服务
+    m_ipcMgr = new MyIPCMgr(IPCRole::Server, IPC_PIPE_NAME, this, this);
+
     // 创建QStackedWidget控件 用于存放多个页面
         qStackedWidget = new QStackedWidget;
         qStackedWidget->setObjectName("BaseContentWidget");
         auto *videoP1 = new videoPage;
+        videoP1->setIPCMgr(m_ipcMgr);
         auto *wordP2 = new word;
+
         auto *pictureP3 = new picture;
         auto *effactP4 = new effact;
 

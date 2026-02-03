@@ -6,48 +6,48 @@
 #include <QString>
 #include <QByteArray>
 
-// ÃüÁîĞĞÖ´ĞĞ»ùÀà£¨¼ò»¯°æ£¬ºËĞÄÄÜÁ¦·â×°£©
+// å‘½ä»¤è¡Œæ‰§è¡ŒåŸºç±»ï¼ˆç®€åŒ–ç‰ˆï¼Œæ ¸å¿ƒèƒ½åŠ›å°è£…ï¼‰
 class CmdExecutor : public QObject
 {
     Q_OBJECT
 public:
     explicit CmdExecutor(QObject *parent = nullptr) : QObject(parent) {
-        // ³õÊ¼»¯½ø³Ì£¬°ó¶¨Êä³ö/´íÎó²¶»ñ
-        m_process.setProcessChannelMode(QProcess::MergedChannels); // ºÏ²¢±ê×¼Êä³öºÍ´íÎóÊä³ö
+        // åˆå§‹åŒ–è¿›ç¨‹ï¼Œç»‘å®šè¾“å‡º/é”™è¯¯æ•è·
+        m_process.setProcessChannelMode(QProcess::MergedChannels); // åˆå¹¶æ ‡å‡†è¾“å‡ºå’Œé”™è¯¯è¾“å‡º
         connect(&m_process, &QProcess::readyReadStandardOutput, this, [this]() {
-            m_output += m_process.readAllStandardOutput(); // ÀÛ¼ÆÊä³öÄÚÈİ
+            m_output += m_process.readAllStandardOutput(); // ç´¯è®¡è¾“å‡ºå†…å®¹
         });
         connect(&m_process, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
                 this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
             m_exitCode = exitCode;
             m_exitStatus = exitStatus;
-            emit cmdFinished(exitCode, exitStatus, m_output); // ´¥·¢Ö´ĞĞÍê³ÉĞÅºÅ
+            emit cmdFinished(exitCode, exitStatus, m_output); // è§¦å‘æ‰§è¡Œå®Œæˆä¿¡å·
         });
     }
 
-    // ========== Í¬²½Ö´ĞĞÃüÁî£¨×èÈûÊ½£¬ÊÊºÏ¼òµ¥ÃüÁî£© ==========
-    // ·µ»ØÖµ£ºÃüÁîÖ´ĞĞ½á¹û£¨Êä³öÄÚÈİ£©
-    // ²ÎÊı£ºcmd - ÒªÖ´ĞĞµÄÃüÁîĞĞ£»timeout - ³¬Ê±Ê±¼ä£¨ºÁÃë£¬-1±íÊ¾²»ÏŞÊ±£©
+    // åŒæ­¥æ‰§è¡Œå‘½ä»¤ï¼ˆé˜»å¡å¼ï¼Œé€‚åˆç®€å•å‘½ä»¤ï¼‰
+    // è¿”å›å€¼ï¼šå‘½ä»¤æ‰§è¡Œç»“æœï¼ˆè¾“å‡ºå†…å®¹ï¼‰
+    // å‚æ•°ï¼šcmd - è¦æ‰§è¡Œçš„å‘½ä»¤è¡Œï¼›timeout - è¶…æ—¶æ—¶é—´ï¼ˆæ¯«ç§’ï¼Œ-1è¡¨ç¤ºä¸é™æ—¶ï¼‰
     QString executeCmdSync(const QString &cmd, int timeout = -1) {
-        m_output.clear(); // Çå¿ÕÉÏ´ÎÊä³ö
+        m_output.clear(); // æ¸…ç©ºä¸Šæ¬¡è¾“å‡º
         m_exitCode = -1;
         m_exitStatus = QProcess::CrashExit;
 
-        // Æô¶¯ÃüÁîĞĞ£¨WindowsÓÃcmd /c£¬Linux/macÓÃsh -c£©
+        // å¯åŠ¨å‘½ä»¤è¡Œï¼ˆWindowsç”¨cmd /cï¼ŒLinux/macç”¨sh -cï¼‰
 #ifdef Q_OS_WIN
         m_process.start("cmd", {"/c", cmd});
 #else
         m_process.start("sh", {"-c", cmd});
 #endif
 
-        // µÈ´ıÖ´ĞĞÍê³É£¨×èÈû£©
+        // ç­‰å¾…æ‰§è¡Œå®Œæˆï¼ˆé˜»å¡ï¼‰
         m_process.waitForFinished(timeout);
 
-        // ·µ»ØÊä³öÄÚÈİ£¨×ª³ÉUTF-8±ÜÃâÖĞÎÄÂÒÂë£©
+        // è¿”å›è¾“å‡ºå†…å®¹ï¼ˆè½¬æˆUTF-8é¿å…ä¸­æ–‡ä¹±ç ï¼‰
         return QString::fromLocal8Bit(m_output);
     }
 
-    // ========== Òì²½Ö´ĞĞÃüÁî£¨·Ç×èÈû£¬ÊÊºÏºÄÊ±ÃüÁî£© ==========
+    // ========== å¼‚æ­¥æ‰§è¡Œå‘½ä»¤ï¼ˆéé˜»å¡ï¼Œé€‚åˆè€—æ—¶å‘½ä»¤ï¼‰ ==========
     void executeCmdAsync(const QString &cmd) {
         m_output.clear();
         m_exitCode = -1;
@@ -58,23 +58,23 @@ public:
 #else
         m_process.start("sh", {"-c", cmd});
 #endif
-        m_process.closeWriteChannel(); // ¹Ø±ÕĞ´ÈëÍ¨µÀ£¬±ÜÃâ½ø³Ì×èÈû
+        m_process.closeWriteChannel(); // å…³é—­å†™å…¥é€šé“ï¼Œé¿å…è¿›ç¨‹é˜»å¡
     }
 
-    // »ñÈ¡ÃüÁîÖ´ĞĞÍË³öÂë£¨0±íÊ¾³É¹¦£¬·Ç0Îª´íÎó£©
+    // è·å–å‘½ä»¤æ‰§è¡Œé€€å‡ºç ï¼ˆ0è¡¨ç¤ºæˆåŠŸï¼Œé0ä¸ºé”™è¯¯ï¼‰
     int exitCode() const { return m_exitCode; }
-    // »ñÈ¡ÃüÁîÖ´ĞĞ×´Ì¬£¨Õı³£ÍË³ö/±ÀÀ££©
+    // è·å–å‘½ä»¤æ‰§è¡ŒçŠ¶æ€ï¼ˆæ­£å¸¸é€€å‡º/å´©æºƒï¼‰
     QProcess::ExitStatus exitStatus() const { return m_exitStatus; }
 
 signals:
-    // Òì²½Ö´ĞĞÍê³ÉĞÅºÅ£¨exitCode=ÍË³öÂë£¬exitStatus=ÍË³ö×´Ì¬£¬output=Êä³öÄÚÈİ£©
+    // å¼‚æ­¥æ‰§è¡Œå®Œæˆä¿¡å·ï¼ˆexitCode=é€€å‡ºç ï¼ŒexitStatus=é€€å‡ºçŠ¶æ€ï¼Œoutput=è¾“å‡ºå†…å®¹ï¼‰
     void cmdFinished(int exitCode, QProcess::ExitStatus exitStatus, const QString &output);
 
 private:
-    QProcess m_process;       // ½ø³Ì¶ÔÏó
-    QByteArray m_output;      // ÃüÁîÊä³ö»º´æ
-    int m_exitCode = -1;      // ÍË³öÂë
-    QProcess::ExitStatus m_exitStatus = QProcess::CrashExit; // ÍË³ö×´Ì¬
+    QProcess m_process;       // è¿›ç¨‹å¯¹è±¡
+    QByteArray m_output;      // å‘½ä»¤è¾“å‡ºç¼“å­˜
+    int m_exitCode = -1;      // é€€å‡ºç 
+    QProcess::ExitStatus m_exitStatus = QProcess::CrashExit; // é€€å‡ºçŠ¶æ€
 };
 
 #endif // CMDEXECUTOR_H
