@@ -3,6 +3,8 @@
 #include <QVBoxLayout>
 #include <QString>
 #include <QThread>
+#include <QVariant>
+#include <QFileDialog>
 #include "mglwidget.h"
 #include "player.h"
 #include "mdevice.h"
@@ -24,8 +26,9 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         p.pause(true);
     });
 
-    connect(stop, &QPushButton::clicked, this, [=]() {
-        p.stop();
+    connect(selectMode, &QPushButton::clicked, this, [=]() {
+         Mode m = box->currentData().value<Mode>();
+         select_Mode(m);
     });
 
     connect(&p, &player::positionChanged, this, [=](int64_t ms, int64_t total_ms) {
@@ -37,26 +40,7 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
         }
     });
 
-    // 搜索摄像头并启动解码线程
 
-    auto devices = getVideoDevices();
-    if (!devices.empty()) {
-        //if (p.ffplayer_open(devices[0].name) == 0) {
-        if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
-            QThread* thread = new QThread();
-            p.moveToThread(thread);
-
-            QObject::connect(thread, &QThread::started, [=]() {
-                while (!p.isQuit()) {
-                    p.ffplayer_read_frame();
-                    QThread::msleep(10);
-                }
-            });
-
-            QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
-            thread->start();
-        }
-    }
 
 
 }
@@ -65,8 +49,15 @@ bool mpalyer::controlInit()
 {
     // 初始化所有控件，设置基础文本/属性
     play = new QPushButton(tr("播放"), this);
-    stop = new QPushButton(tr("停止"), this);
+    selectMode = new QPushButton(tr("选择模式"), this);
     pause = new QPushButton(tr("暂停"), this);
+    box = new QComboBox(this);
+    QVariant capture(CAPTURE);
+    QVariant video(VIDEO);
+    box->addItem("camera",capture);
+    box->addItem("video",video);
+    box->setCurrentIndex(0);
+
     videoProcessBar = new QProgressBar(this);
 
     // 进度条基础设置：范围0-100，初始值0，显示百分比
@@ -86,7 +77,8 @@ bool mpalyer::controlInit()
     // 添加按钮到水平布局
     btnLayout->addWidget(play);
     btnLayout->addWidget(pause);
-    btnLayout->addWidget(stop);
+    btnLayout->addWidget(selectMode);
+    btnLayout->addWidget(box);
     // 按钮区左右添加弹性空间，让按钮居中显示
     btnLayout->addStretch();
     btnLayout->insertStretch(0);
@@ -102,12 +94,12 @@ bool mpalyer::controlInit()
     // 按钮：固定宽高，不随窗口缩放变化
     play->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     pause->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    stop->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    selectMode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     // 按钮设置固定大小（统一尺寸，美观）
     QSize btnSize(80, 36);
     play->setFixedSize(btnSize);
     pause->setFixedSize(btnSize);
-    stop->setFixedSize(btnSize);
+    selectMode->setFixedSize(btnSize);
 
     // 拼接QSS样式字符串，支持换行/注释，便于维护
     QString qss = R"(
@@ -182,5 +174,52 @@ bool mpalyer::controlInit()
     this->setLayout(mainLayout);
     window.show();
     // 初始化成功返回true
+    return true;
+}
+
+bool mpalyer::select_Mode(Mode m)
+{
+    if(m ==CAPTURE){
+        // 搜索摄像头并启动解码线程
+
+        auto devices = getVideoDevices();
+        if (!devices.empty()) {
+            if (p.ffplayer_open(devices[0].name) == 0) {
+            //if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
+                QThread* thread = new QThread();
+                p.moveToThread(thread);
+
+                QObject::connect(thread, &QThread::started, [=]() {
+                    while (!p.isQuit()) {
+                        p.ffplayer_read_frame();
+                        QThread::msleep(10);
+                    }
+                });
+
+                QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
+                thread->start();
+            }
+        }
+    }
+    else if(m == VIDEO){
+        QString file_name = QFileDialog::getOpenFileName(NULL, "标题", ".", "视频文件(*.mp4 *.avi *.mkv *.mov)");
+        if (p.ffplayer_open(file_name,false) == 0) {
+            //if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
+            QThread* thread = new QThread();
+            p.moveToThread(thread);
+
+            QObject::connect(thread, &QThread::started, [=]() {
+                while (!p.isQuit()) {
+                    p.ffplayer_read_frame();
+                    QThread::msleep(10);
+                }
+            });
+
+            QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
+            thread->start();
+            }
+
+    }
+    selectMode->setDisabled(true);
     return true;
 }

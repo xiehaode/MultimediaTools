@@ -23,7 +23,6 @@ videoPage::videoPage(QWidget *parent) :
 {
     ui->setupUi(this);
     init();
-    // еУ
     worker = AvWorker_Create();
     initableWidget();
 
@@ -60,21 +59,21 @@ bool videoPage::init()
     return true;
 }
 
-// videotableWidgetУС
+
 bool videoPage::initableWidget()
 {
-    // ========== 1. · ==========
+
     QString videoDirPath = QDir::currentPath() + "/video";
     QDir videoDir(videoDirPath);
 
-    // ========== 2. У ==========
-    // mkpathmkdirжexists
+
+
     if (!videoDir.mkpath(videoDirPath)) { // mkpatha/b/cmkdir
         QMessageBox::warning(this, GBK2QString(""),
                              GBK2QString("video·") + videoDirPath);
         return false;
     }
-    // δ
+
     static bool isDirCreatedTip = false;
     if (!isDirCreatedTip && !QDir(videoDirPath).exists()) {
         QMessageBox::information(this, GBK2QString(""),
@@ -82,43 +81,43 @@ bool videoPage::initableWidget()
         isDirCreatedTip = true;
     }
 
-    // ========== 3. TableWidget/ ==========
-    QStringList tableHeaders;
-    tableHeaders << GBK2QString("")
-                 << GBK2QString("")
-                 << GBK2QString("С(MB)")
-                 << GBK2QString("")
-                 << GBK2QString("");
 
-    // 1
+    QStringList tableHeaders;
+    tableHeaders << GBK2QString("视频名")
+                 << GBK2QString("时长")
+                 << GBK2QString("大小(MB)")
+                 << GBK2QString("传建/当前时间")
+                 << GBK2QString("编辑");
+
+
     ui->tableWidget->setColumnCount(tableHeaders.size());
     ui->tableWidget->setHorizontalHeaderLabels(tableHeaders);
 
-    // Ч
+
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); // 
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers); // 
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true); // 
-    // п
+
     ui->tableWidget->setColumnWidth(0, 200); // 
     ui->tableWidget->setColumnWidth(1, 100); // 
     ui->tableWidget->setColumnWidth(2, 100); // С
     ui->tableWidget->setColumnWidth(3, 180); // 
 
-    // ========== 4.  ==========
+
     QStringList videoFilters;
     videoFilters << "*.mp4" << "*.avi" << "*.mkv" << "*.flv" << "*.mov" << "*.wmv";
     QFileInfoList videoFileList = videoDir.entryInfoList(videoFilters,
                                                         QDir::Files | QDir::NoDotAndDotDot,
                                                         QDir::Name);
 
-    // ========== 5.  ==========
+
     if (!videoFileList.isEmpty()) {
         ui->tableWidget->setRowCount(videoFileList.size());
         for (int i = 0; i < videoFileList.size(); ++i) {
             QFileInfo fileInfo = videoFileList.at(i);
             QString videoPath = fileInfo.absoluteFilePath();
 
-//            // 5.1 
+//
 //            QTableWidgetItem *nameItem = new QTableWidgetItem(fileInfo.baseName());
 //            nameItem->setTextAlignment(Qt::AlignCenter);
 //            ui->tableWidget->setItem(i, 0, nameItem);
@@ -133,44 +132,43 @@ bool videoPage::initableWidget()
                 false                            // RTSP
             );
 
-            // 2. Widget+
+
             QWidget* nameWidget = new QWidget();
             QHBoxLayout* nameLayout = new QHBoxLayout(nameWidget);
             nameLayout->setContentsMargins(5, 2, 5, 2); // С
             nameLayout->setSpacing(8);                  // 
 
-            // 3. Label
+
             QLabel* imgLabel = new QLabel();
             imgLabel->setFixedSize(60, 40); // Си
             imgLabel->setScaledContents(true); // LabelС
             if (getFrameOk && QFile::exists(bmpPath)) {
                 imgLabel->setPixmap(QPixmap(bmpPath).scaled(imgLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                // BMP
+
                 QFile::remove(bmpPath);
             } else {
                 // 
                 imgLabel->setPixmap(QPixmap(":/rc/video.svg").scaled(imgLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
             }
 
-            // 4. Label
+
             QLabel* textLabel = new QLabel(fileInfo.baseName());
             textLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter); // 
             textLabel->setStyleSheet("color: #333; font-size: 12px;");   // 
 
-            // 5. 
+
             nameLayout->addWidget(imgLabel);
             nameLayout->addWidget(textLabel);
             nameLayout->addStretch(); // 
 
-            // 6. Widget
+
             ui->tableWidget->setCellWidget(i, 0, nameWidget);
 
-            // иС
+
             ui->tableWidget->setRowHeight(i, 45);
 
 
-            //
-            // 5.2 
+
             qDebug() << "·" << videoPath << " | " << QFile::exists(videoPath);
             double duration = AvWorker_getDuration(worker,QString2GBK(videoPath).toStdString().c_str());
 
@@ -179,20 +177,20 @@ bool videoPage::initableWidget()
             int seconds = static_cast<int>(duration) % 60;
             QString durationStr = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
 
-            //  QString  QTableWidgetItem double
+
             QTableWidgetItem *durationItem = new QTableWidgetItem(durationStr);
             durationItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidget->setItem(i, 1, durationItem);
             qDebug()<<"duration:"<<duration;
 
 
-            // 5.3 СMB2λС
+
             double fileSizeMB = fileInfo.size() / (1024.0 * 1024.0);
             QTableWidgetItem *sizeItem = new QTableWidgetItem(QString::asprintf("%.2f", fileSizeMB));
             sizeItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidget->setItem(i, 2, sizeItem);
 
-            // 5.4 
+
             //QDateTime createTime = fileInfo.birthTime().isNull() ? fileInfo.lastModified() : fileInfo.birthTime();
             QDateTime fileTime;
             if (!fileInfo.birthTime().isNull()) {
@@ -209,10 +207,10 @@ bool videoPage::initableWidget()
             timeItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidget->setItem(i, 3, timeItem);
 
-            // 5.5 
+
             QWidget *btnWidget = new QWidget();
-            QPushButton *openBtn = new QPushButton(GBK2QString(""));
-            QPushButton *delBtn = new QPushButton(GBK2QString(""));
+            QPushButton *openBtn = new QPushButton(GBK2QString("打开"));
+            QPushButton *delBtn = new QPushButton(GBK2QString("删除"));
             // 
             openBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#409EFF; color:white;}");
             delBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#F56C6C; color:white;}");
@@ -239,15 +237,14 @@ bool videoPage::initableWidget()
             });
         }
     }
-    // ========== 6.  ==========
     else {
-        // 2У5
+
         ui->tableWidget->setRowCount(1);
         QTableWidgetItem *emptyItem = new QTableWidgetItem(GBK2QString("video"));
         emptyItem->setForeground(Qt::gray);
         emptyItem->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget->setItem(0, 0, emptyItem);
-        // 3tableHeaders.size()5У
+
         ui->tableWidget->setSpan(0, 0, 1, tableHeaders.size());
     }
 
@@ -258,6 +255,20 @@ bool videoPage::initableWidget()
 void videoPage::on_begin_clicked()
 {
 
+    process = new QProcess;
+    process->start("mPlayer.exe");
+    if(process->isOpen()){
+        ui->begin->setDisabled(true);
+    }
+    else{
+        QMessageBox::critical(NULL, "critical", "打开子进程失败", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    }
+    // 一次性连接finished信号，进程结束后统一处理（无需在on_begin_clicked中重复连接）
+    // 推荐的连接方式 (Qt 5 以后的函数指针语法)
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            [=](){
+        ui->begin->setDisabled(false);
+    });
 }
 
 
@@ -265,18 +276,18 @@ void videoPage::on_begin_clicked()
 
 void videoPage::on_import_2_clicked()
 {
-    // 1. ·initableWidgetб
+
     QString videoDirPath = QDir::currentPath() + "/video";
     QDir videoDir(videoDirPath);
 
-    // video
+
     if (!videoDir.mkpath(videoDirPath)) {
         QMessageBox::warning(this, GBK2QString(""),
                              GBK2QString("video"));
         return;
     }
 
-    // 2. 
+
     QString videoFilter = GBK2QString(" (*.mp4 *.avi *.mkv *.flv *.mov *.wmv);; (*.*)");
     QString selectedFilePath = QFileDialog::getOpenFileName(
                 this,
@@ -285,17 +296,17 @@ void videoPage::on_import_2_clicked()
                 videoFilter
                 );
 
-    // 3. ж
+
     if (selectedFilePath.isEmpty()) {
         return;
     }
 
-    // 4. 
+
     QFileInfo srcFileInfo(selectedFilePath);
     QString dstFileName = srcFileInfo.fileName(); // 
     QString dstFilePath = videoDirPath + "/" + dstFileName;
 
-    // 5. 
+
     int fileIndex = 1;
     QString baseName = srcFileInfo.baseName();
     QString suffix = srcFileInfo.suffix();
@@ -305,7 +316,7 @@ void videoPage::on_import_2_clicked()
         dstFilePath = videoDirPath + "/" + dstFileName;
     }
 
-    // 6. video
+
     QFile srcFile(selectedFilePath);
     bool copyOk = srcFile.copy(dstFilePath);
     if (!copyOk) {
@@ -314,10 +325,10 @@ void videoPage::on_import_2_clicked()
         return;
     }
 
-    // 7. 
+
     QMessageBox::information(this, GBK2QString(""),
                              GBK2QString("") + dstFilePath);
 
-    // 8. ±videoб
+
     initableWidget();
 }

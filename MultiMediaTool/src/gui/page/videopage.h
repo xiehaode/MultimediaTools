@@ -27,6 +27,7 @@ private slots:
     void on_import_2_clicked();
 
 private:
+    QProcess *process;
     void *worker = NULL;
     Ui::videoPage *ui;
 };
