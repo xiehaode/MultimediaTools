@@ -17,7 +17,18 @@ typedef struct DecodedFrame DecodedFrame;
 
 
 
-
+enum func {
+	grayImage,
+	customOilPaintApprox,
+	applyOilPainting,
+	applyMosaic,
+	FrostedGlass,
+	simpleSkinSmoothing,
+	Whitening,
+	Whitening2,
+	addTextWatermark,
+	invertImage
+};
 
 
 

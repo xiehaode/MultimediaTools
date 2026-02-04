@@ -13,6 +13,7 @@ public:
 	~FFmpegDecoder();
 
 	int ffplayer_open(const std::string &inputPath, bool isDevice = true);
+	AVFrame *  getFrame();
 	void ffplayer_read_frame();
 	void ffplayer_close();
 
