@@ -131,6 +131,37 @@ int64_t FFmpegDecoder::getCurrentTime() const
 	return 0;
 }
 
+int FFmpegDecoder::getWidth() const
+{
+	if (ctx && ctx->codec_ctx) {
+		return ctx->codec_ctx->width;
+	}
+	return 0;
+}
+
+int FFmpegDecoder::getHeight() const
+{
+	if (ctx && ctx->codec_ctx) {
+		return ctx->codec_ctx->height;
+	}
+	return 0;
+}
+
+int FFmpegDecoder::getFPS() const
+{
+	if (ctx && ctx->fmt_ctx && ctx->video_stream_index >= 0) {
+		AVStream* video_stream = ctx->fmt_ctx->streams[ctx->video_stream_index];
+		if (video_stream) {
+			// 计算帧率
+			AVRational fps = av_guess_frame_rate(ctx->fmt_ctx, video_stream, nullptr);
+			if (fps.num && fps.den) {
+				return fps.num / fps.den;
+			}
+		}
+	}
+	return 30; // 默认帧率
+}
+
 // C接口实现
 extern "C" OPENCVFFMPEGTOOLS_API void* Decoder_Create()
 {
@@ -173,4 +204,22 @@ extern "C" OPENCVFFMPEGTOOLS_API int64_t Decoder_GetCurrentTime(void* decoder)
 {
 	if (!decoder) return 0;
 	return static_cast<FFmpegDecoder*>(decoder)->getCurrentTime();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Decoder_GetWidth(void* decoder)
+{
+	if (!decoder) return 0;
+	return static_cast<FFmpegDecoder*>(decoder)->getWidth();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Decoder_GetHeight(void* decoder)
+{
+	if (!decoder) return 0;
+	return static_cast<FFmpegDecoder*>(decoder)->getHeight();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Decoder_GetFPS(void* decoder)
+{
+	if (!decoder) return 30;
+	return static_cast<FFmpegDecoder*>(decoder)->getFPS();
 }

@@ -27,7 +27,8 @@ enum func {
 	Whitening,
 	Whitening2,
 	addTextWatermark,
-	invertImage
+	invertImage,
+	noAction
 };
 
 
@@ -98,6 +99,21 @@ OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerReadFrame(void* decoder);
 OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerClose(void* decoder);
 OPENCVFFMPEGTOOLS_API int64_t Decoder_GetDuration(void* decoder);
 OPENCVFFMPEGTOOLS_API int64_t Decoder_GetCurrentTime(void* decoder);
+OPENCVFFMPEGTOOLS_API int Decoder_GetWidth(void* decoder);
+OPENCVFFMPEGTOOLS_API int Decoder_GetHeight(void* decoder);
+OPENCVFFMPEGTOOLS_API int Decoder_GetFPS(void* decoder);
+
+// ---- VideoTrans C API ----
+OPENCVFFMPEGTOOLS_API void* VideoTrans_Create();
+OPENCVFFMPEGTOOLS_API void VideoTrans_Destroy(void* trans);
+OPENCVFFMPEGTOOLS_API int VideoTrans_Initialize(void* trans, const char* input_path, const char* output_path);
+OPENCVFFMPEGTOOLS_API int VideoTrans_GetWidth(void* trans);
+OPENCVFFMPEGTOOLS_API int VideoTrans_GetHeight(void* trans);
+OPENCVFFMPEGTOOLS_API int VideoTrans_GetFPS(void* trans);
+OPENCVFFMPEGTOOLS_API int64_t VideoTrans_GetDuration(void* trans);
+OPENCVFFMPEGTOOLS_API int VideoTrans_Process(void* trans, int effect_type);
+OPENCVFFMPEGTOOLS_API int VideoTrans_Reset(void* trans);
+OPENCVFFMPEGTOOLS_API void VideoTrans_Cleanup(void* trans);
 
 #ifdef __cplusplus
 } // extern "C"

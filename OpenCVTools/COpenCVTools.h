@@ -8,7 +8,7 @@
 
 struct AVFrame;
 
-class OPENCVFFMPEGTOOLS_API COpenCVTools {
+class  COpenCVTools {
 public:
 	COpenCVTools();
 	void test();

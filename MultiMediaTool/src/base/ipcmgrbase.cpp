@@ -20,7 +20,7 @@ IPCMgrBase::IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent)
         if (QLocalServer::removeServer(m_pipeName)) {
             qDebug() << "Removed existing pipe:" << m_pipeName;
         }
-        // ¼àÌýÁ¬½Ó
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (!m_localServer->listen(m_pipeName)) {
             qDebug() << "Server listen failed:" << m_localServer->errorString();
         } else {
@@ -40,7 +40,7 @@ IPCMgrBase::IPCMgrBase(IPCRole role, const QString& pipeName, QObject *parent)
 }
 
 
-//Socket´íÎó´¦Àí²Ûº¯Êý
+//Socketï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ûºï¿½ï¿½ï¿½
 
 void IPCMgrBase::onSocketError(QAbstractSocket::SocketError error)
 {
@@ -74,7 +74,7 @@ bool IPCMgrBase::startChildProcess(const QString& exePath, bool hideCurrentWindo
         return false;
     }
 
-    // ´«µÝ¹ÜµÀÃû³Æ¸ø×Ó½ø³Ì,ÈÃ×Ó½ø³ÌÖªµÀÁ¬½ÓÄÄ¸ö¹ÜµÀ
+    // ï¿½ï¿½ï¿½Ý¹Üµï¿½ï¿½ï¿½ï¿½Æ¸ï¿½ï¿½Ó½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Üµï¿½
 
     QStringList args;
     args << m_pipeName;
@@ -85,7 +85,7 @@ bool IPCMgrBase::startChildProcess(const QString& exePath, bool hideCurrentWindo
 
     m_childProcess->start(exePath, args);
 
-    // µÈ´ýÆô¶¯
+    // ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½
 
     if (!m_childProcess->waitForStarted(3000)) {
         qDebug() << "Start child process failed:" << m_childProcess->errorString();
@@ -101,14 +101,14 @@ bool IPCMgrBase::sendMessage(const QString& msg)
         qDebug() << "Socket not connected, send failed";
         return false;
     }
-    // ·¢ËÍÏûÏ¢£¨¼Ó»»ÐÐ·û×÷Îª·Ö¸ô·û£¬±ÜÃâÕ³°ü£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ó»ï¿½ï¿½Ð·ï¿½ï¿½ï¿½Îªï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ³ï¿½ï¿½ï¿½ï¿½
     QByteArray data = msg.toUtf8() + "\n";
     qint64 written = socket->write(data);
-    socket->flush(); // Á¢¼´·¢ËÍ
+    socket->flush(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     return written == data.size();
 }
 
-// Client£ºÁ¬½Ó·þÎñ¶Ë
+// Clientï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½ï¿½
 bool IPCMgrBase::connectToServer()
 {
     if (m_role != IPCRole::Client) {
@@ -116,65 +116,65 @@ bool IPCMgrBase::connectToServer()
         return false;
     }
     m_localSocket->connectToServer(m_pipeName);
-    // µÈ´ýÁ¬½Ó£¨³¬Ê±3Ãë£©
+    // ï¿½È´ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½Ê±3ï¿½ë£©
     return m_localSocket->waitForConnected(3000);
 }
 
-// ¼¤»îµ±Ç°´°¿Ú£¨¿çÆ½Ì¨£©
+// ï¿½ï¿½ï¿½îµ±Ç°ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½
 void IPCMgrBase::activateWindow()
 {
     if (!m_currentWindow) return;
     m_currentWindow->show();
-    m_currentWindow->raise();       // ÌáÉýµ½¶¥²ã
-    m_currentWindow->activateWindow(); // ¼¤»î´°¿Ú
+    m_currentWindow->raise();       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    m_currentWindow->activateWindow(); // ï¿½ï¿½ï¿½î´°ï¿½ï¿½
 }
 
-// ========== ÄÚ²¿²Ûº¯ÊýÊµÏÖ ==========
-// Server£ºÐÂ¿Í»§¶ËÁ¬½Ó
+// ========== ï¿½Ú²ï¿½ï¿½Ûºï¿½ï¿½ï¿½Êµï¿½ï¿½ ==========
+// Serverï¿½ï¿½ï¿½Â¿Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void IPCMgrBase::onNewClientConnected()
 {
-    // ½ö±£ÁôÒ»¸ö¿Í»§¶ËÁ¬½Ó
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_localSocket) {
         m_localSocket->disconnectFromServer();
         m_localSocket->deleteLater();
     }
     m_localSocket = m_localServer->nextPendingConnection();
-    // ÐÞ¸´5£ºreadyRead/disconnectedÐÅºÅ¸ÄÓÃ¾É°æconnectÓï·¨
+    // ï¿½Þ¸ï¿½5ï¿½ï¿½readyRead/disconnectedï¿½ÅºÅ¸ï¿½ï¿½Ã¾É°ï¿½connectï¿½ï·¨
     connect(m_localSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
     connect(m_localSocket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     qDebug() << "New client connected";
 }
 
-// ½ÓÊÕÏûÏ¢£¨Server/ClientÍ¨ÓÃ£©
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Server/ClientÍ¨ï¿½Ã£ï¿½
 void IPCMgrBase::onReadyRead()
 {
     QLocalSocket* socket = (m_role == IPCRole::Server) ? m_localSocket : m_localSocket;
     if (!socket) return;
-    // ¶ÁÈ¡ËùÓÐÊý¾Ý£¨°´»»ÐÐ·û·Ö¸î£©
+    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½ï¿½Ö¸î£©
     QByteArray data = socket->readAll();
     QStringList msgs = QString::fromUtf8(data).split("\n", QString::SkipEmptyParts);
     for (const QString& msg : msgs) {
-        // µ÷ÓÃ×ÓÀàÖØÐ´µÄ»Øµ÷º¯Êý
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½Ä»Øµï¿½ï¿½ï¿½ï¿½ï¿½
         onMessageReceived(msg);
     }
 }
 
-// Á¬½Ó¶Ï¿ª
+// ï¿½ï¿½ï¿½Ó¶Ï¿ï¿½
 void IPCMgrBase::onDisconnected()
 {
     qDebug() << "Socket disconnected";
     if (m_role == IPCRole::Server) {
-        // Server£º¿Í»§¶Ë¶Ï¿ªºó¼¤»î×ÔÉí´°¿Ú
+        // Serverï¿½ï¿½ï¿½Í»ï¿½ï¿½Ë¶Ï¿ï¿½ï¿½ó¼¤»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         activateWindow();
     }
 }
 
-// Server£º×Ó½ø³ÌÍË³ö
+// Serverï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½
 void IPCMgrBase::onChildProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     qDebug() << "Child process exited, code:" << exitCode;
-    // µ÷ÓÃ×ÓÀà»Øµ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
     onChildProcessExited(exitCode);
-    // ¼¤»î×ÔÉí´°¿Ú
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     activateWindow();
 }

@@ -32,13 +32,13 @@ public:
 	*/
 	cv::Mat grayImage(const cv::Mat & frame);
 	/**
-	* @brief 优化版油画效果模拟（无任何xphoto依赖）
+	* @brief 优化版油画效果模拟（无任何xphoto依赖） 3~4      5~7     8~10     >10
 	* @param src 输入8位彩色BGR图像
 	* @param radius 空间滤波半径（影响纹理粗细）
 	* @param sigma_color 颜色sigma（影响颜色融合度）
 	* @return 油画效果图像
 	*/
-	cv::Mat customOilPaintApprox(const cv::Mat& src, int radius, double sigma_color);
+	cv::Mat customOilPaintApprox(const cv::Mat& src, int radius, double sigma_color=25.0);
 	/**
 	* @brief 油画滤镜实现函数（纯自定义实现，无xphoto依赖）
 	* @param src 输入图像（cv::Mat，支持8位彩色图像）

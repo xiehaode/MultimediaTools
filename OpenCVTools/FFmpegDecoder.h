@@ -20,6 +20,13 @@ public:
 	SharedFrameBuffer* getSharedBuffer() { return &ctx->shared_buf; }
 	int64_t getDuration() const;
 	int64_t getCurrentTime() const;
+	
+	// 获取视频属性的方法
+	int getWidth() const;
+	int getHeight() const;
+	int getFPS() const;
+	AVCodecContext* getCodecContext() const { return ctx ? ctx->codec_ctx : nullptr; }
+	AVFrame* getCurrentAVFrame() const { return ctx ? ctx->frame : nullptr; }
 
 
 
