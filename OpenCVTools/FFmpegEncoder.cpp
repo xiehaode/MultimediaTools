@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "FFmpegEncoder.h"
-// ¹¹Ôìº¯Êı£º³õÊ¼»¯ÉÏÏÂÎÄ¾ä±úÎªnullptr
+// æ„é€ å‡½æ•°ï¼šåˆå§‹åŒ–ä¸Šä¸‹æ–‡å¥æŸ„ä¸ºnullptr
 FFmpegEncoder::FFmpegEncoder() : mCtx(nullptr)
 {
 	
@@ -9,21 +9,21 @@ FFmpegEncoder::FFmpegEncoder() : mCtx(nullptr)
 
 void FFmpegEncoder::video_muxer_set_defaults()
 {
-	if (!mCtx) return; // Ç°ÖÃ¿ÕÖ¸ÕëĞ£Ñé
-	mCtx->bit_rate = 4000000;  // Ä¬ÈÏ4MbpsÂëÂÊ
-	mCtx->gop_size = 25;       // Ä¬ÈÏ25Ö¡Ò»¸ö¹Ø¼üÖ¡
+	if (!mCtx) return; // å‰ç½®ç©ºæŒ‡é’ˆæ ¡éªŒ
+	mCtx->bit_rate = 4000000;  // é»˜è®¤4Mbpsç ç‡
+	mCtx->gop_size = 25;       // é»˜è®¤25å¸§ä¸€ä¸ªå…³é”®å¸§
 	mCtx->fmt_ctx = nullptr;
 	mCtx->codec_ctx = nullptr;
 	mCtx->video_stream = nullptr;
-	mCtx->is_init = 0; // ³õÊ¼»¯ÎªÎ´³õÊ¼»¯×´Ì¬
+	mCtx->is_init = 0; // åˆå§‹åŒ–ä¸ºæœªåˆå§‹åŒ–çŠ¶æ€
 }
 
-// ³õÊ¼»¯±àÂëÆ÷ºÍÊÓÆµÁ÷£¨ÄÚ²¿¹¤¾ßº¯Êı£©
+// åˆå§‹åŒ–ç¼–ç å™¨å’Œè§†é¢‘æµï¼ˆå†…éƒ¨å·¥å…·å‡½æ•°ï¼‰
 int FFmpegEncoder::video_muxer_init_codec()
 {
 	if (!mCtx)
 	{
-		av_log(NULL, AV_LOG_ERROR, "³õÊ¼»¯±àÂëÆ÷Ê§°Ü£ºÉÏÏÂÎÄÎ´·ÖÅä\n");
+		av_log(NULL, AV_LOG_ERROR, "åˆå§‹åŒ–ç¼–ç å™¨å¤±è´¥ï¼šä¸Šä¸‹æ–‡æœªåˆ†é…\n");
 		return -1;
 	}
 
@@ -31,71 +31,71 @@ int FFmpegEncoder::video_muxer_init_codec()
 	int ret = 0;
 	char err_buf[64] = { 0 };
 
-	// ²éÕÒH.264±àÂëÆ÷
+	// æŸ¥æ‰¾H.264ç¼–ç å™¨
 	codec = avcodec_find_encoder(AV_CODEC_ID_H264);
 	if (!codec)
 	{
-		av_log(NULL, AV_LOG_ERROR, "Î´ÕÒµ½H.264±àÂëÆ÷£¬ÇëÈ·±£FFmpeg±àÒëÁËlibx264\n");
+		av_log(NULL, AV_LOG_ERROR, "æœªæ‰¾åˆ°H.264ç¼–ç å™¨ï¼Œè¯·ç¡®ä¿FFmpegç¼–è¯‘äº†libx264\n");
 		return -1;
 	}
 
-	// ´´½¨ÊÓÆµÁ÷
+	// åˆ›å»ºè§†é¢‘æµ
 	mCtx->video_stream = avformat_new_stream(mCtx->fmt_ctx, nullptr);
 	if (!mCtx->video_stream)
 	{
-		av_log(NULL, AV_LOG_ERROR, "´´½¨ÊÓÆµÁ÷Ê§°Ü\n");
+		av_log(NULL, AV_LOG_ERROR, "åˆ›å»ºè§†é¢‘æµå¤±è´¥\n");
 		return -1;
 	}
-	// ÉèÖÃÁ÷Ê±¼ä»ùºÍÖ¡ÂÊ
+	// è®¾ç½®æµæ—¶é—´åŸºå’Œå¸§ç‡
 	mCtx->video_stream->time_base = av_make_q(1, mCtx->fps);
 	mCtx->video_stream->r_frame_rate = av_make_q(mCtx->fps, 1);
 
-	// ·ÖÅä±àÂëÉÏÏÂÎÄ
+	// åˆ†é…ç¼–ç ä¸Šä¸‹æ–‡
 	mCtx->codec_ctx = avcodec_alloc_context3(codec);
 	if (!mCtx->codec_ctx)
 	{
-		av_log(NULL, AV_LOG_ERROR, "·ÖÅä±àÂëÉÏÏÂÎÄÊ§°Ü\n");
+		av_log(NULL, AV_LOG_ERROR, "åˆ†é…ç¼–ç ä¸Šä¸‹æ–‡å¤±è´¥\n");
 		return -1;
 	}
 
-	// ÅäÖÃ±àÂëºËĞÄ²ÎÊı
+	// é…ç½®ç¼–ç æ ¸å¿ƒå‚æ•°
 	AVCodecContext *c = mCtx->codec_ctx;
 	c->codec_id = AV_CODEC_ID_H264;
 	c->codec_type = AVMEDIA_TYPE_VIDEO;
-	c->pix_fmt = AV_PIX_FMT_YUV420P; // ±ØĞëYUV420P£¬¼æÈİËùÓĞ²¥·ÅÆ÷
+	c->pix_fmt = AV_PIX_FMT_YUV420P; // å¿…é¡»YUV420Pï¼Œå…¼å®¹æ‰€æœ‰æ’­æ”¾å™¨
 	c->width = mCtx->width;
 	c->height = mCtx->height;
 	c->time_base = mCtx->video_stream->time_base;
 	c->framerate = mCtx->video_stream->r_frame_rate;
 	c->bit_rate = mCtx->bit_rate;
 	c->gop_size = mCtx->gop_size;
-	c->max_b_frames = 0; // ¹Ø±ÕBÖ¡£¬¼ò»¯Ê±¼ä´Á´¦Àí£¬ÌáÉı¼æÈİĞÔ
+	c->max_b_frames = 0; // å…³é—­Bå¸§ï¼Œç®€åŒ–æ—¶é—´æˆ³å¤„ç†ï¼Œæå‡å…¼å®¹æ€§
 
-	// H.264±àÂëÑ¡Ïî£ºbaseline profileÌáÉı¼æÈİĞÔ£¬mediumÆ½ºâËÙ¶È/»­ÖÊ
+	// H.264ç¼–ç é€‰é¡¹ï¼šbaseline profileæå‡å…¼å®¹æ€§ï¼Œmediumå¹³è¡¡é€Ÿåº¦/ç”»è´¨
 	av_opt_set(c->priv_data, "profile", "baseline", 0);
 	av_opt_set(c->priv_data, "preset", "medium", 0);
 
-	// È«¾ÖÍ·ÉèÖÃ£¨MP4/MKVµÈ¸ñÊ½±ØĞè£¬±ÜÃâÂãÁ÷£©
+	// å…¨å±€å¤´è®¾ç½®ï¼ˆMP4/MKVç­‰æ ¼å¼å¿…éœ€ï¼Œé¿å…è£¸æµï¼‰
 	if (mCtx->fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
 	{
 		c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	}
 
-	// ¸´ÖÆ±àÂë²ÎÊıµ½ÊÓÆµÁ÷
+	// å¤åˆ¶ç¼–ç å‚æ•°åˆ°è§†é¢‘æµ
 	ret = avcodec_parameters_from_context(mCtx->video_stream->codecpar, c);
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "¸´ÖÆ±àÂë²ÎÊıµ½ÊÓÆµÁ÷Ê§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "å¤åˆ¶ç¼–ç å‚æ•°åˆ°è§†é¢‘æµå¤±è´¥ï¼š%s\n", err_buf);
 		return ret;
 	}
 
-	// ´ò¿ª±àÂëÆ÷
+	// æ‰“å¼€ç¼–ç å™¨
 	ret = avcodec_open2(c, codec, nullptr);
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "´ò¿ªH.264±àÂëÆ÷Ê§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "æ‰“å¼€H.264ç¼–ç å™¨å¤±è´¥ï¼š%s\n", err_buf);
 		return ret;
 	}
 
@@ -108,25 +108,25 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	
 	if (!output_path || width % 2 != 0 || height % 2 != 0 || fps <= 0)
 	{
-		av_log(NULL, AV_LOG_ERROR, "²ÎÊı·Ç·¨£ºÂ·¾¶Îª¿Õ/·Ö±æÂÊ·ÇÅ¼Êı£¨µ±Ç°%dx%d£©/Ö¡ÂÊ<=0£¨µ±Ç°%d£©\n", width, height, fps);
-		return -1; // ĞŞÕı£ºint·µ»ØÖµ²»ÄÜÓÃNULL
+		av_log(NULL, AV_LOG_ERROR, "å‚æ•°éæ³•ï¼šè·¯å¾„ä¸ºç©º/åˆ†è¾¨ç‡éå¶æ•°ï¼ˆå½“å‰%dx%dï¼‰/å¸§ç‡<=0ï¼ˆå½“å‰%dï¼‰\n", width, height, fps);
+		return -1; // ä¿®æ­£ï¼šintè¿”å›å€¼ä¸èƒ½ç”¨NULL
 	}
 
 	
 	VideoMuxerCtx *ctx = (VideoMuxerCtx *)av_mallocz(sizeof(VideoMuxerCtx));
 	if (!ctx)
 	{
-		av_log(NULL, AV_LOG_ERROR, "·ÖÅäVideoMuxerCtxÄÚ´æÊ§°Ü\n");
+		av_log(NULL, AV_LOG_ERROR, "åˆ†é…VideoMuxerCtxå†…å­˜å¤±è´¥\n");
 		return -1;
 	}
 
 	
 	mCtx = ctx;
-	mCtx->output_path = av_strdup(output_path); // ¸´ÖÆÂ·¾¶£¬±ÜÃâÍâ²¿Ö¸ÕëÊ§Ğ§
+	mCtx->output_path = av_strdup(output_path); // å¤åˆ¶è·¯å¾„ï¼Œé¿å…å¤–éƒ¨æŒ‡é’ˆå¤±æ•ˆ
 	mCtx->width = width;
 	mCtx->height = height;
 	mCtx->fps = fps;
-	video_muxer_set_defaults(); // ÏÖÔÚmCtxÒÑ¸³Öµ£¬¿É°²È«µ÷ÓÃ
+	video_muxer_set_defaults(); // ç°åœ¨mCtxå·²èµ‹å€¼ï¼Œå¯å®‰å…¨è°ƒç”¨
 
 	int ret = -1;
 	char err_buf[64] = { 0 };
@@ -136,7 +136,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "³õÊ¼»¯·â×°¸ñÊ½ÉÏÏÂÎÄÊ§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "åˆå§‹åŒ–å°è£…æ ¼å¼ä¸Šä¸‹æ–‡å¤±è´¥ï¼š%s\n", err_buf);
 		goto fail;
 	}
 
@@ -144,7 +144,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	ret = video_muxer_init_codec();
 	if (ret < 0)
 	{
-		av_log(NULL, AV_LOG_ERROR, "³õÊ¼»¯±àÂëÆ÷Ê§°Ü£¬´íÎóÂë£º%d\n", ret);
+		av_log(NULL, AV_LOG_ERROR, "åˆå§‹åŒ–ç¼–ç å™¨å¤±è´¥ï¼Œé”™è¯¯ç ï¼š%d\n", ret);
 		goto fail;
 	}
 
@@ -155,7 +155,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 		if (ret < 0)
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			av_log(NULL, AV_LOG_ERROR, "´ò¿ªÊä³öÎÄ¼şÊ§°Ü£º%s\n", err_buf);
+			av_log(NULL, AV_LOG_ERROR, "æ‰“å¼€è¾“å‡ºæ–‡ä»¶å¤±è´¥ï¼š%s\n", err_buf);
 			goto fail;
 		}
 	}
@@ -165,15 +165,15 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "Ğ´ÈëÎÄ¼şÍ·Ê§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "å†™å…¥æ–‡ä»¶å¤´å¤±è´¥ï¼š%s\n", err_buf);
 		goto fail;
 	}
 
 	
 	mCtx->is_init = 1;
-	av_log(NULL, AV_LOG_INFO, "ÊÓÆµ·â×°Æ÷³õÊ¼»¯³É¹¦£º%s£¨%dx%d£¬%dfps£¬%dMbps£©\n",
+	av_log(NULL, AV_LOG_INFO, "è§†é¢‘å°è£…å™¨åˆå§‹åŒ–æˆåŠŸï¼š%sï¼ˆ%dx%dï¼Œ%dfpsï¼Œ%dMbpsï¼‰\n",
 		output_path, width, height, fps, mCtx->bit_rate / 1000000);
-	return 0; // ĞŞÕı£ºÍ³Ò»·µ»Ø0±íÊ¾³É¹¦
+	return 0; // ä¿®æ­£ï¼šç»Ÿä¸€è¿”å›0è¡¨ç¤ºæˆåŠŸ
 
 
 fail:
@@ -190,24 +190,24 @@ fail:
 		}
 		if (mCtx->codec_ctx) avcodec_free_context(&mCtx->codec_ctx);
 		av_free(mCtx);
-		mCtx = nullptr; // ÖÃ¿Õ£¬±ÜÃâÒ°Ö¸Õë
+		mCtx = nullptr; // ç½®ç©ºï¼Œé¿å…é‡æŒ‡é’ˆ
 	}
 	return -1;
 }
 
-// Ğ´Èëµ¥¸öAVFrame
+// å†™å…¥å•ä¸ªAVFrame
 int FFmpegEncoder::video_muxer_write_frame(AVFrame *frame, int frame_idx)
 {
 	if (!mCtx || !mCtx->is_init || !frame || frame_idx < 0)
 	{
-		av_log(NULL, AV_LOG_ERROR, "Ğ´ÈëÖ¡Ê§°Ü£ºÉÏÏÂÎÄÎ´³õÊ¼»¯/Ö¡Îª¿Õ/Ë÷Òı·Ç·¨£¨µ±Ç°%d£©\n", frame_idx);
+		av_log(NULL, AV_LOG_ERROR, "å†™å…¥å¸§å¤±è´¥ï¼šä¸Šä¸‹æ–‡æœªåˆå§‹åŒ–/å¸§ä¸ºç©º/ç´¢å¼•éæ³•ï¼ˆå½“å‰%dï¼‰\n", frame_idx);
 		return -1;
 	}
 
-	// Ğ£ÑéÖ¡¸ñÊ½ºÍ·Ö±æÂÊ
+	// æ ¡éªŒå¸§æ ¼å¼å’Œåˆ†è¾¨ç‡
 	if (frame->format != AV_PIX_FMT_YUV420P || frame->width != mCtx->width || frame->height != mCtx->height)
 	{
-		av_log(NULL, AV_LOG_ERROR, "Ö¡²ÎÊı²»Æ¥Åä£ºÒªÇóYUV420P/%dx%d£¬Êµ¼Ê¸ñÊ½%d/%dx%d\n",
+		av_log(NULL, AV_LOG_ERROR, "å¸§å‚æ•°ä¸åŒ¹é…ï¼šè¦æ±‚YUV420P/%dx%dï¼Œå®é™…æ ¼å¼%d/%dx%d\n",
 			mCtx->width, mCtx->height, frame->format, frame->width, frame->height);
 		return -1;
 	}
@@ -216,62 +216,62 @@ int FFmpegEncoder::video_muxer_write_frame(AVFrame *frame, int frame_idx)
 	AVPacket pkt = { 0 };
 	char err_buf[64] = { 0 };
 
-	// ÉèÖÃÖ¡PTSÊ±¼ä´Á,»ùÓÚ±àÂëÊ±¼ä»ù 1/fps£¬Ö±½ÓÓÃÖ¡Ë÷Òı
+	// è®¾ç½®å¸§PTSæ—¶é—´æˆ³,åŸºäºç¼–ç æ—¶é—´åŸº 1/fpsï¼Œç›´æ¥ç”¨å¸§ç´¢å¼•
 	frame->pts = frame_idx;
-	frame->pict_type = AV_PICTURE_TYPE_NONE; // ÓÉ±àÂëÆ÷×Ô¶¯ÅĞ¶ÏÖ¡ÀàĞÍ£¨I/PÖ¡£©
+	frame->pict_type = AV_PICTURE_TYPE_NONE; // ç”±ç¼–ç å™¨è‡ªåŠ¨åˆ¤æ–­å¸§ç±»å‹ï¼ˆI/På¸§ï¼‰
 
-	// ·¢ËÍÖ¡µ½±àÂëÆ÷
+	// å‘é€å¸§åˆ°ç¼–ç å™¨
 	ret = avcodec_send_frame(mCtx->codec_ctx, frame);
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "·¢ËÍÖ¡µ½±àÂëÆ÷Ê§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "å‘é€å¸§åˆ°ç¼–ç å™¨å¤±è´¥ï¼š%s\n", err_buf);
 		av_packet_unref(&pkt);
 		return ret;
 	}
 
-	// Ñ­»·½ÓÊÕ±àÂëÆ÷Êä³öµÄAVPacket,Ò»Ö¡¿ÉÄÜ¶ÔÓ¦¶à¸ö°ü£¬»ò¶à¸öÖ¡¶ÔÓ¦Ò»¸ö°ü
+	// å¾ªç¯æ¥æ”¶ç¼–ç å™¨è¾“å‡ºçš„AVPacket,ä¸€å¸§å¯èƒ½å¯¹åº”å¤šä¸ªåŒ…ï¼Œæˆ–å¤šä¸ªå¸§å¯¹åº”ä¸€ä¸ªåŒ…
 	while (ret >= 0)
 	{
 		ret = avcodec_receive_packet(mCtx->codec_ctx, &pkt);
 		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 		{
-			break; // ÎŞ¸ü¶à°ü£¬ÍË³öÑ­»·
+			break; // æ— æ›´å¤šåŒ…ï¼Œé€€å‡ºå¾ªç¯
 		}
 		else if (ret < 0)
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			av_log(NULL, AV_LOG_ERROR, "½ÓÊÕ±àÂëÆ÷°üÊ§°Ü£º%s\n", err_buf);
+			av_log(NULL, AV_LOG_ERROR, "æ¥æ”¶ç¼–ç å™¨åŒ…å¤±è´¥ï¼š%s\n", err_buf);
 			av_packet_unref(&pkt);
 			return ret;
 		}
 
-		// ĞŞÕıPacketÊ±¼ä´Á£¨±àÂëÊ±¼ä»ù ¡ú Á÷Ê±¼ä»ù£©£¬¹ØÁªÁ÷Ë÷Òı
+		// ä¿®æ­£Packetæ—¶é—´æˆ³ï¼ˆç¼–ç æ—¶é—´åŸº â†’ æµæ—¶é—´åŸºï¼‰ï¼Œå…³è”æµç´¢å¼•
 		av_packet_rescale_ts(&pkt, mCtx->codec_ctx->time_base, mCtx->video_stream->time_base);
 		pkt.stream_index = mCtx->video_stream->index;
 
-		// Ğ´Èë·â×°ÉÏÏÂÎÄ,av_interleaved_write_frame£º½»´íĞ´Èë£¬Ö§³ÖºóĞøÀ©Õ¹ÒôÆµ£©
+		// å†™å…¥å°è£…ä¸Šä¸‹æ–‡,av_interleaved_write_frameï¼šäº¤é”™å†™å…¥ï¼Œæ”¯æŒåç»­æ‰©å±•éŸ³é¢‘ï¼‰
 		ret = av_interleaved_write_frame(mCtx->fmt_ctx, &pkt);
 		if (ret < 0)
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			av_log(NULL, AV_LOG_ERROR, "Ğ´ÈëÖ¡µ½·â×°Æ÷Ê§°Ü£º%s\n", err_buf);
+			av_log(NULL, AV_LOG_ERROR, "å†™å…¥å¸§åˆ°å°è£…å™¨å¤±è´¥ï¼š%s\n", err_buf);
 			av_packet_unref(&pkt);
 			return ret;
 		}
 
-		av_packet_unref(&pkt); // ÊÍ·ÅPacket×ÊÔ´£¬±ÜÃâÄÚ´æĞ¹Â©£¨¹Ø¼ü£©
+		av_packet_unref(&pkt); // é‡Šæ”¾Packetèµ„æºï¼Œé¿å…å†…å­˜æ³„æ¼ï¼ˆå…³é”®ï¼‰
 	}
 
 	return 0;
 }
 
-// Ë¢ĞÂ±àÂëÆ÷»º´æ²¢Ğ´ÈëÎÄ¼şÎ²
+// åˆ·æ–°ç¼–ç å™¨ç¼“å­˜å¹¶å†™å…¥æ–‡ä»¶å°¾
 int FFmpegEncoder::video_muxer_flush()
 {
 	if (!mCtx || !mCtx->is_init)
 	{
-		av_log(NULL, AV_LOG_ERROR, "Ë¢ĞÂ±àÂëÆ÷Ê§°Ü£ºÉÏÏÂÎÄÎ´³õÊ¼»¯\n");
+		av_log(NULL, AV_LOG_ERROR, "åˆ·æ–°ç¼–ç å™¨å¤±è´¥ï¼šä¸Šä¸‹æ–‡æœªåˆå§‹åŒ–\n");
 		return -1;
 	}
 
@@ -279,17 +279,17 @@ int FFmpegEncoder::video_muxer_flush()
 	AVPacket pkt = { 0 };
 	char err_buf[64] = { 0 };
 
-	// ·¢ËÍNULL´¥·¢±àÂëÆ÷»º´æË¢ĞÂ£¨Êä³öËùÓĞÎ´±àÂëµÄÖ¡£¬¹Ø¼ü£º±ÜÃâÊÓÆµÎ²²¿¶ªÊ§£©
+	// å‘é€NULLè§¦å‘ç¼–ç å™¨ç¼“å­˜åˆ·æ–°ï¼ˆè¾“å‡ºæ‰€æœ‰æœªç¼–ç çš„å¸§ï¼Œå…³é”®ï¼šé¿å…è§†é¢‘å°¾éƒ¨ä¸¢å¤±ï¼‰
 	ret = avcodec_send_frame(mCtx->codec_ctx, nullptr);
 	if (ret < 0 && ret != AVERROR_EOF)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
-		av_log(NULL, AV_LOG_ERROR, "´¥·¢±àÂëÆ÷Ë¢ĞÂÊ§°Ü£º%s\n", err_buf);
+		av_log(NULL, AV_LOG_ERROR, "è§¦å‘ç¼–ç å™¨åˆ·æ–°å¤±è´¥ï¼š%s\n", err_buf);
 		av_packet_unref(&pkt);
 		return ret;
 	}
 
-	// ½ÓÊÕ²¢Ğ´ÈëËùÓĞ»º´æµÄPacket
+	// æ¥æ”¶å¹¶å†™å…¥æ‰€æœ‰ç¼“å­˜çš„Packet
 	while (ret >= 0)
 	{
 		ret = avcodec_receive_packet(mCtx->codec_ctx, &pkt);
@@ -300,7 +300,7 @@ int FFmpegEncoder::video_muxer_flush()
 		else if (ret < 0)
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			av_log(NULL, AV_LOG_ERROR, "½ÓÊÕË¢ĞÂµÄ±àÂëÆ÷°üÊ§°Ü£º%s\n", err_buf);
+			av_log(NULL, AV_LOG_ERROR, "æ¥æ”¶åˆ·æ–°çš„ç¼–ç å™¨åŒ…å¤±è´¥ï¼š%s\n", err_buf);
 			av_packet_unref(&pkt);
 			return ret;
 		}
@@ -312,7 +312,7 @@ int FFmpegEncoder::video_muxer_flush()
 		if (ret < 0)
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
-			av_log(NULL, AV_LOG_ERROR, "Ğ´ÈëË¢ĞÂµÄÖ¡Ê§°Ü£º%s\n", err_buf);
+			av_log(NULL, AV_LOG_ERROR, "å†™å…¥åˆ·æ–°çš„å¸§å¤±è´¥ï¼š%s\n", err_buf);
 			av_packet_unref(&pkt);
 			return ret;
 		}
@@ -320,19 +320,19 @@ int FFmpegEncoder::video_muxer_flush()
 		av_packet_unref(&pkt);
 	}
 
-	// Ğ´ÈëÎÄ¼şÎ²
+	// å†™å…¥æ–‡ä»¶å°¾
 	av_write_trailer(mCtx->fmt_ctx);
-	av_log(NULL, AV_LOG_INFO, "ÊÓÆµ·â×°ÊÕÎ²Íê³É£¬ÎÄ¼şÎ²ÒÑĞ´Èë£º%s\n", mCtx->output_path);
+	av_log(NULL, AV_LOG_INFO, "è§†é¢‘å°è£…æ”¶å°¾å®Œæˆï¼Œæ–‡ä»¶å°¾å·²å†™å…¥ï¼š%s\n", mCtx->output_path);
 	return 0;
 }
 
-// Ïú»ÙÊµÀı²¢ÊÍ·ÅËùÓĞ×ÊÔ´,ÄæĞòÊÍ·Å 
+// é”€æ¯å®ä¾‹å¹¶é‡Šæ”¾æ‰€æœ‰èµ„æº,é€†åºé‡Šæ”¾ 
 void FFmpegEncoder::video_muxer_destroy()
 {
 	if (!mCtx) return;
 
 	VideoMuxerCtx *c = mCtx;
-	// ÄæĞòÊÍ·ÅFFmpeg×ÊÔ´£º±àÂëÆ÷ ¡ú ·â×°Æ÷ ¡ú ÎÄ¼ş¾ä±ú ¡ú Â·¾¶ ¡ú ÉÏÏÂÎÄ
+	// é€†åºé‡Šæ”¾FFmpegèµ„æºï¼šç¼–ç å™¨ â†’ å°è£…å™¨ â†’ æ–‡ä»¶å¥æŸ„ â†’ è·¯å¾„ â†’ ä¸Šä¸‹æ–‡
 	if (c->codec_ctx)
 	{
 		avcodec_free_context(&c->codec_ctx);
@@ -342,24 +342,49 @@ void FFmpegEncoder::video_muxer_destroy()
 	{
 		if (!(c->fmt_ctx->oformat->flags & AVFMT_NOFILE))
 		{
-			avio_close(c->fmt_ctx->pb); // ¹Ø±ÕÎÄ¼ş¾ä±ú£¬±ÜÃâ×ÊÔ´Ğ¹Â©
+			avio_close(c->fmt_ctx->pb); // å…³é—­æ–‡ä»¶å¥æŸ„ï¼Œé¿å…èµ„æºæ³„æ¼
 		}
 		avformat_free_context(c->fmt_ctx);
 		c->fmt_ctx = nullptr;
 	}
 	if (c->output_path)
 	{
-		av_free((void *)c->output_path); // ÊÍ·Åav_strdup¸´ÖÆµÄÂ·¾¶
+		av_free((void *)c->output_path); // é‡Šæ”¾av_strdupå¤åˆ¶çš„è·¯å¾„
 		c->output_path = nullptr;
 	}
-	// ÊÍ·ÅÉÏÏÂÎÄ½á¹¹Ìå±¾Éí²¢ÖÃ¿ÕÀà³ÉÔ±£¬±ÜÃâÒ°Ö¸Õë
+	// é‡Šæ”¾ä¸Šä¸‹æ–‡ç»“æ„ä½“æœ¬èº«å¹¶ç½®ç©ºç±»æˆå‘˜ï¼Œé¿å…é‡æŒ‡é’ˆ
 	av_free(c);
 	mCtx = nullptr;
 
-	av_log(NULL, AV_LOG_INFO, "ÊÓÆµ·â×°Æ÷ÒÑÏú»Ù£¬ËùÓĞ×ÊÔ´ÊÍ·ÅÍê³É\n");
+	av_log(NULL, AV_LOG_INFO, "è§†é¢‘å°è£…å™¨å·²é”€æ¯ï¼Œæ‰€æœ‰èµ„æºé‡Šæ”¾å®Œæˆ\n");
 }
 
 extern "C" OPENCVFFMPEGTOOLS_API void* Encoder_Create()
 {
 	return new FFmpegEncoder();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void Encoder_Destroy(void* encoder)
+{
+	if (encoder) {
+		delete static_cast<FFmpegEncoder*>(encoder);
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerCreate(void* encoder, const char* output_path, int width, int height, int fps)
+{
+	if (!encoder) return -1;
+	return static_cast<FFmpegEncoder*>(encoder)->video_muxer_create(output_path, width, height, fps);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerWriteFrame(void* encoder, void* frame, int frame_idx)
+{
+	if (!encoder) return -1;
+	return static_cast<FFmpegEncoder*>(encoder)->video_muxer_write_frame(static_cast<AVFrame*>(frame), frame_idx);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerFlush(void* encoder)
+{
+	if (!encoder) return -1;
+	return static_cast<FFmpegEncoder*>(encoder)->video_muxer_flush();
 }

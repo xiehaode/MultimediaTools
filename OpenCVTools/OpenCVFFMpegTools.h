@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <stdint.h>
 // C 语言下的结构体前向声明（兼容C编译）
 typedef struct PlayerConfig PlayerConfig;
 typedef struct DecodedFrame DecodedFrame;
@@ -70,6 +71,22 @@ OPENCVFFMPEGTOOLS_API bool CvTranslator_OilPainting_File(void* translator, const
 OPENCVFFMPEGTOOLS_API bool CvTranslator_Mosaic_File(void* translator, const char* input_path, const char* output_path, int x, int y, int w, int h, int cellSize);
 OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermark_File(void* translator, const char* input_path, const char* output_path, const char* text);
 OPENCVFFMPEGTOOLS_API bool CvTranslator_AddTextWatermarkEx_File(void* translator, const char* input_path, const char* output_path, const char* text, int x, int y, double fontScale, int b, int g, int r, int thickness);
+
+// ---- FFmpegEncoder C API ----
+OPENCVFFMPEGTOOLS_API void* Encoder_Create();
+OPENCVFFMPEGTOOLS_API void Encoder_Destroy(void* encoder);
+OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerCreate(void* encoder, const char* output_path, int width, int height, int fps);
+OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerWriteFrame(void* encoder, void* frame, int frame_idx);
+OPENCVFFMPEGTOOLS_API int Encoder_VideoMuxerFlush(void* encoder);
+
+// ---- FFmpegDecoder C API ----
+OPENCVFFMPEGTOOLS_API void* Decoder_Create();
+OPENCVFFMPEGTOOLS_API void Decoder_Destroy(void* decoder);
+OPENCVFFMPEGTOOLS_API int Decoder_FFPlayerOpen(void* decoder, const char* input_path, int is_device);
+OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerReadFrame(void* decoder);
+OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerClose(void* decoder);
+OPENCVFFMPEGTOOLS_API int64_t Decoder_GetDuration(void* decoder);
+OPENCVFFMPEGTOOLS_API int64_t Decoder_GetCurrentTime(void* decoder);
 
 #ifdef __cplusplus
 } // extern "C"

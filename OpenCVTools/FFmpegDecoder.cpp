@@ -130,3 +130,47 @@ int64_t FFmpegDecoder::getCurrentTime() const
 	
 	return 0;
 }
+
+// C接口实现
+extern "C" OPENCVFFMPEGTOOLS_API void* Decoder_Create()
+{
+	return new FFmpegDecoder();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void Decoder_Destroy(void* decoder)
+{
+	if (decoder) {
+		delete static_cast<FFmpegDecoder*>(decoder);
+	}
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int Decoder_FFPlayerOpen(void* decoder, const char* input_path, int is_device)
+{
+	if (!decoder || !input_path) return -1;
+	bool isDevice = (is_device != 0);
+	return static_cast<FFmpegDecoder*>(decoder)->ffplayer_open(std::string(input_path), isDevice);
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerReadFrame(void* decoder)
+{
+	if (!decoder) return;
+	static_cast<FFmpegDecoder*>(decoder)->ffplayer_read_frame();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API void Decoder_FFPlayerClose(void* decoder)
+{
+	if (!decoder) return;
+	static_cast<FFmpegDecoder*>(decoder)->ffplayer_close();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int64_t Decoder_GetDuration(void* decoder)
+{
+	if (!decoder) return 0;
+	return static_cast<FFmpegDecoder*>(decoder)->getDuration();
+}
+
+extern "C" OPENCVFFMPEGTOOLS_API int64_t Decoder_GetCurrentTime(void* decoder)
+{
+	if (!decoder) return 0;
+	return static_cast<FFmpegDecoder*>(decoder)->getCurrentTime();
+}
