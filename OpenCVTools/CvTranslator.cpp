@@ -56,8 +56,8 @@ cv::Mat CvTranslator::applyOilPainting(const cv::Mat& src, int radius, double si
 cv::Mat CvTranslator::customOilPaintApprox(const cv::Mat& src, int radius, double sigma_color)
 {
 	// 步骤1：下采样到原尺寸的1/2，减少计算量（与Python版本完全对齐）
-	cv::Mat small;
-	cv::resize(src, small, cv::Size(), 0.5, 0.5, cv::INTER_LINEAR);
+	cv::Mat mSmall;
+	cv::resize(src, mSmall, cv::Size(), 0.5, 0.5, cv::INTER_LINEAR);
 
 	// 步骤2：双边滤波模拟油画纹理
 	// 双边滤波参数说明：
@@ -66,7 +66,7 @@ cv::Mat CvTranslator::customOilPaintApprox(const cv::Mat& src, int radius, doubl
 	// sigmaSpace: 坐标空间的sigma，用radius值，控制空间距离权重
 	cv::Mat blur;
 	int d = 9;
-	cv::bilateralFilter(small, blur, d, sigma_color, static_cast<double>(radius));
+	cv::bilateralFilter(mSmall, blur, d, sigma_color, static_cast<double>(radius));
 
 	// 步骤3：上采样回原尺寸，使用三次立方插值保证清晰度（与Python一致）
 	cv::Mat result;

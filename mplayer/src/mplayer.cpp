@@ -34,7 +34,7 @@ mpalyer::mpalyer(QWidget *parent) : QWidget(parent)
 
     connect(record, &QPushButton::clicked, this, [=]() {
         if (!p.isRecording()) {
-            QString path = QFileDialog::getSaveFileName(this, tr("视频录制"), "recorded.mp4", tr("视频文件(*.mp4)"));
+            QString path = QFileDialog::getSaveFileName(this, tr("视频录制"), "video/recorded.mp4", tr("视频文件(*.mp4)"));
             if (path.isEmpty()) return;
 
             QFileInfo info(path);

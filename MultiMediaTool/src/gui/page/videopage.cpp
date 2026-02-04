@@ -40,12 +40,12 @@ videoPage::~videoPage()
 
 bool videoPage::init()
 {
-    QString vedio = GBK2QString("");
-    QString camere = GBK2QString("");
-    QString network = GBK2QString("");
+    QString vedio = GBK2QString("±¾µØÊÓÆµ");
+    QString camere = GBK2QString("ÉãÏñÍ·");
+    QString network = GBK2QString("ÆÁÄ»");
     ui->recordComboBox->addItem(QIcon(":/rc/video.svg"), vedio);
     ui->recordComboBox->addItem(QIcon(":/rc/camere.svg"), camere);
-    //ui->recordComboBox->addItem(QIcon(":/rc/network.svg"), network);
+    ui->recordComboBox->addItem(QIcon(":/rc/network.svg"), network);
 
     ui->recordLabel->setObjectName("recordlabel");
     QString styleSheet =
@@ -72,9 +72,9 @@ bool videoPage::initableWidget()
 
 
 
-    if (!videoDir.mkpath(videoDirPath)) { // mkpatha/b/cmkdir
+    if (!videoDir.mkpath(videoDirPath)) { //
         QMessageBox::warning(this, GBK2QString(""),
-                             GBK2QString("videoÂ·") + videoDirPath);
+                             GBK2QString("video¡¤") + videoDirPath);
         return false;
     }
 
@@ -130,12 +130,12 @@ bool videoPage::initableWidget()
 
 //            AvWorker_GetVideoFirstFrame(worker,"1.mp4","1.bmp",false);
 
-            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMPÂ·
+            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMP¡¤
             bool getFrameOk = AvWorker_GetVideoFirstFrame(
                 worker,
-                QString2GBK(videoPath).toStdString().c_str(),  // Â·GBK
-                QString2GBK(bmpPath).toStdString().c_str(),    // BMPÂ·GBK
-                false                            // RTSP
+                QString2GBK(videoPath).toStdString().c_str(),
+                QString2GBK(bmpPath).toStdString().c_str(),
+                false
             );
 
 
@@ -173,7 +173,7 @@ bool videoPage::initableWidget()
             ui->tableWidget->setRowHeight(i, 45);
 
 
-            qDebug() << "Â¤" << videoPath << " | " << QFile::exists(videoPath);
+            qDebug() << "videoPath" << videoPath << " | " << QFile::exists(videoPath);
 
             double duration = AvWorker_getDuration(worker,QString2GBK(videoPath).toStdString().c_str());
 
@@ -214,8 +214,8 @@ bool videoPage::initableWidget()
 
 
             QWidget *btnWidget = new QWidget();
-            QPushButton *openBtn = new QPushButton(GBK2QString(""));
-            QPushButton *delBtn = new QPushButton(GBK2QString(""));
+            QPushButton *openBtn = new QPushButton(GBK2QString("´ò¿ª"));
+            QPushButton *delBtn = new QPushButton(GBK2QString("É¾³ý"));
             // 
             openBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#409EFF; color:white;}");
             delBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#F56C6C; color:white;}");
@@ -242,7 +242,7 @@ bool videoPage::initableWidget()
 
 
 
-                m_ipcMgr->startChildProcess(mplayerPath, false); // Ã©Ã¨â€”â€”
+                m_ipcMgr->startChildProcess(mplayerPath, false); // ¨¦¨¨¡ª¡ª
                 
 
                 m_ipcMgr->sendMessage("play_video:" + videoPath);
@@ -283,7 +283,7 @@ void videoPage::on_begin_clicked()
         ui->begin->setDisabled(true);
     }
     else{
-        QMessageBox::critical(NULL, "critical", "æ‰“å¼€æ’­æ”¾å™¨å¤±è´¥", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        QMessageBox::critical(NULL, "critical", "´ò¿ª²¥·ÅÆ÷Ê§°Ü", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     }
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [=](){
@@ -302,7 +302,7 @@ void videoPage::on_import_2_clicked()
 
 
     if (!videoDir.mkpath(videoDirPath)) {
-        QMessageBox::warning(this, GBK2QString(""),
+        QMessageBox::warning(this, GBK2QString("Ñ¡Ôñµ¼ÈëµÄÊÓÆµ"),
                              GBK2QString("video"));
         return;
     }
@@ -311,7 +311,7 @@ void videoPage::on_import_2_clicked()
     QString videoFilter = GBK2QString(" (*.mp4 *.avi *.mkv *.flv *.mov *.wmv);; (*.*)");
     QString selectedFilePath = QFileDialog::getOpenFileName(
                 this,
-                GBK2QString(""),
+                GBK2QString("Ñ¡ÔñÒªµ¼ÈëµÄÎÄ¼þ"),
                 QDir::homePath(), // 
                 videoFilter
                 );

@@ -1,773 +1,132 @@
 #include "pch.h"
 #include "FFmpegDecoder.h"
-#include "OpenCVFFMpegTools.h"
 
-// ¾²Ì¬³ÉÔ±³õÊ¼»¯
-std::atomic_flag FFmpegDecoder::s_ffmpeg_init = ATOMIC_FLAG_INIT;
 
-// ÖĞ¶Ï»Øµ÷ÊµÏÖ
-int FFmpegDecoder::interrupt_callback(void* opaque) {
-	if (!opaque) return 0;
-	FFmpegDecoder* decoder = static_cast<FFmpegDecoder*>(opaque);
-
-	// ¼ì²éÊÇ·ñĞèÒªÍË³ö£¬»ò×èÈû³¬Ê±
-	if (decoder->m_quit || (time(nullptr) - decoder->m_block_starttime > decoder->m_config.block_timeout)) {
-		hlogi("interrupt callback: quit=%d, timeout=%d", decoder->m_quit.load(),
-			(int)(time(nullptr) - decoder->m_block_starttime));
-		return 1;
-	}
-	return 0;
+FFmpegDecoder::FFmpegDecoder()
+{
+	avdevice_register_all();
+	ctx = new FFPlayerContext();
 }
 
-// ¹¹Ôìº¯Êı
-FFmpegDecoder::FFmpegDecoder() {
-	// È«¾Ö³õÊ¼»¯FFmpeg£¨½öµÚÒ»´Î´´½¨ÊµÀıÊ±Ö´ĞĞ£©
-	if (!s_ffmpeg_init.test_and_set()) {
-		avformat_network_init();
-		avdevice_register_all();
-		hlogi("FFmpeg initialized");
-	}
-
-	// ³õÊ¼»¯FFmpeg¶ÔÏó
-	m_packet = av_packet_alloc();
-	m_frame = av_frame_alloc();
+FFmpegDecoder::~FFmpegDecoder()
+{
+	if (ctx->sws_ctx) sws_freeContext(ctx->sws_ctx);
+	if (ctx->codec_ctx) avcodec_free_context(&ctx->codec_ctx);
+	if (ctx->fmt_ctx) avformat_close_input(&ctx->fmt_ctx);
+	if (ctx->frame) av_frame_free(&ctx->frame);
+	delete ctx;
 }
 
-// Îö¹¹º¯Êı
-FFmpegDecoder::~FFmpegDecoder() {
-	stop();
-	close_input();
-}
+int FFmpegDecoder::ffplayer_open(const std::string &inputPath, bool isDevice)
+{
+	AVInputFormat *ifmt = nullptr;
+	std::string path = inputPath;
 
-// ³õÊ¼»¯²¥·ÅÆ÷
-int FFmpegDecoder::init(const PlayerConfig& config) {
-	if (m_running) {
-		hloge("Player is already running");
+	if (avformat_open_input(&ctx->fmt_ctx, path.c_str(), ifmt, nullptr) < 0) {
 		return -1;
 	}
 
-	m_config = config;
-	m_error_code = 0;
-	m_eof = false;
+	if (avformat_find_stream_info(ctx->fmt_ctx, nullptr) < 0) return -1;
 
-	// ×ª»»Ä¿±êÏñËØ¸ñÊ½
-	if (config.dst_format == PIX_FMT_YUV420P) {
-		m_dst_pix_fmt = AV_PIX_FMT_YUV420P;
-	}
-	else if (config.dst_format == PIX_FMT_BGR24) {
-		m_dst_pix_fmt = AV_PIX_FMT_BGR24;
-	}
-	else {
-		hloge("Unsupported pixel format");
-		return -2;
-	}
-
-	// ´ò¿ªÊäÈëÔ´
-	int ret = open_input();
-	if (ret != 0) {
-		hloge("Open input failed: %d", ret);
-		m_error_code = ret;
-		return ret;
-	}
-
-	hlogi("Player initialized successfully: %s", config.src.c_str());
-	hlogi("Video info: %dx%d, fps=%d, duration=%lldms",
-		m_width, m_height, m_fps, m_duration);
-
-	return 0;
-}
-
-// ´ò¿ªÊäÈëÔ´²¢³õÊ¼»¯½âÂëÆ÷
-int FFmpegDecoder::open_input() {
-	// 1. ¹¹½¨ÊäÈëURL
-	std::string ifile;
-	AVInputFormat* ifmt = nullptr;
-
-	switch (m_config.type) {
-	case MEDIA_TYPE_CAPTURE: {
-		ifile = "video=" + m_config.src;
-#ifdef _WIN32
-		const char* drive = "dshow";
-#elif defined(__linux__)
-		const char* drive = "v4l2";
-#else
-		const char* drive = "avfoundation";
-#endif
-		ifmt = av_find_input_format(drive);
-		if (!ifmt) {
-			hloge("Cannot find input format: %s", drive);
-			return -5;
-		}
-		break;
-	}
-	case MEDIA_TYPE_FILE:
-	case MEDIA_TYPE_NETWORK:
-		ifile = m_config.src;
-		break;
-	default:
-		hloge("Unsupported media type");
-		return -10;
-	}
-
-	// 2. ·ÖÅä¸ñÊ½ÉÏÏÂÎÄ
-	m_fmt_ctx = avformat_alloc_context();
-	if (!m_fmt_ctx) {
-		hloge("avformat_alloc_context failed");
-		return -11;
-	}
-
-	// 3. ÉèÖÃÊäÈë²ÎÊı
-	if (m_config.type == MEDIA_TYPE_NETWORK) {
-		// RTSP²ÎÊıÅäÖÃ
-		if (ifile.substr(0, 5) == "rtsp:") {
-			av_dict_set(&m_fmt_opts, "rtsp_transport", "tcp", 0); // Ä¬ÈÏTCP
-			av_dict_set(&m_fmt_opts, "stimeout", "5000000", 0);   // 5Ãë³¬Ê±
-		}
-	}
-	av_dict_set(&m_fmt_opts, "buffer_size", "2048000", 0); // »º³åÇø2MB
-
-	// 4. ÉèÖÃÖĞ¶Ï»Øµ÷
-	m_fmt_ctx->interrupt_callback.callback = interrupt_callback;
-	m_fmt_ctx->interrupt_callback.opaque = this;
-	m_block_starttime = time(nullptr);
-
-	// 5. ´ò¿ªÊäÈë
-	int ret = avformat_open_input(&m_fmt_ctx, ifile.c_str(), ifmt, &m_fmt_opts);
-	if (ret < 0) {
-		hloge("avformat_open_input failed: %d", ret);
-		avformat_free_context(m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return ret;
-	}
-
-	// 6. ²éÕÒÁ÷ĞÅÏ¢
-	ret = avformat_find_stream_info(m_fmt_ctx, nullptr);
-	if (ret < 0) {
-		hloge("avformat_find_stream_info failed: %d", ret);
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return ret;
-	}
-
-	// 7. ÕÒµ½ÊÓÆµÁ÷
-	m_video_stream_index = av_find_best_stream(m_fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-	if (m_video_stream_index < 0) {
-		hloge("Cannot find video stream");
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -20;
-	}
-
-	AVStream* video_stream = m_fmt_ctx->streams[m_video_stream_index];
-	m_video_time_base = video_stream->time_base;
-
-	// 8. »ñÈ¡½âÂëÆ÷²ÎÊı
-	AVCodecParameters* codec_param = video_stream->codecpar;
-	m_width = codec_param->width;
-	m_height = codec_param->height;
-	m_src_pix_fmt = (AVPixelFormat)codec_param->format;
-	//m_src_pix_fmt = (AVPixelFormat)codec_param->pix_fmt;
-
-	if (m_width <= 0 || m_height <= 0 || m_src_pix_fmt == AV_PIX_FMT_NONE) {
-		hloge("Invalid video parameters");
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -21;
-	}
-
-	// 9. ¼ÆËãÄ¿±ê·Ö±æÂÊ£¨4×Ö½Ú¶ÔÆë£©
-	m_dst_width = m_width >> 2 << 2;
-	m_dst_height = m_height;
-
-	// 10. »ñÈ¡½âÂëÆ÷£¨ÓÅÏÈÓ²¼ş½âÂë£©
-	AVCodec* codec = nullptr;
-	DecodeMode real_decode_mode = SOFTWARE_DECODE;
-
-	if (m_config.decode_mode != SOFTWARE_DECODE) {
-		std::string decoder_name = avcodec_get_name(codec_param->codec_id);
-		if (m_config.decode_mode == HARDWARE_DECODE_CUVID) {
-			decoder_name += "_cuvid";
-			real_decode_mode = HARDWARE_DECODE_CUVID;
-		}
-		else if (m_config.decode_mode == HARDWARE_DECODE_QSV) {
-			decoder_name += "_qsv";
-			real_decode_mode = HARDWARE_DECODE_QSV;
-		}
-
-		codec = avcodec_find_decoder_by_name(decoder_name.c_str());
-		if (!codec) {
-			hlogi("Hardware decoder %s not found, use software decoder", decoder_name.c_str());
-		}
-	}
-
-	// Ó²¼ş½âÂëÊ§°ÜÔòÊ¹ÓÃÈí¼ş½âÂë
-	if (!codec) {
-		codec = avcodec_find_decoder(codec_param->codec_id);
-		if (!codec) {
-			hloge("Cannot find decoder for codec ID: %d", codec_param->codec_id);
-			avformat_close_input(&m_fmt_ctx);
-			m_fmt_ctx = nullptr;
-			return -30;
-		}
-	}
-
-	// 11. ³õÊ¼»¯½âÂëÆ÷ÉÏÏÂÎÄ
-	m_codec_ctx = avcodec_alloc_context3(codec);
-	if (!m_codec_ctx) {
-		hloge("avcodec_alloc_context3 failed");
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -31;
-	}
-
-	ret = avcodec_parameters_to_context(m_codec_ctx, codec_param);
-	if (ret < 0) {
-		hloge("avcodec_parameters_to_context failed: %d", ret);
-		avcodec_free_context(&m_codec_ctx);
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -32;
-	}
-
-	// 12. ´ò¿ª½âÂëÆ÷
-	av_dict_set(&m_codec_opts, "refcounted_frames", "1", 0);
-	ret = avcodec_open2(m_codec_ctx, codec, &m_codec_opts);
-	if (ret < 0) {
-		hloge("avcodec_open2 failed: %d", ret);
-		avcodec_free_context(&m_codec_ctx);
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -33;
-	}
-
-	// 13. ´´½¨¸ñÊ½×ª»»ÉÏÏÂÎÄ
-	m_sws_ctx = sws_getContext(m_width, m_height, m_src_pix_fmt,
-		m_dst_width, m_dst_height, m_dst_pix_fmt,
-		SWS_BICUBIC, nullptr, nullptr, nullptr);
-	if (!m_sws_ctx) {
-		hloge("sws_getContext failed");
-		avcodec_free_context(&m_codec_ctx);
-		avformat_close_input(&m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-		return -40;
-	}
-
-	// 14. »ñÈ¡Ã½ÌåĞÅÏ¢
-	if (video_stream->avg_frame_rate.num && video_stream->avg_frame_rate.den) {
-		m_fps = video_stream->avg_frame_rate.num / video_stream->avg_frame_rate.den;
-	}
-
-	if (video_stream->duration > 0) {
-		m_duration = (int64_t)(video_stream->duration * av_q2d(m_video_time_base) * 1000);
-	}
-
-	return 0;
-}
-
-// ¹Ø±ÕÊäÈëÔ´²¢ÊÍ·Å×ÊÔ´
-void FFmpegDecoder::close_input() {
-	// ÊÍ·Å¸ñÊ½×ª»»ÉÏÏÂÎÄ
-	if (m_sws_ctx) {
-		sws_freeContext(m_sws_ctx);
-		m_sws_ctx = nullptr;
-	}
-
-	// ÊÍ·Å½âÂëÆ÷
-	if (m_codec_ctx) {
-		avcodec_close(m_codec_ctx);
-		avcodec_free_context(&m_codec_ctx);
-		m_codec_ctx = nullptr;
-	}
-
-	// ÊÍ·Å¸ñÊ½ÉÏÏÂÎÄ
-	if (m_fmt_ctx) {
-		avformat_close_input(&m_fmt_ctx);
-		avformat_free_context(m_fmt_ctx);
-		m_fmt_ctx = nullptr;
-	}
-
-	// ÊÍ·ÅÊı¾İ°üºÍÖ¡
-	if (m_packet) {
-		av_packet_free(&m_packet);
-		m_packet = nullptr;
-	}
-
-	if (m_frame) {
-		av_frame_free(&m_frame);
-		m_frame = nullptr;
-	}
-
-	// ÊÍ·Å×Öµä²ÎÊı
-	if (m_fmt_opts) {
-		av_dict_free(&m_fmt_opts);
-		m_fmt_opts = nullptr;
-	}
-
-	if (m_codec_opts) {
-		av_dict_free(&m_codec_opts);
-		m_codec_opts = nullptr;
-	}
-
-	// Çå¿ÕÖ¡¶ÓÁĞ
-	clear_frames();
-}
-
-// ¿ªÊ¼½âÂëÏß³Ì
-int FFmpegDecoder::start() {
-	if (m_running) {
-		hloge("Decoder is already running");
-		return -1;
-	}
-
-	if (!m_fmt_ctx || !m_codec_ctx) {
-		hloge("Player not initialized");
-		return -2;
-	}
-
-	m_quit = false;
-	m_eof = false;
-	m_running = true;
-
-	// Æô¶¯½âÂëÏß³Ì
-	m_decode_thread = std::thread(&FFmpegDecoder::decode_loop, this);
-
-	hlogi("Decoder started");
-	return 0;
-}
-
-// Í£Ö¹½âÂë
-void FFmpegDecoder::stop() {
-	if (!m_running) return;
-
-	hlogi("Stopping decoder...");
-
-	// Í¨ÖªÏß³ÌÍË³ö
-	m_quit = true;
-	m_running = false;
-
-	// »½ĞÑµÈ´ıµÄÏß³Ì
-	m_queue_cv.notify_all();
-
-	// µÈ´ıÏß³Ì½áÊø
-	if (m_decode_thread.joinable()) {
-		m_decode_thread.join();
-	}
-
-	// ÇåÀí×ÊÔ´
-	close_input();
-
-	hlogi("Decoder stopped");
-}
-
-// ½âÂëÏß³ÌÖ÷Ñ­»·
-void FFmpegDecoder::decode_loop() {
-	hlogi("Decode thread started");
-
-	while (!m_quit && !m_eof && m_error_code == 0) {
-		//av_init_packet(m_packet);
-		//m_packet = { 0 };
-		// ÉèÖÃÖĞ¶Ï»Øµ÷
-		m_fmt_ctx->interrupt_callback.callback = interrupt_callback;
-		m_fmt_ctx->interrupt_callback.opaque = this;
-		m_block_starttime = time(nullptr);
-
-		// ¶ÁÈ¡Êı¾İ°ü
-		int ret = av_read_frame(m_fmt_ctx, m_packet);
-		m_fmt_ctx->interrupt_callback.callback = nullptr;
-
-		if (ret < 0) {
-			if (ret == AVERROR_EOF || avio_feof(m_fmt_ctx->pb)) {
-				hlogi("End of file");
-				m_eof = true;
-			}
-			else {
-				hloge("av_read_frame failed: %d", ret);
-				m_error_code = ret;
-			}
+	for (unsigned int i = 0; i < ctx->fmt_ctx->nb_streams; i++) {
+		if (ctx->fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+			ctx->video_stream_index = i;
 			break;
 		}
-
-		// Ö»´¦ÀíÊÓÆµÁ÷
-		if (m_packet->stream_index != m_video_stream_index) {
-			av_packet_unref(m_packet);
-			continue;
-		}
-
-		// ·¢ËÍÊı¾İ°üµ½½âÂëÆ÷
-		ret = avcodec_send_packet(m_codec_ctx, m_packet);
-		av_packet_unref(m_packet); // ÊÍ·ÅÊı¾İ°ü
-
-		if (ret < 0) {
-			hloge("avcodec_send_packet failed: %d", ret);
-			m_error_code = ret;
-			break;
-		}
-
-		// ½ÓÊÕ½âÂëºóµÄÖ¡
-		ret = avcodec_receive_frame(m_codec_ctx, m_frame);
-		if (ret == AVERROR(EAGAIN)) {
-			continue; // ĞèÒª¸ü¶àÊı¾İ
-		}
-		else if (ret < 0) {
-			hloge("avcodec_receive_frame failed: %d", ret);
-			m_error_code = ret;
-			break;
-		}
-
-		// ×ª»»Ö¡¸ñÊ½²¢¼ÓÈë¶ÓÁĞ
-		DecodedFrame decoded_frame;
-		if (convert_frame(m_frame, decoded_frame)) {
-			std::unique_lock<std::mutex> lock(m_queue_mutex);
-
-			// ÏŞÖÆ¶ÓÁĞ´óĞ¡£¬±ÜÃâÄÚ´æ±©ÕÇ
-			while (m_frame_queue.size() >= m_config.frame_queue_size && !m_quit) {
-				m_queue_cv.wait_for(lock, std::chrono::milliseconds(10));
-			}
-
-			if (!m_quit) {
-				m_frame_queue.push(std::move(decoded_frame));
-				m_queue_cv.notify_one();
-			}
-		}
-
-		av_frame_unref(m_frame);
 	}
 
-	// Í¨ÖªËùÓĞµÈ´ıµÄÏß³Ì
-	m_queue_cv.notify_all();
-	hlogi("Decode thread exited");
-}
+	if (ctx->video_stream_index == -1) return -1;
 
-// ×ª»»AVFrameµ½DecodedFrame
-bool FFmpegDecoder::convert_frame(AVFrame* av_frame, DecodedFrame& out_frame) {
-	if (!av_frame || !m_sws_ctx) {
-		return false;
-	}
+	AVCodecParameters *codecpar = ctx->fmt_ctx->streams[ctx->video_stream_index]->codecpar;
+	AVCodec *codec = avcodec_find_decoder(codecpar->codec_id);
+	ctx->codec_ctx = avcodec_alloc_context3(codec);
+	avcodec_parameters_to_context(ctx->codec_ctx, codecpar);
 
-	// ÉèÖÃ»ù±¾ĞÅÏ¢
-	out_frame.width = m_dst_width;
-	out_frame.height = m_dst_height;
-	out_frame.timestamp = (int64_t)(av_frame->pts * av_q2d(m_video_time_base) * 1000);
+	if (avcodec_open2(ctx->codec_ctx, codec, nullptr) < 0) return -1;
 
-	// ¸ù¾İÄ¿±ê¸ñÊ½·ÖÅäÄÚ´æ
-	if (m_dst_pix_fmt == AV_PIX_FMT_YUV420P) {
-		out_frame.format = PIX_FMT_YUV420P;
-		int y_size = m_dst_width * m_dst_height;
-		out_frame.data_size = y_size * 3 / 2;
-		out_frame.data = new uint8_t[out_frame.data_size];
-
-		// ÉèÖÃYUVÊı¾İÖ¸Õë
-		uint8_t* data[3] = {
-			out_frame.data,
-			out_frame.data + y_size,
-			out_frame.data + y_size + y_size / 4
-		};
-		int linesize[3] = { m_dst_width, m_dst_width / 2, m_dst_width / 2 };
-
-		// ¸ñÊ½×ª»»
-		int ret = sws_scale(m_sws_ctx, av_frame->data, av_frame->linesize,
-			0, av_frame->height, data, linesize);
-		if (ret <= 0) {
-			delete[] out_frame.data;
-			out_frame.data = nullptr;
-			return false;
-		}
-
-		// ±£´æĞĞ´óĞ¡
-		out_frame.linesize[0] = linesize[0];
-		out_frame.linesize[1] = linesize[1];
-		out_frame.linesize[2] = linesize[2];
-	}
-	else if (m_dst_pix_fmt == AV_PIX_FMT_BGR24) {
-		out_frame.format = PIX_FMT_BGR24;
-		out_frame.data_size = m_dst_width * m_dst_height * 3;
-		out_frame.data = new uint8_t[out_frame.data_size];
-
-		uint8_t* data[1] = { out_frame.data };
-		int linesize[1] = { m_dst_width * 3 };
-
-		int ret = sws_scale(m_sws_ctx, av_frame->data, av_frame->linesize,
-			0, av_frame->height, data, linesize);
-		if (ret <= 0) {
-			delete[] out_frame.data;
-			out_frame.data = nullptr;
-			return false;
-		}
-
-		out_frame.linesize[0] = linesize[0];
-	}
-	else {
-		return false;
-	}
-
-	return true;
-}
-
-// »ñÈ¡½âÂëºóµÄÖ¡
-bool FFmpegDecoder::get_frame(DecodedFrame& frame) {
-	std::unique_lock<std::mutex> lock(m_queue_mutex);
-
-	// µÈ´ıÓĞÖ¡»òÍ£Ö¹
-	while (m_frame_queue.empty() && m_running && !m_eof && m_error_code == 0) {
-		m_queue_cv.wait(lock);
-	}
-
-	// ¼ì²éÊÇ·ñÓĞÖ¡
-	if (!m_frame_queue.empty()) {
-		frame = std::move(m_frame_queue.front());
-		m_frame_queue.pop();
-		return true;
-	}
-
-	return false;
-}
-
-// Çå¿ÕÖ¡¶ÓÁĞ
-void FFmpegDecoder::clear_frames() {
-	std::lock_guard<std::mutex> lock(m_queue_mutex);
-	std::queue<DecodedFrame> empty_queue;
-	std::swap(m_frame_queue, empty_queue);
-}
-
-// Ìø×ª²¥·ÅÎ»ÖÃ
-int FFmpegDecoder::seek(int64_t ms) {
-	if (!m_fmt_ctx || m_video_stream_index < 0) {
-		return -1;
-	}
-
-	if (ms < 0) ms = 0;
-	if (ms > m_duration) ms = m_duration;
-
-	// ¼ÆËãÄ¿±êÊ±¼ä´Á£¨×ª»»ÎªFFmpegÊ±¼ä»ù£©
-	int64_t target_ts = (int64_t)(ms / 1000.0 / av_q2d(m_video_time_base));
-
-	// Çå¿ÕÖ¡¶ÓÁĞ
-	clear_frames();
-
-	// Ö´ĞĞseek
-	int ret = av_seek_frame(m_fmt_ctx, m_video_stream_index, target_ts, AVSEEK_FLAG_BACKWARD);
-	if (ret < 0) {
-		hloge("av_seek_frame failed: %d", ret);
-		m_error_code = ret;
-		return ret;
-	}
-
-	// Ë¢ĞÂ½âÂëÆ÷
-	if (m_codec_ctx) {
-		avcodec_flush_buffers(m_codec_ctx);
-	}
-
-	hlogi("Seek to %lldms (ts: %lld)", ms, target_ts);
+	ctx->frame = av_frame_alloc();
 	return 0;
 }
 
-
-
-// ====================== C ½Ó¿Úµ¼³ö²¿·Ö ======================
-extern "C" {
-
-	// ´´½¨½âÂëÆ÷ÊµÀı
-	OPENCVFFMPEGTOOLS_API void* FFmpegDecoder_Create()
-	{
-		return new FFmpegDecoder();
+void FFmpegDecoder::ffplayer_read_frame()
+{
+	if (m_paused && !m_seek_req) {
+		return;
 	}
 
-	// Ïú»Ù½âÂëÆ÷ÊµÀı
-	OPENCVFFMPEGTOOLS_API void FFmpegDecoder_Destroy(void* decoder)
 	{
-		if (decoder) {
-			delete static_cast<FFmpegDecoder*>(decoder);
+		std::lock_guard<std::mutex> lock(m_ctrl_mtx);
+		if (m_seek_req) {
+			int64_t seek_target = av_rescale_q(m_seek_target * 1000, { 1, AV_TIME_BASE }, ctx->fmt_ctx->streams[ctx->video_stream_index]->time_base);
+			if (av_seek_frame(ctx->fmt_ctx, ctx->video_stream_index, seek_target, AVSEEK_FLAG_BACKWARD) >= 0) {
+				avcodec_flush_buffers(ctx->codec_ctx);
+			}
+			m_seek_req = false;
 		}
 	}
 
-	// ³õÊ¼»¯½âÂëÆ÷
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı£¬config-ÅäÖÃ½á¹¹ÌåÖ¸Õë
-	// ·µ»ØÖµ£º0³É¹¦£¬·Ç0Ê§°Ü£¨´íÎóÂëÍ¬Ô­ÓĞinitº¯Êı£©
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Init(void* decoder, const PlayerConfig* config)
-	{
-		if (!decoder || !config) {
-			return -1;
+	AVPacket pkt;
+	if (av_read_frame(ctx->fmt_ctx, &pkt) >= 0) {
+
+		if (pkt.stream_index == ctx->video_stream_index) {
+			if (avcodec_send_packet(ctx->codec_ctx, &pkt) == 0) {
+				while (avcodec_receive_frame(ctx->codec_ctx, ctx->frame) == 0) {
+
+					int dw = ctx->codec_ctx->width;
+					int dh = ctx->codec_ctx->height;
+
+					{
+						std::lock_guard<std::mutex> lock(ctx->shared_buf.mtx);
+
+						// é›¶æ‹·è´å‡†å¤‡ï¼šç¡®ä¿ç¼“å†²åŒºå¤§å°æ­£ç¡®
+						int target_size = dw * dh * 4; // å‡è®¾è½¬ä¸º RGBA
+						if (ctx->shared_buf.buf.size() != (size_t)target_size) {
+							ctx->shared_buf.buf.resize(target_size);
+							ctx->shared_buf.w = dw;
+							ctx->shared_buf.h = dh;
+							ctx->shared_buf.type = 1; // æ ‡è®°ä¸º RGBA/BGR
+						}
+
+						// åˆå§‹åŒ– SwsContext
+						if (!ctx->sws_ctx) {
+							ctx->sws_ctx = sws_getContext(dw, dh, ctx->codec_ctx->pix_fmt,
+								dw, dh, AV_PIX_FMT_RGBA,
+								SWS_BILINEAR, nullptr, nullptr, nullptr);
+						}
+
+						// ç›´æ¥å†™å…¥å…±äº«ç¼“å†²åŒº
+						ctx->data[0] = ctx->shared_buf.buf.data();
+						ctx->linesize[0] = dw * 4;
+
+						sws_scale(ctx->sws_ctx, ctx->frame->data, ctx->frame->linesize,
+							0, dh, ctx->data, ctx->linesize);
+
+						ctx->shared_buf.ts = av_gettime_relative() / 1000;
+						ctx->shared_buf.state = BUFFER_FILLED;
+					}
+				}
+			}
+
 		}
-		return static_cast<FFmpegDecoder*>(decoder)->init(*config);
+		av_packet_unref(&pkt);
 	}
+}
 
-	// Æô¶¯½âÂëÏß³Ì
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£º0³É¹¦£¬·Ç0Ê§°Ü
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Start(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->start();
+void FFmpegDecoder::ffplayer_close()
+{
+
+}
+
+int64_t FFmpegDecoder::getDuration() const
+{
+	if (ctx->fmt_ctx && ctx->fmt_ctx->duration != AV_NOPTS_VALUE) {
+		return ctx->fmt_ctx->duration / (AV_TIME_BASE / 1000);
 	}
-
-	// Í£Ö¹½âÂë
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	OPENCVFFMPEGTOOLS_API void FFmpegDecoder_Stop(void* decoder)
-	{
-		if (decoder) {
-			static_cast<FFmpegDecoder*>(decoder)->stop();
-		}
-	}
-
-	// »ñÈ¡½âÂëºóµÄÖ¡
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı£¬frame-Êä³öÖ¡½á¹¹ÌåÖ¸Õë
-	// ·µ»ØÖµ£ºtrue(1)³É¹¦»ñÈ¡Ö¡£¬false(0)ÎŞÖ¡/Í£Ö¹/³ö´í
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetFrame(void* decoder, DecodedFrame* frame)
-	{
-		if (!decoder || !frame) {
-			return 0;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_frame(*frame) ? 1 : 0;
-	}
-
-	// Ìø×ª²¥·ÅÎ»ÖÃ
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı£¬ms-Ä¿±êÊ±¼ä£¨ºÁÃë£©
-	// ·µ»ØÖµ£º0³É¹¦£¬·Ç0Ê§°Ü
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_Seek(void* decoder, int64_t ms)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->seek(ms);
-	}
-
-	// »ñÈ¡Ã½Ìå×ÜÊ±³¤£¨ºÁÃë£©
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£ºÊ±³¤£¨ºÁÃë£©£¬Ê§°Ü·µ»Ø-1
-	OPENCVFFMPEGTOOLS_API int64_t FFmpegDecoder_GetDuration(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_duration();
-	}
-
-	// »ñÈ¡ÊÓÆµ¿í¶È
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£º¿í¶È£¬Ê§°Ü·µ»Ø-1
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetWidth(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_width();
-	}
-
-	// »ñÈ¡ÊÓÆµ¸ß¶È
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£º¸ß¶È£¬Ê§°Ü·µ»Ø-1
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetHeight(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_height();
-	}
-
-	// »ñÈ¡Ö¡ÂÊ
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£ºÖ¡ÂÊ£¬Ê§°Ü·µ»Ø-1
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetFps(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_fps();
-	}
-
-	// »ñÈ¡´íÎóÂë
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	// ·µ»ØÖµ£º´íÎóÂë£¬0±íÊ¾ÎŞ´íÎó
-	OPENCVFFMPEGTOOLS_API int FFmpegDecoder_GetErrorCode(void* decoder)
-	{
-		if (!decoder) {
-			return -1;
-		}
-		return static_cast<FFmpegDecoder*>(decoder)->get_error_code();
-	}
-
-	// Çå¿ÕÖ¡¶ÓÁĞ
-	// ²ÎÊı£ºdecoder-½âÂëÆ÷ÊµÀı
-	OPENCVFFMPEGTOOLS_API void FFmpegDecoder_ClearFrames(void* decoder)
-	{
-		if (decoder) {
-			static_cast<FFmpegDecoder*>(decoder)->clear_frames();
-		}
-	}
-
-	// ÊÍ·Å½âÂëÖ¡µÄÄÚ´æ£¨C¶Ëµ÷ÓÃºóĞèÊÍ·ÅÖ¡Êı¾İ£©
-	// ²ÎÊı£ºframe-½âÂëÖ¡½á¹¹ÌåÖ¸Õë
-	OPENCVFFMPEGTOOLS_API void FFmpegDecoder_FreeFrameData(DecodedFrame* frame)
-	{
-		if (frame && frame->data) {
-			delete[] frame->data;
-			frame->data = nullptr;
-			frame->data_size = 0;
-		}
-	}
-
-} // extern "C"
-
-//example
-/*
-#include <iostream>
-
-int main() {
-	// 1. ´´½¨²¥·ÅÆ÷ÅäÖÃ
-	PlayerConfig config;
-	config.src = "2.mp4";                  // ±¾µØÎÄ¼ş/RTSPµØÖ·/Éè±¸Ãû
-	config.type = MEDIA_TYPE_FILE;            // Ã½ÌåÀàĞÍ
-	config.decode_mode = SOFTWARE_DECODE;     // Èí¼ş½âÂë
-	config.dst_format = PIX_FMT_YUV420P;      // Êä³öYUV420P¸ñÊ½
-	config.block_timeout = 10;                // ×èÈû³¬Ê±10Ãë
-	config.frame_queue_size = 5;              // Ö¡¶ÓÁĞ´óĞ¡
-
-	// 2. ´´½¨½âÂëÆ÷ÊµÀı
-	FFmpegDecoder decoder;
-
-	// 3. ³õÊ¼»¯
-	int ret = decoder.init(config);
-	if (ret != 0) {
-		std::cerr << "Init decoder failed: " << ret << std::endl;
-		return -1;
-	}
-
-	// 4. ¿ªÊ¼½âÂë
-	ret = decoder.start();
-	if (ret != 0) {
-		std::cerr << "Start decoder failed: " << ret << std::endl;
-		return -1;
-	}
-
-	// 5. Ñ­»·»ñÈ¡½âÂëºóµÄÖ¡
-	int frame_count = 0;
-	while (decoder.is_running() && !decoder.is_eof() && decoder.get_error_code() == 0) {
-		DecodedFrame frame;
-		if (decoder.get_frame(frame)) {
-			frame_count++;
-			std::cout << "Get frame " << frame_count
-				<< ": " << frame.width << "x" << frame.height
-				<< ", ts=" << frame.timestamp << "ms"
-				<< ", size=" << frame.data_size << " bytes" << std::endl;
-
-			// TODO: ´¦ÀíÖ¡Êı¾İ£¨±£´æÎÄ¼ş/ÍøÂç´«Êä/ÆäËû´¦Àí£©
-			// frame.data ¾ÍÊÇ½âÂëºóµÄÏñËØÊı¾İ
-		}
-	}
-
-	// 6. Í£Ö¹½âÂëÆ÷
-	decoder.stop();
-
-	std::cout << "Decode finished, total frames: " << frame_count << std::endl;
-	if (decoder.get_error_code() != 0) {
-		std::cerr << "Decode error: " << decoder.get_error_code() << std::endl;
-	}
-
 	return 0;
 }
 
-
-
-*/
+int64_t FFmpegDecoder::getCurrentTime() const
+{
+	
+	return 0;
+}

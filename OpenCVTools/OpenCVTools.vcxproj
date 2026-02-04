@@ -176,8 +176,10 @@
     <ClInclude Include="COpenCVTools.h" />
     <ClInclude Include="CvTranslator.h" />
     <ClInclude Include="FFmpegDecoder.h" />
+    <ClInclude Include="FFmpegEncoder.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="LogStreamBuf.h" />
+    <ClInclude Include="mdevice.h" />
     <ClInclude Include="OpenCVFFMpegTools.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -187,6 +189,7 @@
     <ClCompile Include="CvTranslator.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FFmpegDecoder.cpp" />
+    <ClCompile Include="FFmpegEncoder.cpp" />
     <ClCompile Include="LogStreamBuf.cpp" />
     <ClCompile Include="OpenCVFFMpegTools.cpp" />
     <ClCompile Include="pch.cpp">
