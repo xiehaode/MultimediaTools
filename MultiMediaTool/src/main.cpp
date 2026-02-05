@@ -12,11 +12,12 @@ extern const QString IPC_PIPE_NAME = "MultiMediaTool-Unique-IPC-Pipe-2026";
 
 int main(int argc, char *argv[])
 {
-    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    if (FAILED(hr)) {
-        qCritical() << "COM MTA模式初始化失败：" << hr;
-        return -1;
-    }
+    //qt不能mat多线程否则会导致卡死
+//    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+//    if (FAILED(hr)) {
+//        qCritical() << "COM MTA模式初始化失败：" << hr;
+//        return -1;
+//    }
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
@@ -49,8 +50,8 @@ int main(int argc, char *argv[])
     w.show();
 
     return a.exec();
-    // 第四步：程序结束时释放COM
-    CoUninitialize();
+
+    //CoUninitialize();
 }
 
 

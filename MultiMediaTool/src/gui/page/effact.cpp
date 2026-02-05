@@ -32,7 +32,7 @@ void effact::initUI()
 
 void effact::setupCheckBoxConnections()
 {
-    // è¿æ¥æ‰€æœ‰å¤é€‰æ¡†çš„clickedä¿¡å·åˆ°åŒä¸€ä¸ªæ§½å‡½æ•°
+    // Á¬½ÓËùÓĞ¸´Ñ¡¿òµÄclickedĞÅºÅµ½Í¬Ò»¸ö²Ûº¯Êı
     connect(ui->gray, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
     connect(ui->TextWatermark, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
     connect(ui->customOilPaintApprox, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
@@ -51,7 +51,7 @@ void effact::onCheckBoxClicked()
     if (clickedBox) {
         ensureSingleSelection(clickedBox);
         
-        // æ ¹æ®é€‰ä¸­çš„å¤é€‰æ¡†ç¡®å®šå¯¹åº”çš„funcæšä¸¾å€¼
+        // ¸ù¾İÑ¡ÖĞµÄ¸´Ñ¡¿òÈ·¶¨¶ÔÓ¦µÄfuncÃ¶¾ÙÖµ
 
         if (clickedBox == ui->gray) {
             effectType = grayImage;
@@ -82,7 +82,7 @@ void effact::onCheckBoxClicked()
 void effact::ensureSingleSelection(QCheckBox* checkedBox)
 {
     if (checkedBox->isChecked()) {
-        // å¦‚æœå½“å‰å¤é€‰æ¡†è¢«é€‰ä¸­ï¼Œå–æ¶ˆå…¶ä»–æ‰€æœ‰å¤é€‰æ¡†çš„é€‰ä¸­çŠ¶æ€
+        // Èç¹ûµ±Ç°¸´Ñ¡¿ò±»Ñ¡ÖĞ£¬È¡ÏûÆäËûËùÓĞ¸´Ñ¡¿òµÄÑ¡ÖĞ×´Ì¬
         QList<QCheckBox*> checkBoxes = {
             ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
@@ -100,24 +100,24 @@ void effact::ensureSingleSelection(QCheckBox* checkedBox)
 void effact::on_ok_clicked()
 {
     if (!trans) {
-        qDebug() << "é”™è¯¯ï¼šè½¬æ¢å™¨æœªåˆå§‹åŒ–ã€‚è¯·å…ˆç‚¹å‡»'å¯¼å‡º'é€‰æ‹©è·¯å¾„ã€‚";
+        qDebug() << "´íÎó£º×ª»»Æ÷Î´³õÊ¼»¯¡£ÇëÏÈµã»÷'µ¼³ö'Ñ¡ÔñÂ·¾¶¡£";
         return;
     }
 
-    // ç¦ç”¨æŒ‰é’®é˜²æ­¢é‡å¤ç‚¹å‡»
+    // ½ûÓÃ°´Å¥·ÀÖ¹ÖØ¸´µã»÷
     ui->ok->setEnabled(false);
     
-    qDebug() << "å¼€å§‹å¤„ç†è§†é¢‘...";
+    qDebug() << "¿ªÊ¼´¦ÀíÊÓÆµ...";
     int processRet = VideoTrans_Process(trans, effectType);
     
     if (processRet != 0) {
-        qDebug() << "è§†é¢‘å¤„ç†å¤±è´¥ï¼Œé”™è¯¯ç :" << processRet;
-        // å¦‚æœå¤„ç†å¤±è´¥ï¼Œå»ºè®®é”€æ¯é‡å»ºä»¥ç¡®ä¿çŠ¶æ€å¹²å‡€
+        qDebug() << "ÊÓÆµ´¦ÀíÊ§°Ü£¬´íÎóÂë:" << processRet;
+        // Èç¹û´¦ÀíÊ§°Ü£¬½¨ÒéÏú»ÙÖØ½¨ÒÔÈ·±£×´Ì¬¸É¾»
         VideoTrans_Destroy(trans);
         trans = nullptr;
     } else {
-        qDebug() << "è§†é¢‘å¤„ç†å®Œæˆï¼";
-        // å¤„ç†æˆåŠŸåï¼Œé‡ç½®åº•å±‚çŠ¶æ€ä½†ä¿ç•™å®ä¾‹ï¼Œæ–¹ä¾¿ä¸‹æ¬¡ç›´æ¥ä½¿ç”¨
+        qDebug() << "ÊÓÆµ´¦ÀíÍê³É£¡";
+        // ´¦Àí³É¹¦ºó£¬ÖØÖÃµ×²ã×´Ì¬µ«±£ÁôÊµÀı£¬·½±ãÏÂ´ÎÖ±½ÓÊ¹ÓÃ
         VideoTrans_Reset(trans); 
     }
 
@@ -137,20 +137,20 @@ void effact::on_addFile_clicked()
 void effact::on_exportFile_clicked()
 {
     if (file.isEmpty()) {
-        qDebug() << "æœªé€‰æ‹©è¾“å…¥æ–‡ä»¶";
+        qDebug() << "Î´Ñ¡ÔñÊäÈëÎÄ¼ş";
         return;
     }
 
-    // ä½¿ç”¨ getSaveFileName å…è®¸ç”¨æˆ·æŒ‡å®šæ–‡ä»¶åå’Œä½ç½®ï¼Œé¿å…ç›®å½•æ‹¼æ¥é”™è¯¯
-    outFile = QFileDialog::getSaveFileName(this, "é€‰æ‹©è¾“å‡ºæ–‡ä»¶", QDir::currentPath(), "è§†é¢‘æ–‡ä»¶ (*.mp4)");
+    // Ê¹ÓÃ getSaveFileName ÔÊĞíÓÃ»§Ö¸¶¨ÎÄ¼şÃûºÍÎ»ÖÃ£¬±ÜÃâÄ¿Â¼Æ´½Ó´íÎó
+    outFile = QFileDialog::getSaveFileName(this, "Ñ¡ÔñÊä³öÎÄ¼ş", QDir::currentPath(), "ÊÓÆµÎÄ¼ş (*.mp4)");
     
     if(outFile.isEmpty()){
-        qDebug() << "æœªé€‰æ‹©è¾“å‡ºæ–‡ä»¶";
+        qDebug() << "Î´Ñ¡ÔñÊä³öÎÄ¼ş";
         return;
     }
 
-    // è½¬æ¢ä¸ºæœ¬åœ°è·¯å¾„å¹¶ç¡®ä¿ä½¿ç”¨ UTF-8 ç¼–ç ä¼ é€’ç»™åº•å±‚ C æ¥å£
-    // è®¸å¤šåº•å±‚åº“ï¼ˆå¦‚ FFmpegï¼‰åœ¨ Windows ä¸ŠæœŸæœ› UTF-8 è·¯å¾„
+    // ×ª»»Îª±¾µØÂ·¾¶²¢È·±£Ê¹ÓÃ UTF-8 ±àÂë´«µİ¸øµ×²ã C ½Ó¿Ú
+    // Ğí¶àµ×²ã¿â£¨Èç FFmpeg£©ÔÚ Windows ÉÏÆÚÍû UTF-8 Â·¾¶
     std::string utf8Input = QDir::toNativeSeparators(file).toUtf8().constData();
     std::string utf8Output = QDir::toNativeSeparators(outFile).toUtf8().constData();
 
@@ -159,24 +159,29 @@ void effact::on_exportFile_clicked()
     }
 
     if (!trans) {
-        qDebug() << "æ— æ³•åˆ›å»ºè§†é¢‘è½¬æ¢å™¨å®ä¾‹";
+        qDebug() << "ÎŞ·¨´´½¨ÊÓÆµ×ª»»Æ÷ÊµÀı";
         return;
     }
 
-    // ç¬¬ä¸€æ¬¡å°è¯•åˆå§‹åŒ–ï¼šFFmpeg ç¼–ç å™¨è¦æ±‚åˆ†è¾¨ç‡å¿…é¡»æ˜¯å¶æ•°
-    int initRet = VideoTrans_Initialize(trans, utf8Input.c_str(), utf8Output.c_str());
+    // ÔÚ¶ÀÁ¢Ïß³ÌÖĞ³õÊ¼»¯£¬±ÜÃâSTA³åÍ»
+    QFuture<int> future = QtConcurrent::run([this, &utf8Input, &utf8Output]() -> int {
+        return VideoTrans_Initialize(trans, utf8Input.c_str(), utf8Output.c_str());
+    });
     
-    // å¦‚æœå› ä¸ºåˆ†è¾¨ç‡éå¶æ•°å¯¼è‡´å¤±è´¥ (-4)ï¼Œå°è¯•è·å–å°ºå¯¸å¹¶è§„æ•´ï¼ˆå¦‚æœåº•å±‚æ”¯æŒè·å–å±æ€§ï¼‰
-    // æ³¨æ„ï¼šç›®å‰çš„åº•å±‚é€»è¾‘åœ¨ Initialize å¤±è´¥æ—¶ä¼šæ¸…ç†èµ„æºï¼Œæ‰€ä»¥è¿™é‡Œæˆ‘ä»¬ç›´æ¥æç¤ºç”¨æˆ·
+    // µÈ´ı³õÊ¼»¯Íê³É
+    int initRet = future.result();
+    
+    // Èç¹ûÒòÎª·Ö±æÂÊ·ÇÅ¼Êıµ¼ÖÂÊ§°Ü (-4)£¬³¢ÊÔ»ñÈ¡³ß´ç²¢¹æÕû£¨Èç¹ûµ×²ãÖ§³Ö»ñÈ¡ÊôĞÔ£©
+    // ×¢Òâ£ºÄ¿Ç°µÄµ×²ãÂß¼­ÔÚ Initialize Ê§°ÜÊ±»áÇåÀí×ÊÔ´£¬ËùÒÔÕâÀïÎÒÃÇÖ±½ÓÌáÊ¾ÓÃ»§
     if (initRet != 0) {
-        qDebug() << "åˆå§‹åŒ–å¤±è´¥ï¼Œé”™è¯¯ç :" << initRet;
+        qDebug() << "³õÊ¼»¯Ê§°Ü£¬´íÎóÂë:" << initRet;
         if (initRet == -4) {
-            qDebug() << "æç¤ºï¼šç¼–ç å™¨è¦æ±‚è§†é¢‘å®½åº¦å’Œé«˜åº¦å¿…é¡»æ˜¯å¶æ•°ã€‚è¯·æ£€æŸ¥è¾“å…¥è§†é¢‘åˆ†è¾¨ç‡ã€‚";
+            qDebug() << "ÌáÊ¾£º±àÂëÆ÷ÒªÇóÊÓÆµ¿í¶ÈºÍ¸ß¶È±ØĞëÊÇÅ¼Êı¡£Çë¼ì²éÊäÈëÊÓÆµ·Ö±æÂÊ¡£";
         }
         VideoTrans_Destroy(trans);
         trans = nullptr;
     } else {
-        qDebug() << "åˆå§‹åŒ–æˆåŠŸ";
+        qDebug() << "³õÊ¼»¯³É¹¦";
     }
 }
 

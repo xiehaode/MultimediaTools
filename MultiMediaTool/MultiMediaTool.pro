@@ -1,4 +1,4 @@
-QT       += core gui network
+QT       += core gui network concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,7 +9,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 #CONFIG += console
-# ½ûÓÃ Qt ¶Ô±ê×¼Êä³öµÄÖØ¶¨Ïò
+# ç¦ç”¨ Qt å¯¹æ ‡å‡†è¾“å‡ºçš„é‡å®šå‘
 # DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
 
 
