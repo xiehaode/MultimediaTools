@@ -5,104 +5,59 @@
 
 #include <Windows.h>
 
-namespace {
-std::string GetExeDir() {
-	char path[MAX_PATH] = { 0 };
-	DWORD len = GetModuleFileNameA(nullptr, path, MAX_PATH);
-	if (len == 0 || len >= MAX_PATH) {
-		return std::string();
-	}
-	std::string s(path);
-	size_t pos = s.find_last_of("\\/");
-	if (pos == std::string::npos) {
-		return std::string();
-	}
-	return s.substr(0, pos);
-}
+#include <cstdio>
+#include <iostream>
 
-std::string JoinPath(const std::string& a, const std::string& b) {
-	if (a.empty()) return b;
-	const char last = a.back();
-	if (last == '\\' || last == '/') return a + b;
-	return a + "\\" + b;
-}
-
-bool FileExists(const std::string& p) {
-	DWORD attr = GetFileAttributesA(p.c_str());
-	return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) == 0;
-}
-
-unsigned long long FileSize(const std::string& p) {
-	WIN32_FILE_ATTRIBUTE_DATA data = {};
-	if (!GetFileAttributesExA(p.c_str(), GetFileExInfoStandard, &data)) {
-		return 0;
-	}
-	ULARGE_INTEGER li;
-	li.HighPart = data.nFileSizeHigh;
-	li.LowPart = data.nFileSizeLow;
-	return static_cast<unsigned long long>(li.QuadPart);
-}
-
-void DeleteIfExists(const std::string& p) {
-	if (FileExists(p)) {
-		DeleteFileA(p.c_str());
-	}
-}
-} // namespace
-
-TEST(OpenCVFFMpegToolsDll, ExportSymbolsWork) {
-	// 这个测试能通过就说明：测试程序能链接并加载 `OPENCVTOOLS.dll`。
-	EXPECT_EQ(fnOpenCVTools(), 0);
-
-	void* worker = AvWorker_Create();
-	ASSERT_NE(worker, nullptr);
-	AvWorker_Destroy(worker);
-}
-
-TEST(OpenCVFFMpegToolsDll, GetVideoFirstFrame_GeneratesBmp) {
-	const std::string exe_dir = GetExeDir();
-	ASSERT_FALSE(exe_dir.empty());
+int main() {
+	// 1. 定义输入/输出路径
+	// 使用绝对路径，避免调试时工作目录变化导致找不到文件
+	const char* inputVideo = "D:/vsPro/MultiMediaTool/bin/1.mp4";
+	const char* outputVideo = "D:/vsPro/MultiMediaTool/bin/output_addTextWatermark.mp4";
 
 
-	const std::string input_mp4 = JoinPath(exe_dir, "1.mp4");
-	if (!FileExists(input_mp4)) {
-		//GTEST_SKIP() << "缺少测试输入文件: " << input_mp4;
+	// 2. 创建videoTrans句柄（C接口：VideoTrans_Create）
+	void* pTrans = VideoTrans_Create();
+	if (!pTrans) {
+		printf("创建VideoTrans句柄失败！\n");
+		return -1;
 	}
 
-	const std::string out_bmp = JoinPath(exe_dir, "_test_first_frame.bmp");
-	DeleteIfExists(out_bmp);
-
-	void* worker = AvWorker_Create();
-	ASSERT_NE(worker, nullptr);
-
-	const bool ok = AvWorker_GetVideoFirstFrame(worker, input_mp4.c_str(), out_bmp.c_str(), false);
-	AvWorker_Destroy(worker);
-
-	ASSERT_TRUE(ok);
-	ASSERT_TRUE(FileExists(out_bmp));
-	ASSERT_GT(FileSize(out_bmp), 0ULL);
-}
-
-TEST(OpenCVFFMpegToolsDll, SpliceAV_GeneratesMp4) {
-	const std::string exe_dir = GetExeDir();
-	ASSERT_FALSE(exe_dir.empty());
-
-	const std::string input1 = JoinPath(exe_dir, "1.mp4");
-	const std::string input2 = JoinPath(exe_dir, "2.mp4");
-	if (!FileExists(input1) || !FileExists(input2)) {
-		//GTEST_SKIP() << "缺少测试输入文件: " << input1 << " 或 " << input2;
+	// 3. 初始化（C接口：VideoTrans_Initialize）
+	int initRet = VideoTrans_Initialize(pTrans, inputVideo, outputVideo);
+	if (initRet != 0) {
+		printf("初始化失败，错误码：%d\n", initRet);
+		VideoTrans_Destroy(pTrans);
+		return initRet;
 	}
 
-	const std::string out_mp4 = JoinPath(exe_dir, "_test_splice_out.mp4");
-	DeleteIfExists(out_mp4);
+	// 4. 打印视频属性（C接口获取宽/高/帧率/时长）
+	int width = VideoTrans_GetWidth(pTrans);
+	int height = VideoTrans_GetHeight(pTrans);
+	int fps = VideoTrans_GetFPS(pTrans);
+	int64_t duration = VideoTrans_GetDuration(pTrans);
+	printf("视频属性：%dx%d | %dfps | 时长：%llds\n",
+		width, height, fps, duration / 1000);
 
-	void* worker = AvWorker_Create();
-	ASSERT_NE(worker, nullptr);
+	// 5. 执行视频处理（C接口：VideoTrans_Process，传入特效类型int值）
+	// 特效类型：applyMosaic（马赛克），直接传枚举对应的int值
+	int processRet = VideoTrans_Process(pTrans, addTextWatermark);
+	if (processRet != 0) {
+		printf("视频处理失败，错误码：%d\n", processRet);
+		VideoTrans_Destroy(pTrans);
+		return processRet;
+	}
 
-	const bool ok = AvWorker_SpliceAV(worker, input1.c_str(), input2.c_str(), out_mp4.c_str(), false);
-	AvWorker_Destroy(worker);
+	// 6. 重置解码器（可选，重新处理同一路径视频时使用）
+	// int resetRet = VideoTrans_Reset(pTrans);
+	// if (resetRet != 0) { printf("重置失败：%d\n", resetRet); }
 
-	ASSERT_TRUE(ok);
-	ASSERT_TRUE(FileExists(out_mp4));
-	ASSERT_GT(FileSize(out_mp4), 0ULL);
+	// 7. 手动清理资源（可选，Destroy会自动调用）
+	// VideoTrans_Cleanup(pTrans);
+
+	// 8. 销毁句柄（释放所有资源，必须调用）
+	VideoTrans_Destroy(pTrans);
+	pTrans = nullptr;
+
+	printf("视频处理完成！输出路径：%s\n", outputVideo);
+	return 0;
 }

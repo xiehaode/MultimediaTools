@@ -13,8 +13,9 @@ public:
 	~FFmpegDecoder();
 
 	int ffplayer_open(const std::string &inputPath, bool isDevice = true);
-	AVFrame *  getFrame();
+	//AVFrame *  getFrame();
 	void ffplayer_read_frame();
+	int read_frame_for_trans();
 	void ffplayer_close();
 
 	SharedFrameBuffer* getSharedBuffer() { return &ctx->shared_buf; }

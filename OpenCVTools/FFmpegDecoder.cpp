@@ -65,8 +65,12 @@ void FFmpegDecoder::ffplayer_read_frame()
 		}
 	}
 
-	AVPacket pkt;
+	AVPacket pkt = {0};
+	//av_init_packet(&pkt);
+	pkt.data = nullptr;
+	pkt.size = 0;
 	if (av_read_frame(ctx->fmt_ctx, &pkt) >= 0) {
+
 
 		if (pkt.stream_index == ctx->video_stream_index) {
 			if (avcodec_send_packet(ctx->codec_ctx, &pkt) == 0) {
@@ -110,6 +114,74 @@ void FFmpegDecoder::ffplayer_read_frame()
 		}
 		av_packet_unref(&pkt);
 	}
+}
+
+int FFmpegDecoder::read_frame_for_trans()
+{
+	{
+		std::lock_guard<std::mutex> lock(m_ctrl_mtx);
+		if (m_seek_req) {
+			int64_t seek_target = av_rescale_q(m_seek_target * 1000, { 1, AV_TIME_BASE }, ctx->fmt_ctx->streams[ctx->video_stream_index]->time_base);
+			if (av_seek_frame(ctx->fmt_ctx, ctx->video_stream_index, seek_target, AVSEEK_FLAG_BACKWARD) >= 0) {
+				avcodec_flush_buffers(ctx->codec_ctx);
+			}
+			m_seek_req = false;
+		}
+	}
+
+	AVPacket pkt = {0};
+	//av_init_packet(&pkt);
+	pkt.data = nullptr;
+	pkt.size = 0;
+	while (av_read_frame(ctx->fmt_ctx, &pkt) >= 0) {
+		if (pkt.stream_index != ctx->video_stream_index) {
+			av_packet_unref(&pkt);
+			continue; // 跳过非视频流
+		}
+
+		int sendRet = avcodec_send_packet(ctx->codec_ctx, &pkt);
+		if (sendRet == 0) {
+			while (true) {
+				int ret = avcodec_receive_frame(ctx->codec_ctx, ctx->frame);
+				if (ret == 0) {
+					av_packet_unref(&pkt);
+					return 1; // 成功读取到一帧
+				}
+				if (ret == AVERROR(EAGAIN)) {
+					break; // 需要更多数据包
+				}
+				av_packet_unref(&pkt);
+				return -1; // 解码失败
+			}
+			av_packet_unref(&pkt);
+			continue;
+		}
+
+		if (sendRet == AVERROR(EAGAIN)) {
+			int ret = avcodec_receive_frame(ctx->codec_ctx, ctx->frame);
+			if (ret == 0) {
+				av_packet_unref(&pkt);
+				return 1;
+			}
+			av_packet_unref(&pkt);
+			continue; // 继续读取更多包
+		}
+
+		av_packet_unref(&pkt);
+		return -1; // 送入解码器失败
+	}
+
+
+
+	// 尝试刷新解码器，读取缓冲区中可能剩余的帧
+	if (avcodec_send_packet(ctx->codec_ctx, nullptr) == 0) {
+		int ret = avcodec_receive_frame(ctx->codec_ctx, ctx->frame);
+		if (ret == 0) {
+			return 1;
+		}
+	}
+
+	return 0; // EOF
 }
 
 void FFmpegDecoder::ffplayer_close()

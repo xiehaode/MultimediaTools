@@ -31,12 +31,15 @@ int FFmpegEncoder::video_muxer_init_codec()
 	int ret = 0;
 	char err_buf[64] = { 0 };
 
-	// 查找H.264编码器
-	codec = avcodec_find_encoder(AV_CODEC_ID_H264);
-	if (!codec)
-	{
-		av_log(NULL, AV_LOG_ERROR, "未找到H.264编码器，请确保FFmpeg编译了libx264\n");
-		return -1;
+	// 查找H.264编码器，优先使用libx264
+	codec = avcodec_find_encoder_by_name("libx264");
+	if (!codec) {
+		// 回退到系统内置H.264编码器
+		codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+		if (!codec) {
+			av_log(NULL, AV_LOG_ERROR, "未找到H.264编码器，请确保FFmpeg编译了libx264\n");
+			return -1;
+		}
 	}
 
 	// 创建视频流
@@ -71,9 +74,11 @@ int FFmpegEncoder::video_muxer_init_codec()
 	c->gop_size = mCtx->gop_size;
 	c->max_b_frames = 0; // 关闭B帧，简化时间戳处理，提升兼容性
 
-	// H.264编码选项：baseline profile提升兼容性，medium平衡速度/画质
-	av_opt_set(c->priv_data, "profile", "baseline", 0);
-	av_opt_set(c->priv_data, "preset", "medium", 0);
+	// H.264编码选项：仅在libx264可用时设置
+	if (avcodec_find_encoder_by_name("libx264")) {
+		av_opt_set(c->priv_data, "profile", "baseline", 0);
+		av_opt_set(c->priv_data, "preset", "medium", 0);
+	}
 
 	// 全局头设置（MP4/MKV等格式必需，避免裸流）
 	if (mCtx->fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
@@ -96,6 +101,7 @@ int FFmpegEncoder::video_muxer_init_codec()
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
 		av_log(NULL, AV_LOG_ERROR, "打开H.264编码器失败：%s\n", err_buf);
+		std::cout << "打开H.264编码器失败：" << err_buf << " (错误码:" << ret << ")" << std::endl;
 		return ret;
 	}
 
@@ -109,6 +115,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (!output_path || width % 2 != 0 || height % 2 != 0 || fps <= 0)
 	{
 		av_log(NULL, AV_LOG_ERROR, "参数非法：路径为空/分辨率非偶数（当前%dx%d）/帧率<=0（当前%d）\n", width, height, fps);
+		std::cout << "!output_path || width % 2 != 0 || height % 2 != 0 illlegal param\n" << std::endl;
 		return -1; // 修正：int返回值不能用NULL
 	}
 
@@ -117,6 +124,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (!ctx)
 	{
 		av_log(NULL, AV_LOG_ERROR, "分配VideoMuxerCtx内存失败\n");
+		std::cout << "av_mallocz fair\n"<<std::endl;
 		return -1;
 	}
 
@@ -136,7 +144,9 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (ret < 0)
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
+		std::cout << "avformat_alloc_output_context2 fair\n" << std::endl;
 		av_log(NULL, AV_LOG_ERROR, "初始化封装格式上下文失败：%s\n", err_buf);
+
 		goto fail;
 	}
 
@@ -145,6 +155,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	if (ret < 0)
 	{
 		av_log(NULL, AV_LOG_ERROR, "初始化编码器失败，错误码：%d\n", ret);
+		std::cout << "video_muxer_init_codec fair\n" << std::endl;
 		goto fail;
 	}
 
@@ -156,6 +167,8 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 		{
 			av_strerror(ret, err_buf, sizeof(err_buf));
 			av_log(NULL, AV_LOG_ERROR, "打开输出文件失败：%s\n", err_buf);
+			std::cout << "avio_open fair\n" << std::endl;
+
 			goto fail;
 		}
 	}
@@ -166,6 +179,7 @@ int FFmpegEncoder::video_muxer_create(const char *output_path, int width, int he
 	{
 		av_strerror(ret, err_buf, sizeof(err_buf));
 		av_log(NULL, AV_LOG_ERROR, "写入文件头失败：%s\n", err_buf);
+		std::cout << "avformat_write_header fair\n" << std::endl;
 		goto fail;
 	}
 

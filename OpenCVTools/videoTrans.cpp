@@ -135,15 +135,22 @@ int videoTrans::process(func fun)
 	
 	// 逐帧处理
 	int frameIdx = 0;
-	const int maxFrames = 10000; // 限制最大帧数，避免无限循环
+	const int maxFrames = 100000; // 限制最大帧数，避免无限循环
 	
 	while (frameIdx < maxFrames) {
-		decoder->ffplayer_read_frame();
+		int readRet = decoder->read_frame_for_trans();
+		if (readRet == 0) {
+			// EOF
+			break;
+		}
+		if (readRet < 0) {
+			printf("读取帧失败，错误代码: %d\n", readRet);
+			break;
+		}
 		
 		// 获取当前解码的AVFrame
 		AVFrame* currentFrame = decoder->getCurrentAVFrame();
 		if (!currentFrame) {
-			// 可能是解码完成或错误
 			break;
 		}
 		
@@ -225,13 +232,12 @@ int videoTrans::process(func fun)
 					break; // 写入失败，退出循环
 				}
 			} else {
-				printf("转换AVFrame失败，帧索引: %d\n", frameIdx);
+				printf("转换AVFrame失败，帧索引: %d - 跳过该帧\n", frameIdx);
+				frameIdx++;
+				continue; // 跳过转换失败的帧，继续处理下一帧
 			}
 			
 			frameIdx++;
-		} else {
-			// 帧无效，可能已经到达文件末尾
-			break;
 		}
 	}
 	

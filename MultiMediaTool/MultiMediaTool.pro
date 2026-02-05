@@ -60,7 +60,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 
-win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS
+win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lole32
 
 
 INCLUDEPATH += $$PWD/../OpenCVTools

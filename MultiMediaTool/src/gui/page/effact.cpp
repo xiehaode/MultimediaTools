@@ -1,7 +1,9 @@
 #include "effact.h"
 #include "ui_effact.h"
 #include <QFileDialog>
-
+#include <QDir>
+#include <QDebug>
+#include <QtConcurrent>
 
 effact::effact(QWidget *parent) :
     ui(new Ui::effact)
@@ -98,19 +100,28 @@ void effact::ensureSingleSelection(QCheckBox* checkedBox)
 void effact::on_ok_clicked()
 {
     if (!trans) {
-        qDebug() << "视频转换器未初始化或已销毁";
+        qDebug() << "错误：转换器未初始化。请先点击'导出'选择路径。";
         return;
     }
 
-    int processRet = VideoTrans_Process(trans, effectType);
-    if (processRet != 0) {
-        qDebug()<<"视频处理失败，错误码:"<<processRet;
-    }
+    // 禁用按钮防止重复点击
+    ui->ok->setEnabled(false);
     
-    VideoTrans_Destroy(trans);
-    trans = nullptr;
+    qDebug() << "开始处理视频...";
+    int processRet = VideoTrans_Process(trans, effectType);
+    
+    if (processRet != 0) {
+        qDebug() << "视频处理失败，错误码:" << processRet;
+        // 如果处理失败，建议销毁重建以确保状态干净
+        VideoTrans_Destroy(trans);
+        trans = nullptr;
+    } else {
+        qDebug() << "视频处理完成！";
+        // 处理成功后，重置底层状态但保留实例，方便下次直接使用
+        VideoTrans_Reset(trans); 
+    }
 
-    printf("视频处理完成！输出路径：%s\n", outFile.toStdString().c_str());
+    ui->ok->setEnabled(true);
 }
 
 
@@ -130,26 +141,42 @@ void effact::on_exportFile_clicked()
         return;
     }
 
-    outFile =QFileDialog::getExistingDirectory()+"/output.mp4";
+    // 使用 getSaveFileName 允许用户指定文件名和位置，避免目录拼接错误
+    outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "视频文件 (*.mp4)");
+    
     if(outFile.isEmpty()){
-        qDebug()<<"输出目录为空";
+        qDebug() << "未选择输出文件";
         return;
     }
+
+    // 转换为本地路径并确保使用 UTF-8 编码传递给底层 C 接口
+    // 许多底层库（如 FFmpeg）在 Windows 上期望 UTF-8 路径
+    std::string utf8Input = QDir::toNativeSeparators(file).toUtf8().constData();
+    std::string utf8Output = QDir::toNativeSeparators(outFile).toUtf8().constData();
 
     if (!trans) {
         trans = VideoTrans_Create();
     }
 
     if (!trans) {
-        qDebug() << "无法创建视频转换器";
+        qDebug() << "无法创建视频转换器实例";
         return;
     }
 
-    int initRet = VideoTrans_Initialize(trans, file.toStdString().c_str(), outFile.toStdString().c_str());
+    // 第一次尝试初始化：FFmpeg 编码器要求分辨率必须是偶数
+    int initRet = VideoTrans_Initialize(trans, utf8Input.c_str(), utf8Output.c_str());
+    
+    // 如果因为分辨率非偶数导致失败 (-4)，尝试获取尺寸并规整（如果底层支持获取属性）
+    // 注意：目前的底层逻辑在 Initialize 失败时会清理资源，所以这里我们直接提示用户
     if (initRet != 0) {
-        qDebug()<<"初始化失败，错误码:"<<initRet;
+        qDebug() << "初始化失败，错误码:" << initRet;
+        if (initRet == -4) {
+            qDebug() << "提示：编码器要求视频宽度和高度必须是偶数。请检查输入视频分辨率。";
+        }
         VideoTrans_Destroy(trans);
         trans = nullptr;
+    } else {
+        qDebug() << "初始化成功";
     }
 }
 
