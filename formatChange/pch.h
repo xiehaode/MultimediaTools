@@ -17,7 +17,10 @@
 #include <stdexcept>
 
 // FFmpeg 头文件（需确保路径正确）
+#ifdef __cplusplus
 extern "C" {
+#endif
+
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
@@ -28,7 +31,10 @@ extern "C" {
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
+
+#ifdef __cplusplus
 }
+#endif
 
 
 #endif //PCH_H

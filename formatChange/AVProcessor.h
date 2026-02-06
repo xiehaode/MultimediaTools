@@ -12,28 +12,7 @@ private:
 };
 
 // 音视频配置结构体：用于传递转码/格式转换的参数
-struct AVConfig {
-	// 通用参数
-	int bit_rate = 0;          // 码率（0表示使用默认值）
-	int width = 0;             // 视频宽度（0表示使用源尺寸）
-	int height = 0;            // 视频高度（0表示使用源尺寸）
-	int frame_rate = 25;       // 帧率（默认25fps）
-	int sample_rate = 44100;   // 音频采样率（默认44100Hz）
-	int channels = 2;          // 音频声道数（默认立体声）
 
-	// GIF专用参数
-	int gif_delay = 10;        // GIF帧延迟（单位：1/100秒，默认10即100ms）
-	int gif_loop = 0;          // GIF循环次数（0表示无限循环）
-
-	// 时间范围参数
-	double start_time = 0.0;   // 处理起始时间（秒）
-	double duration = 0.0;     // 处理时长（秒，0表示处理全部）
-
-	// 图片序列参数
-	std::string img_pattern;   // 图片序列路径模板（如 "frame_%04d.jpg"）
-	int img_start_idx = 0;     // 图片序列起始索引
-	int img_end_idx = -1;      // 图片序列结束索引（-1表示自动检测）
-};
 
 // 音视频处理器核心类
 class AVProcessor {

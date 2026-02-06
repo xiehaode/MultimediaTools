@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "../OpenCVTools/OpenCVFFMpegTools.h"
-
+#include "../formatChange/formatChange.h"
 #include <string>
 
 #include <Windows.h>
@@ -9,55 +9,143 @@
 #include <iostream>
 
 int main() {
-	// 1. å®šä¹‰è¾“å…¥/è¾“å‡ºè·¯å¾„
-	// ä½¿ç”¨ç»å¯¹è·¯å¾„ï¼Œé¿å…è°ƒè¯•æ—¶å·¥ä½œç›®å½•å˜åŒ–å¯¼è‡´æ‰¾ä¸åˆ°æ–‡ä»¶
+	/*
+	// 1. ¶¨ÒåÊäÈë/Êä³öÂ·¾¶
+	// Ê¹ÓÃ¾ø¶ÔÂ·¾¶£¬±ÜÃâµ÷ÊÔÊ±¹¤×÷Ä¿Â¼±ä»¯µ¼ÖÂÕÒ²»µ½ÎÄ¼ş
 	const char* inputVideo = "D:/vsPro/MultiMediaTool/bin/1.mp4";
 	const char* outputVideo = "D:/vsPro/MultiMediaTool/bin/output_addTextWatermark.mp4";
 
 
-	// 2. åˆ›å»ºvideoTranså¥æŸ„ï¼ˆCæ¥å£ï¼šVideoTrans_Createï¼‰
+	// 2. ´´½¨videoTrans¾ä±ú£¨C½Ó¿Ú£ºVideoTrans_Create£©
 	void* pTrans = VideoTrans_Create();
 	if (!pTrans) {
-		printf("åˆ›å»ºVideoTranså¥æŸ„å¤±è´¥ï¼\n");
+		printf("´´½¨VideoTrans¾ä±úÊ§°Ü£¡\n");
 		return -1;
 	}
 
-	// 3. åˆå§‹åŒ–ï¼ˆCæ¥å£ï¼šVideoTrans_Initializeï¼‰
+	// 3. ³õÊ¼»¯£¨C½Ó¿Ú£ºVideoTrans_Initialize£©
 	int initRet = VideoTrans_Initialize(pTrans, inputVideo, outputVideo);
 	if (initRet != 0) {
-		printf("åˆå§‹åŒ–å¤±è´¥ï¼Œé”™è¯¯ç ï¼š%d\n", initRet);
+		printf("³õÊ¼»¯Ê§°Ü£¬´íÎóÂë£º%d\n", initRet);
 		VideoTrans_Destroy(pTrans);
 		return initRet;
 	}
 
-	// 4. æ‰“å°è§†é¢‘å±æ€§ï¼ˆCæ¥å£è·å–å®½/é«˜/å¸§ç‡/æ—¶é•¿ï¼‰
+	// 4. ´òÓ¡ÊÓÆµÊôĞÔ£¨C½Ó¿Ú»ñÈ¡¿í/¸ß/Ö¡ÂÊ/Ê±³¤£©
 	int width = VideoTrans_GetWidth(pTrans);
 	int height = VideoTrans_GetHeight(pTrans);
 	int fps = VideoTrans_GetFPS(pTrans);
 	int64_t duration = VideoTrans_GetDuration(pTrans);
-	printf("è§†é¢‘å±æ€§ï¼š%dx%d | %dfps | æ—¶é•¿ï¼š%llds\n",
+	printf("ÊÓÆµÊôĞÔ£º%dx%d | %dfps | Ê±³¤£º%llds\n",
 		width, height, fps, duration / 1000);
 
-	// 5. æ‰§è¡Œè§†é¢‘å¤„ç†ï¼ˆCæ¥å£ï¼šVideoTrans_Processï¼Œä¼ å…¥ç‰¹æ•ˆç±»å‹intå€¼ï¼‰
-	// ç‰¹æ•ˆç±»å‹ï¼šapplyMosaicï¼ˆé©¬èµ›å…‹ï¼‰ï¼Œç›´æ¥ä¼ æšä¸¾å¯¹åº”çš„intå€¼
+	// 5. Ö´ĞĞÊÓÆµ´¦Àí£¨C½Ó¿Ú£ºVideoTrans_Process£¬´«ÈëÌØĞ§ÀàĞÍintÖµ£©
+	// ÌØĞ§ÀàĞÍ£ºapplyMosaic£¨ÂíÈü¿Ë£©£¬Ö±½Ó´«Ã¶¾Ù¶ÔÓ¦µÄintÖµ
 	int processRet = VideoTrans_Process(pTrans, addTextWatermark);
 	if (processRet != 0) {
-		printf("è§†é¢‘å¤„ç†å¤±è´¥ï¼Œé”™è¯¯ç ï¼š%d\n", processRet);
+		printf("ÊÓÆµ´¦ÀíÊ§°Ü£¬´íÎóÂë£º%d\n", processRet);
 		VideoTrans_Destroy(pTrans);
 		return processRet;
 	}
 
-	// 6. é‡ç½®è§£ç å™¨ï¼ˆå¯é€‰ï¼Œé‡æ–°å¤„ç†åŒä¸€è·¯å¾„è§†é¢‘æ—¶ä½¿ç”¨ï¼‰
+	// 6. ÖØÖÃ½âÂëÆ÷£¨¿ÉÑ¡£¬ÖØĞÂ´¦ÀíÍ¬Ò»Â·¾¶ÊÓÆµÊ±Ê¹ÓÃ£©
 	// int resetRet = VideoTrans_Reset(pTrans);
-	// if (resetRet != 0) { printf("é‡ç½®å¤±è´¥ï¼š%d\n", resetRet); }
+	// if (resetRet != 0) { printf("ÖØÖÃÊ§°Ü£º%d\n", resetRet); }
 
-	// 7. æ‰‹åŠ¨æ¸…ç†èµ„æºï¼ˆå¯é€‰ï¼ŒDestroyä¼šè‡ªåŠ¨è°ƒç”¨ï¼‰
+	// 7. ÊÖ¶¯ÇåÀí×ÊÔ´£¨¿ÉÑ¡£¬Destroy»á×Ô¶¯µ÷ÓÃ£©
 	// VideoTrans_Cleanup(pTrans);
 
-	// 8. é”€æ¯å¥æŸ„ï¼ˆé‡Šæ”¾æ‰€æœ‰èµ„æºï¼Œå¿…é¡»è°ƒç”¨ï¼‰
+	// 8. Ïú»Ù¾ä±ú£¨ÊÍ·ÅËùÓĞ×ÊÔ´£¬±ØĞëµ÷ÓÃ£©
 	VideoTrans_Destroy(pTrans);
 	pTrans = nullptr;
 
-	printf("è§†é¢‘å¤„ç†å®Œæˆï¼è¾“å‡ºè·¯å¾„ï¼š%s\n", outputVideo);
+	printf("ÊÓÆµ´¦ÀíÍê³É£¡Êä³öÂ·¾¶£º%s\n", outputVideo);
+	*/
+
+	printf("===== ²âÊÔ×ª·â×°¹¦ÄÜ =====\n");
+	// ´´½¨AVProcessorÊµÀı
+	void* processor = AVProcessor_Create();
+	if (!processor) {
+		printf("´´½¨AVProcessorÊµÀıÊ§°Ü£¡\n");
+		return -1;
+	}
+
+	// µ÷ÓÃ×ª·â×°£ºÊäÈëMP4£¬Êä³öFLV
+	const char* input_path = "D:/vsPro/MultiMediaTool/bin/1.mp4";
+	const char* output_path = "test_output.flv";
+	int ret = AVProcessor_Remux(processor, input_path, output_path);
+	if (ret == 0) {
+		printf("×ª·â×°³É¹¦£º%s ¡ú %s\n", input_path, output_path);
+	}
+	else {
+		printf("×ª·â×°Ê§°Ü£¡´íÎóÂë£º%d\n", ret);
+	}
+
+	// ======================================
+	// 2. ½ø½×Ê¾Àı£ºµ÷ÓÃ×ªÂë¹¦ÄÜ£¨ÅäÖÃ²ÎÊı£©
+	// ======================================
+	printf("\n===== ²âÊÔ×ªÂë¹¦ÄÜ¿ò¼Ü =====\n");
+	AVConfig config = { 0 };
+	// ÉèÖÃ×ªÂëÅäÖÃ
+	config.width = 1280;          // Êä³ö¿í¶È
+	config.height = 720;         // Êä³ö¸ß¶È
+	//config.bitrate = 2000000;    // 2Mbps±ÈÌØÂÊ
+	//config.fps = 30;             // 30Ö¡/Ãë
+	//strcpy(config.codec_name, "h264"); // H.264±àÂëÆ÷
+
+	// µ÷ÓÃ×ªÂë£ºÊäÈëMP4£¬Êä³öĞÂMP4£¨ĞŞ¸Ä·Ö±æÂÊ/±àÂë£©
+	const char* transcode_input = "2.mp4";
+	const char* transcode_output = "test_transcode.mp4";
+	ret = AVProcessor_Transcode(processor, transcode_input, transcode_output, &config);
+	if (ret == 0) {
+		printf("×ªÂë¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕû±àÂëÂß¼­£©\n");
+	}
+	else {
+		printf("×ªÂëµ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+	}
+
+	// ======================================
+	// 3. ²âÊÔMP4×ªGIF£¨¿ò¼Ü£©
+	// ======================================
+	printf("\n===== ²âÊÔMP4×ªGIF¹¦ÄÜ¿ò¼Ü =====\n");
+	AVConfig gif_config = { 0 };
+	gif_config.width = 640;
+	gif_config.height = 360;
+	//gif_config.fps = 10; // GIFÖ¡ÂÊ
+
+	const char* gif_input = "D:/vsPro/MultiMediaTool/bin/1.mp4";
+	const char* gif_output = "test_output.gif";
+	ret = AVProcessor_Mp4ToGif(processor, gif_input, gif_output, &gif_config);
+	if (ret == 0) {
+		printf("MP4×ªGIF¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕûÂß¼­£©\n");
+	}
+	else {
+		printf("MP4×ªGIFµ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+	}
+
+	// ======================================
+	// 4. ²âÊÔÍ¼Æ¬ĞòÁĞ×ªMP4£¨¿ò¼Ü£©
+	// ======================================
+	printf("\n===== ²âÊÔÍ¼Æ¬ĞòÁĞ×ªMP4¹¦ÄÜ¿ò¼Ü =====\n");
+	AVConfig img_config = { 0 };
+	img_config.width = 1920;
+	img_config.height = 1080;
+	//img_config.fps = 25;
+	//strcpy(img_config.codec_name, "h264");
+
+	const char* img_output = "D:/vsPro/MultiMediaTool/bin/1.mp4";
+	ret = AVProcessor_ImgSeqToMp4(processor, img_output, &img_config);
+	if (ret == 0) {
+		printf("Í¼Æ¬ĞòÁĞ×ªMP4¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕûÂß¼­£©\n");
+	}
+	else {
+		printf("Í¼Æ¬ĞòÁĞ×ªMP4µ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+	}
+
+	// ======================================
+	// 5. ÊÍ·Å×ÊÔ´
+	// ======================================
+	AVProcessor_Destroy(processor);
+	printf("\nËùÓĞ²âÊÔÍê³É£¬×ÊÔ´ÒÑÊÍ·Å£¡\n");
 	return 0;
 }

@@ -25,6 +25,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="build_dll.py" />
+    <Compile Include="converter_cli.py" />
+    <Compile Include="install_and_build.py" />
+    <Compile Include="setup.py" />
+    <Compile Include="test_converter.py" />
+    <Compile Include="universal_converter.py" />
     <Compile Include="WordToPdf.py" />
   </ItemGroup>
   <ItemGroup>
