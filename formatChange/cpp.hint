@@ -1,0 +1,2 @@
+#define FORMATCHANGE_API __declspec(dllexport)
+#define FORMATCHANGE_API __declspec(dllimport)

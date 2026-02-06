@@ -1,8 +1,9 @@
 #ifndef WORD_H
 #define WORD_H
 
-#include <QWidget>
 #include "src/base/pagebase.h"
+#include <QWidget>
+#include <QString>
 
 namespace Ui {
 class word;
@@ -18,6 +19,7 @@ public:
 
 private:
     Ui::word *ui;
+
 };
 
 #endif // WORD_H
