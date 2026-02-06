@@ -25,9 +25,9 @@ MainWindow::MainWindow(QWidget *parent)
 
         qStackedWidget->addWidget(videoP1);
         qStackedWidget->addWidget(wordP2);
-        qStackedWidget->addWidget(pictureP3);
-        qStackedWidget->addWidget(effactP4);
 
+        qStackedWidget->addWidget(effactP4);
+        qStackedWidget->addWidget(pictureP3);
         this->createleftNavigationBar();
 
         // 绑定侧边栏按钮和主界面的控件
