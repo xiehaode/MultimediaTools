@@ -57,6 +57,11 @@ OpenCVTools/3rd/opencv/bin/
 OpenCVTools/3rd/opencv/lib/
 OpenCVTools/3rd/opencv/x64/
 
+formatChange/3rd/
+WordToPdf/build/
+WordToPdf/release/
+
+
 ## NuGet 包（建议通过 nuget.config 管理，忽略本地包）
 packages/
 !packages/repositories.config
