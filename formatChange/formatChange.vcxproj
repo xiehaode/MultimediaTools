@@ -73,6 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>FORMATCHANGE</TargetName>
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>../bin</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>FORMATCHANGE</TargetName>
@@ -95,11 +96,14 @@
       <PreprocessorDefinitions>_DEBUG;FORMATCHANGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\vsPro\MultiMediaTool\formatChange\3rd\opencv\include;D:\vsPro\MultiMediaTool\formatChange\3rd\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>D:\vsPro\MultiMediaTool\formatChange\3rd\opencv\x64\vc15\lib;D:\vsPro\MultiMediaTool\formatChange\3rd\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world345d.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;swresample.lib;swscale.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -162,11 +166,13 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AVProcessor.h" />
     <ClInclude Include="formatChange.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AVProcessor.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="formatChange.cpp" />
     <ClCompile Include="pch.cpp">
