@@ -1,2 +1,2 @@
-pyinstaller -F WordToPdf.py
-mv dist/WordToPdf.exe .
+pyinstaller --onefile --windowed converter_cli.py
+mv dist/converter_cli.exe ../bin

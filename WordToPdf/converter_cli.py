@@ -11,7 +11,12 @@ from universal_converter import UniversalConverter
 
 def main():
     """主函数"""
+    # 打印命令行参数用于调试
+    if len(sys.argv) == 1:
+        print("提示: 未提供任何参数。使用 --help 查看帮助。")
+    
     parser = argparse.ArgumentParser(
+
         description='通用文件格式转换器',
         prog='universal_converter',
         usage='%(prog)s [选项]'

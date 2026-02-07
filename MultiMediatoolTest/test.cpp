@@ -5,128 +5,381 @@
 
 #include <Windows.h>
 
+#if defined(__has_include)
+#if __has_include(<Python.h>)
+#include <Python.h>
+#define HAS_PYTHON_H 1
+#else
+#define HAS_PYTHON_H 0
+#endif
+#else
+#define HAS_PYTHON_H 0
+#endif
+
 #include <cstdio>
-#include <iostream>
+#include <stdio.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <string>
+#include <memory>
+
+extern "C" int printf(const char* format, ...);
+
+#ifndef HAS_PYTHON_H
+#define HAS_PYTHON_H 0
+#endif
+
+
+struct PyTask {
+	enum class Action {
+		GetSupportedConversions,
+		Convert
+	};
+
+	Action action;
+	std::string input;
+	std::string output;
+	bool done = false;
+	bool ok = false;
+	std::string result;
+	std::string error;
+	std::mutex mtx;
+	std::condition_variable cv;
+};
+
+class PythonWorker {
+public:
+	PythonWorker(const char* module_dir)
+		: module_dir_(module_dir) {}
+
+	bool Start() {
+#if !HAS_PYTHON_H
+		(void)module_dir_;
+		return false;
+#else
+		worker_ = std::thread([this]() { this->Run(); });
+		return true;
+#endif
+	}
+
+	void Stop() {
+		{
+			std::lock_guard<std::mutex> lock(queue_mtx_);
+			stopping_ = true;
+		}
+		queue_cv_.notify_all();
+		if (worker_.joinable()) {
+			worker_.join();
+		}
+	}
+
+	void Enqueue(const std::shared_ptr<PyTask>& task) {
+		{
+			std::lock_guard<std::mutex> lock(queue_mtx_);
+			queue_.push(task);
+		}
+		queue_cv_.notify_one();
+	}
+
+private:
+	void Run() {
+#if HAS_PYTHON_H
+		Py_Initialize();
+		PyEval_InitThreads();
+
+		PyGILState_STATE gstate = PyGILState_Ensure();
+		PyObject* sys_path = PySys_GetObject("path");
+		if (sys_path) {
+			PyObject* p = PyUnicode_FromString(module_dir_.c_str());
+			if (p) {
+				PyList_Append(sys_path, p);
+				Py_DECREF(p);
+			}
+		}
+
+		PyObject* module = PyImport_ImportModule("universal_converter");
+		if (module) {
+			PyObject* cls = PyObject_GetAttrString(module, "UniversalConverter");
+			if (cls) {
+				converter_ = PyObject_CallObject(cls, NULL);
+				Py_DECREF(cls);
+			}
+			Py_DECREF(module);
+		}
+		if (!converter_) {
+			PyErr_Print();
+		}
+		PyGILState_Release(gstate);
+
+		while (true) {
+			std::shared_ptr<PyTask> task;
+			{
+				std::unique_lock<std::mutex> lock(queue_mtx_);
+				queue_cv_.wait(lock, [&]() { return stopping_ || !queue_.empty(); });
+				if (stopping_ && queue_.empty()) {
+					break;
+				}
+				task = queue_.front();
+				queue_.pop();
+			}
+
+			HandleTask(task);
+		}
+
+		PyGILState_STATE gstate_end = PyGILState_Ensure();
+		Py_XDECREF(converter_);
+		converter_ = NULL;
+		PyGILState_Release(gstate_end);
+		Py_Finalize();
+#endif
+	}
+
+	void HandleTask(const std::shared_ptr<PyTask>& task) {
+		if (!task) {
+			return;
+		}
+
+		PyGILState_STATE gstate = PyGILState_Ensure();
+		if (!converter_) {
+			task->ok = false;
+			task->error = "converter not initialized";
+			PyGILState_Release(gstate);
+			NotifyTask(task);
+			return;
+		}
+
+		switch (task->action) {
+		case PyTask::Action::GetSupportedConversions:
+		{
+			PyObject* conversions = PyObject_CallMethod(converter_, "get_supported_conversions", NULL);
+			if (!conversions) {
+				PyErr_Print();
+				task->ok = false;
+				task->error = "get_supported_conversions failed";
+				break;
+			}
+			PyObject* json_mod = PyImport_ImportModule("json");
+			PyObject* dumps = json_mod ? PyObject_GetAttrString(json_mod, "dumps") : NULL;
+			if (!dumps) {
+				Py_XDECREF(json_mod);
+				Py_DECREF(conversions);
+				task->ok = false;
+				task->error = "json.dumps not available";
+				break;
+			}
+			PyObject* args = PyTuple_Pack(1, conversions);
+			PyObject* kwargs = PyDict_New();
+			PyDict_SetItemString(kwargs, "ensure_ascii", Py_False);
+			PyObject* json_str = PyObject_Call(dumps, args, kwargs);
+			if (json_str) {
+				const char* s = PyUnicode_AsUTF8(json_str);
+				task->result = s ? s : "";
+				task->ok = true;
+				Py_DECREF(json_str);
+			} else {
+				PyErr_Print();
+				task->ok = false;
+				task->error = "json.dumps failed";
+			}
+			Py_DECREF(kwargs);
+			Py_DECREF(args);
+			Py_DECREF(dumps);
+			Py_XDECREF(json_mod);
+			Py_DECREF(conversions);
+			break;
+		}
+		case PyTask::Action::Convert:
+		{
+			PyObject* result = PyObject_CallMethod(converter_, "convert", "ss", task->input.c_str(), task->output.c_str());
+			if (!result) {
+				PyErr_Print();
+				task->ok = false;
+				task->error = "convert failed";
+			} else {
+				task->ok = PyObject_IsTrue(result) ? true : false;
+				Py_DECREF(result);
+			}
+			break;
+		}
+		default:
+			task->ok = false;
+			task->error = "unknown action";
+			break;
+		}
+
+		PyGILState_Release(gstate);
+		NotifyTask(task);
+	}
+
+	void NotifyTask(const std::shared_ptr<PyTask>& task) {
+		std::lock_guard<std::mutex> lock(task->mtx);
+		task->done = true;
+		task->cv.notify_one();
+	}
+
+private:
+	std::string module_dir_;
+	std::thread worker_;
+	std::mutex queue_mtx_;
+	std::condition_variable queue_cv_;
+	std::queue<std::shared_ptr<PyTask>> queue_;
+	bool stopping_ = false;
+	PyObject* converter_ = NULL;
+};
+
+static void TestUniversalConverterPython()
+{
+#if !HAS_PYTHON_H
+	printf("æœªæ‰¾åˆ° Python.hï¼Œè¯·è®¾ç½® PYTHON_HOME å¹¶é‡æ–°ç”Ÿæˆã€‚\n");
+	return;
+#else
+	PythonWorker worker("D:/vsPro/MultiMediaTool/WordToPdf");
+	if (!worker.Start()) {
+		printf("PythonWorker å¯åŠ¨å¤±è´¥\n");
+		return;
+	}
+
+	auto task = std::make_shared<PyTask>();
+	task->action = PyTask::Action::GetSupportedConversions;
+	worker.Enqueue(task);
+
+	{
+		std::unique_lock<std::mutex> lock(task->mtx);
+		task->cv.wait(lock, [&]() { return task->done; });
+	}
+
+	if (task->ok) {
+		printf("æ”¯æŒçš„è½¬æ¢: %s\n", task->result.c_str());
+	} else {
+		printf("è·å–å¤±è´¥: %s\n", task->error.c_str());
+	}
+
+	worker.Stop();
+#endif
+}
 
 int main() {
+	TestUniversalConverterPython();
 	/*
-	// 1. ¶¨ÒåÊäÈë/Êä³öÂ·¾¶
-	// Ê¹ÓÃ¾ø¶ÔÂ·¾¶£¬±ÜÃâµ÷ÊÔÊ±¹¤×÷Ä¿Â¼±ä»¯µ¼ÖÂÕÒ²»µ½ÎÄ¼ş
+	// 1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½Â·ï¿½ï¿½
+	// Ê¹ï¿½Ã¾ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
 	const char* inputVideo = "D:/vsPro/MultiMediaTool/bin/1.mp4";
 	const char* outputVideo = "D:/vsPro/MultiMediaTool/bin/output_addTextWatermark.mp4";
 
 
-	// 2. ´´½¨videoTrans¾ä±ú£¨C½Ó¿Ú£ºVideoTrans_Create£©
+	// 2. ï¿½ï¿½ï¿½ï¿½videoTransï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½Ó¿Ú£ï¿½VideoTrans_Createï¿½ï¿½
 	void* pTrans = VideoTrans_Create();
 	if (!pTrans) {
-		printf("´´½¨VideoTrans¾ä±úÊ§°Ü£¡\n");
+		printf("ï¿½ï¿½ï¿½ï¿½VideoTransï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½\n");
 		return -1;
 	}
 
-	// 3. ³õÊ¼»¯£¨C½Ó¿Ú£ºVideoTrans_Initialize£©
+	// 3. ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Cï¿½Ó¿Ú£ï¿½VideoTrans_Initializeï¿½ï¿½
 	int initRet = VideoTrans_Initialize(pTrans, inputVideo, outputVideo);
 	if (initRet != 0) {
-		printf("³õÊ¼»¯Ê§°Ü£¬´íÎóÂë£º%d\n", initRet);
+		printf("ï¿½ï¿½Ê¼ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", initRet);
 		VideoTrans_Destroy(pTrans);
 		return initRet;
 	}
 
-	// 4. ´òÓ¡ÊÓÆµÊôĞÔ£¨C½Ó¿Ú»ñÈ¡¿í/¸ß/Ö¡ÂÊ/Ê±³¤£©
+	// 4. ï¿½ï¿½Ó¡ï¿½ï¿½Æµï¿½ï¿½ï¿½Ô£ï¿½Cï¿½Ó¿Ú»ï¿½È¡ï¿½ï¿½/ï¿½ï¿½/Ö¡ï¿½ï¿½/Ê±ï¿½ï¿½ï¿½ï¿½
 	int width = VideoTrans_GetWidth(pTrans);
 	int height = VideoTrans_GetHeight(pTrans);
 	int fps = VideoTrans_GetFPS(pTrans);
 	int64_t duration = VideoTrans_GetDuration(pTrans);
-	printf("ÊÓÆµÊôĞÔ£º%dx%d | %dfps | Ê±³¤£º%llds\n",
+	printf("ï¿½ï¿½Æµï¿½ï¿½ï¿½Ô£ï¿½%dx%d | %dfps | Ê±ï¿½ï¿½ï¿½ï¿½%llds\n",
 		width, height, fps, duration / 1000);
 
-	// 5. Ö´ĞĞÊÓÆµ´¦Àí£¨C½Ó¿Ú£ºVideoTrans_Process£¬´«ÈëÌØĞ§ÀàĞÍintÖµ£©
-	// ÌØĞ§ÀàĞÍ£ºapplyMosaic£¨ÂíÈü¿Ë£©£¬Ö±½Ó´«Ã¶¾Ù¶ÔÓ¦µÄintÖµ
+	// 5. Ö´ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½Ó¿Ú£ï¿½VideoTrans_Processï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½intÖµï¿½ï¿½
+	// ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½Í£ï¿½applyMosaicï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½Ö±ï¿½Ó´ï¿½Ã¶ï¿½Ù¶ï¿½Ó¦ï¿½ï¿½intÖµ
 	int processRet = VideoTrans_Process(pTrans, addTextWatermark);
 	if (processRet != 0) {
-		printf("ÊÓÆµ´¦ÀíÊ§°Ü£¬´íÎóÂë£º%d\n", processRet);
+		printf("ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", processRet);
 		VideoTrans_Destroy(pTrans);
 		return processRet;
 	}
 
-	// 6. ÖØÖÃ½âÂëÆ÷£¨¿ÉÑ¡£¬ÖØĞÂ´¦ÀíÍ¬Ò»Â·¾¶ÊÓÆµÊ±Ê¹ÓÃ£©
+	// 6. ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½Í¬Ò»Â·ï¿½ï¿½ï¿½ï¿½ÆµÊ±Ê¹ï¿½Ã£ï¿½
 	// int resetRet = VideoTrans_Reset(pTrans);
-	// if (resetRet != 0) { printf("ÖØÖÃÊ§°Ü£º%d\n", resetRet); }
+	// if (resetRet != 0) { printf("ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½%d\n", resetRet); }
 
-	// 7. ÊÖ¶¯ÇåÀí×ÊÔ´£¨¿ÉÑ¡£¬Destroy»á×Ô¶¯µ÷ÓÃ£©
+	// 7. ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Destroyï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
 	// VideoTrans_Cleanup(pTrans);
 
-	// 8. Ïú»Ù¾ä±ú£¨ÊÍ·ÅËùÓĞ×ÊÔ´£¬±ØĞëµ÷ÓÃ£©
+	// 8. ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
 	VideoTrans_Destroy(pTrans);
 	pTrans = nullptr;
 
-	printf("ÊÓÆµ´¦ÀíÍê³É£¡Êä³öÂ·¾¶£º%s\n", outputVideo);
+	printf("ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½%s\n", outputVideo);
 	*/
-
-	printf("===== ²âÊÔ×ª·â×°¹¦ÄÜ =====\n");
-	// ´´½¨AVProcessorÊµÀı
+	/*
+	printf("===== ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ =====\n");
+	// ï¿½ï¿½ï¿½ï¿½AVProcessorÊµï¿½ï¿½
 	void* processor = AVProcessor_Create();
 	if (!processor) {
-		printf("´´½¨AVProcessorÊµÀıÊ§°Ü£¡\n");
+		printf("ï¿½ï¿½ï¿½ï¿½AVProcessorÊµï¿½ï¿½Ê§ï¿½Ü£ï¿½\n");
 		return -1;
 	}
 
-	// µ÷ÓÃ×ª·â×°£ºÊäÈëMP4£¬Êä³öFLV
+	// ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MP4ï¿½ï¿½ï¿½ï¿½ï¿½FLV
 	const char* input_path = "D:/vsPro/MultiMediaTool/bin/1.mp4";
 	const char* output_path = "test_output.flv";
 	int ret = AVProcessor_Remux(processor, input_path, output_path);
 	if (ret == 0) {
-		printf("×ª·â×°³É¹¦£º%s ¡ú %s\n", input_path, output_path);
+		printf("×ªï¿½ï¿½×°ï¿½É¹ï¿½ï¿½ï¿½%s ï¿½ï¿½ %s\n", input_path, output_path);
 	}
 	else {
-		printf("×ª·â×°Ê§°Ü£¡´íÎóÂë£º%d\n", ret);
+		printf("×ªï¿½ï¿½×°Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", ret);
 	}
 
 	// ======================================
-	// 2. ½ø½×Ê¾Àı£ºµ÷ÓÃ×ªÂë¹¦ÄÜ£¨ÅäÖÃ²ÎÊı£©
+	// 2. ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ë¹¦ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½
 	// ======================================
-	printf("\n===== ²âÊÔ×ªÂë¹¦ÄÜ¿ò¼Ü =====\n");
+	printf("\n===== ï¿½ï¿½ï¿½ï¿½×ªï¿½ë¹¦ï¿½Ü¿ï¿½ï¿½ =====\n");
 	AVConfig config = { 0 };
-	// ÉèÖÃ×ªÂëÅäÖÃ
-	config.width = 1280;          // Êä³ö¿í¶È
-	config.height = 720;         // Êä³ö¸ß¶È
-	//config.bitrate = 2000000;    // 2Mbps±ÈÌØÂÊ
-	//config.fps = 30;             // 30Ö¡/Ãë
-	//strcpy(config.codec_name, "h264"); // H.264±àÂëÆ÷
+	// ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	config.width = 1280;          // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	config.height = 720;         // ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+	//config.bitrate = 2000000;    // 2Mbpsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//config.fps = 30;             // 30Ö¡/ï¿½ï¿½
+	//strcpy(config.codec_name, "h264"); // H.264ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	// µ÷ÓÃ×ªÂë£ºÊäÈëMP4£¬Êä³öĞÂMP4£¨ĞŞ¸Ä·Ö±æÂÊ/±àÂë£©
+	// ï¿½ï¿½ï¿½ï¿½×ªï¿½ë£ºï¿½ï¿½ï¿½ï¿½MP4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MP4ï¿½ï¿½ï¿½Ş¸Ä·Ö±ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ë£©
 	const char* transcode_input = "2.mp4";
 	const char* transcode_output = "test_transcode.mp4";
 	ret = AVProcessor_Transcode(processor, transcode_input, transcode_output, &config);
 	if (ret == 0) {
-		printf("×ªÂë¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕû±àÂëÂß¼­£©\n");
+		printf("×ªï¿½ï¿½ï¿½Üµï¿½ï¿½Ã³É¹ï¿½ï¿½ï¿½ï¿½è²¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½\n");
 	}
 	else {
-		printf("×ªÂëµ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+		printf("×ªï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", ret);
 	}
 
 	// ======================================
-	// 3. ²âÊÔMP4×ªGIF£¨¿ò¼Ü£©
+	// 3. ï¿½ï¿½ï¿½ï¿½MP4×ªGIFï¿½ï¿½ï¿½ï¿½Ü£ï¿½
 	// ======================================
-	printf("\n===== ²âÊÔMP4×ªGIF¹¦ÄÜ¿ò¼Ü =====\n");
+	printf("\n===== ï¿½ï¿½ï¿½ï¿½MP4×ªGIFï¿½ï¿½ï¿½Ü¿ï¿½ï¿½ =====\n");
 	AVConfig gif_config = { 0 };
 	gif_config.width = 640;
 	gif_config.height = 360;
-	//gif_config.fps = 10; // GIFÖ¡ÂÊ
+	//gif_config.fps = 10; // GIFÖ¡ï¿½ï¿½
 
 	const char* gif_input = "D:/vsPro/MultiMediaTool/bin/1.mp4";
 	const char* gif_output = "test_output.gif";
 	ret = AVProcessor_Mp4ToGif(processor, gif_input, gif_output, &gif_config);
 	if (ret == 0) {
-		printf("MP4×ªGIF¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕûÂß¼­£©\n");
+		printf("MP4×ªGIFï¿½ï¿½Üµï¿½ï¿½Ã³É¹ï¿½ï¿½ï¿½ï¿½è²¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½\n");
 	}
 	else {
-		printf("MP4×ªGIFµ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+		printf("MP4×ªGIFï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", ret);
 	}
 
 	// ======================================
-	// 4. ²âÊÔÍ¼Æ¬ĞòÁĞ×ªMP4£¨¿ò¼Ü£©
+	// 4. ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½×ªMP4ï¿½ï¿½ï¿½ï¿½Ü£ï¿½
 	// ======================================
-	printf("\n===== ²âÊÔÍ¼Æ¬ĞòÁĞ×ªMP4¹¦ÄÜ¿ò¼Ü =====\n");
+	printf("\n===== ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½×ªMP4ï¿½ï¿½ï¿½Ü¿ï¿½ï¿½ =====\n");
 	AVConfig img_config = { 0 };
 	img_config.width = 1920;
 	img_config.height = 1080;
@@ -136,16 +389,17 @@ int main() {
 	const char* img_output = "D:/vsPro/MultiMediaTool/bin/1.mp4";
 	ret = AVProcessor_ImgSeqToMp4(processor, img_output, &img_config);
 	if (ret == 0) {
-		printf("Í¼Æ¬ĞòÁĞ×ªMP4¿ò¼Üµ÷ÓÃ³É¹¦£¨Ğè²¹³äÍêÕûÂß¼­£©\n");
+		printf("Í¼Æ¬ï¿½ï¿½ï¿½ï¿½×ªMP4ï¿½ï¿½Üµï¿½ï¿½Ã³É¹ï¿½ï¿½ï¿½ï¿½è²¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½\n");
 	}
 	else {
-		printf("Í¼Æ¬ĞòÁĞ×ªMP4µ÷ÓÃÊ§°Ü£¡´íÎóÂë£º%d\n", ret);
+		printf("Í¼Æ¬ï¿½ï¿½ï¿½ï¿½×ªMP4ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£º%d\n", ret);
 	}
 
 	// ======================================
-	// 5. ÊÍ·Å×ÊÔ´
+	// 5. ï¿½Í·ï¿½ï¿½ï¿½Ô´
 	// ======================================
 	AVProcessor_Destroy(processor);
-	printf("\nËùÓĞ²âÊÔÍê³É£¬×ÊÔ´ÒÑÊÍ·Å£¡\n");
+	printf("\nï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½Í·Å£ï¿½\n");
 	return 0;
+	*/
 }

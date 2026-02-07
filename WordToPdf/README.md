@@ -86,48 +86,20 @@ python converter_cli.py -b file1.pdf file2.docx -d output_dir -f pdf
 python converter_cli.py --list-formats
 ```
 
-## 打包为DLL
+## C/C++ 调用（Python.h）
 
-### 1. 构建DLL
+推荐使用 Python C API 直接调用 `universal_converter.py`，无需打包 DLL。
 
-```bash
-# 运行构建脚本
-python build_dll.py
+### 1. 配置环境
+- 安装 **与项目一致位数** 的 Python（x64 项目用 64 位 Python）
+- 设置环境变量：
+  - `PYTHON_HOME`：Python 安装目录
+  - `PYTHON_LIB`：对应 `python3xx.lib`（例如 `python311.lib`）
 
-# 或者手动构建
-python setup.py build_ext --inplace
-```
+### 2. C/C++ 示例（MultiMediatoolTest）
+项目中已加入示例：通过 `Python.h` 调用 `UniversalConverter.get_supported_conversions()`。
 
-构建完成后，DLL文件和相关文件会生成在 `release/` 目录中。
-
-### 2. Qt项目集成
-
-1. 包含头文件:
-```cpp
-#include "qt_converter.h"
-```
-
-2. 链接DLL文件到项目中
-
-3. 使用转换器:
-```cpp
-QtFileConverter converter;
-
-// 转换文件
-if (converter.convertFile("input.docx", "output.pdf")) {
-    qDebug() << "转换成功";
-} else {
-    qDebug() << "转换失败:" << converter.getLastError();
-}
-
-// 检查文件支持
-if (converter.isFileSupported("test.pdf")) {
-    qDebug() << "文件格式支持";
-}
-
-// 获取支持格式
-QString formats = converter.getSupportedFormats();
-```
+如需扩展，可以在 C++ 里继续调用 `convert()`、`validate_file()` 等接口。
 
 ## API文档
 

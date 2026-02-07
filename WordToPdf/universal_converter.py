@@ -20,7 +20,6 @@ try:
     import pandas as pd
     from PIL import Image
     from docx import Document
-    import python_pptx as pptx
     from pptx import Presentation
     from bs4 import BeautifulSoup
     import img2pdf
@@ -59,6 +58,54 @@ class UniversalConverter:
     def __init__(self):
         """初始化转换器"""
         self.temp_dir = tempfile.gettempdir()
+        self.unicode_font_path = None
+        self._find_unicode_font()
+
+    def _find_unicode_font(self):
+        """查找系统中的中文字体"""
+        # 调整优先级：微软雅黑(msyh)通常比宋体(simsun)在fpdf2中兼容性更好
+        font_paths = [
+            "C:\\Windows\\Fonts\\msyh.ttc",     # 微软雅黑
+            "C:\\Windows\\Fonts\\simhei.ttf",   # 黑体
+            "C:\\Windows\\Fonts\\simsun.ttc",    # 宋体
+            "C:\\Windows\\Fonts\\simkai.ttf",   # 楷体
+            "C:\\Windows\\Fonts\\arialuni.ttf", # Arial Unicode MS
+        ]
+        for path in font_paths:
+            if os.path.exists(path):
+                self.unicode_font_path = path
+                logger.info(f"找到中文字体: {path}")
+                break
+
+        if not self.unicode_font_path:
+            logger.warning("未找到系统中的中文字体，PDF转换可能会显示乱码或报错")
+
+    def _get_pdf_instance(self):
+        """创建一个支持Unicode的FPDF实例"""
+        pdf = FPDF()
+        if self.unicode_font_path:
+            try:
+                # 显式添加并设置字体
+                pdf.add_font("UnicodeFont", "", self.unicode_font_path)
+                pdf.set_font("UnicodeFont", size=12)
+                return pdf
+            except Exception as e:
+                logger.warning(f"加载主字体 {self.unicode_font_path} 失败: {e}，尝试使用单体TTF黑体")
+                # 如果 msyh 失败，尝试查找 simhei.ttf (它是单体ttf，不含彩色位图，兼容性最强)
+                alt_font = "C:\\Windows\\Fonts\\simhei.ttf"
+                if os.path.exists(alt_font):
+                    try:
+                        pdf.add_font("AltFont", "", alt_font)
+                        pdf.set_font("AltFont", size=12)
+                        return pdf
+                    except Exception as e2:
+                        logger.warning(f"加载备用黑体也失败: {e2}")
+        
+        pdf.set_font("Arial", size=12)
+        return pdf
+
+
+
         
     def get_file_type(self, file_path: str) -> Optional[str]:
         """根据文件扩展名获取文件类型"""
@@ -282,30 +329,26 @@ class UniversalConverter:
     # Word转换方法
     def _convert_word_to_pdf(self, input_path: str, output_path: str) -> bool:
         """Word转PDF"""
+        # 直接使用备用方案以确保Unicode支持，避免docx2pdf可能引发的COM报错或字体问题
         try:
-            # 尝试使用docx2pdf（依赖Word）
-            from docx2pdf import convert as docx_to_pdf
-            docx_to_pdf(input_path, output_path)
+            doc = Document(input_path)
+            pdf = self._get_pdf_instance()
+            pdf.add_page()
+            
+            for para in doc.paragraphs:
+                text = para.text.strip()
+                if text:
+                    # 使用 multi_cell 自动换行，避免长行导致的问题
+                    pdf.multi_cell(0, 10, text)
+                    pdf.ln(2)
+            
+            pdf.output(output_path)
             logger.info("Word转PDF成功")
             return True
-        except:
-            # 使用备用方案
-            try:
-                doc = Document(input_path)
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.set_font("Arial", size=12)
-                
-                for para in doc.paragraphs:
-                    if para.text.strip():
-                        pdf.cell(0, 10, para.text, ln=1)
-                
-                pdf.output(output_path)
-                logger.info("Word转PDF成功（备用方案）")
-                return True
-            except Exception as e:
-                logger.error(f"Word转PDF失败: {e}")
-                return False
+        except Exception as e:
+            logger.error(f"Word转PDF失败: {e}")
+            return False
+
     
     def _convert_word_to_html(self, input_path: str, output_path: str) -> bool:
         """Word转HTML"""
@@ -392,15 +435,17 @@ class UniversalConverter:
             text = soup.get_text()
             
             # 创建PDF
-            pdf = FPDF()
+            pdf = self._get_pdf_instance()
             pdf.add_page()
-            pdf.set_font("Arial", size=12)
             
             # 分行写入文本
             lines = text.split('\n')
             for line in lines:
-                if line.strip():
-                    pdf.cell(0, 10, line.strip(), ln=1)
+                clean_line = line.strip()
+                if clean_line:
+                    pdf.multi_cell(0, 10, clean_line)
+                    pdf.ln(2)
+
             
             pdf.output(output_path)
             logger.info("HTML转PDF成功")
@@ -491,11 +536,10 @@ class UniversalConverter:
         try:
             # 这是一个简化的实现，实际需要更复杂的逻辑
             prs = Presentation(input_path)
-            pdf = FPDF()
+            pdf = self._get_pdf_instance()
             
             for slide in prs.slides:
                 pdf.add_page()
-                pdf.set_font("Arial", size=12)
                 
                 # 提取幻灯片文本
                 for shape in slide.shapes:
@@ -523,7 +567,7 @@ class UniversalConverter:
             # 备用方案
             try:
                 image = Image.open(input_path)
-                pdf = FPDF()
+                pdf = self._get_pdf_instance()
                 pdf.add_page()
                 
                 # 获取图片尺寸
@@ -587,9 +631,8 @@ class UniversalConverter:
         try:
             df = pd.read_csv(input_path, encoding='utf-8-sig')
             
-            pdf = FPDF()
+            pdf = self._get_pdf_instance()
             pdf.add_page()
-            pdf.set_font("Arial", size=12)
             
             # 写入表头
             for col in df.columns:
@@ -599,8 +642,10 @@ class UniversalConverter:
             # 写入数据行
             for index, row in df.iterrows():
                 for col in df.columns:
+                    # 确保单元格内文字也能处理中文
                     pdf.cell(40, 10, str(row[col]), border=1)
                 pdf.ln()
+
             
             pdf.output(output_path)
             logger.info("CSV转PDF成功")
