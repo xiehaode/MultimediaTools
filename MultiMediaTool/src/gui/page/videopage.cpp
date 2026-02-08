@@ -291,15 +291,16 @@ bool videoPage::initableWidget()
 
 void videoPage::on_begin_clicked()
 {
-
-    process = new QProcess;
-    process->start("mPlayer.exe");
-    if(process->isOpen()){
+    QString mplayerPath = QCoreApplication::applicationDirPath() + "/mPlayer.exe";
+    process = new QProcess(this);
+    process->start(mplayerPath);
+    if(process->waitForStarted()){
         ui->begin->setDisabled(true);
     }
     else{
-        QMessageBox::critical(NULL, "critical", "´ò¿ª²¥·ÅÆ÷Ê§°Ü", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        QMessageBox::critical(NULL, "´íÎó", "´ò¿ª²¥·ÅÆ÷Ê§°Ü: " + process->errorString(), QMessageBox::Yes);
     }
+
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [=](){
         ui->begin->setDisabled(false);
