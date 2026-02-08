@@ -14,6 +14,10 @@ effact::effact(QWidget *parent) :
     if (!trans) {
         qDebug()<<"VideoTrans_Create fair";
     }
+    m_processor = AVProcessor_Create();
+    if (!m_processor) {
+        qDebug() << "AVProcessor_Create failed";
+    }
 }
 
 effact::~effact()
@@ -22,12 +26,25 @@ effact::~effact()
         VideoTrans_Destroy(trans);
         trans = nullptr;
     }
+    if (m_processor) {
+        AVProcessor_Destroy(m_processor);
+        m_processor = nullptr;
+    }
     delete ui;
 }
 
 void effact::initUI()
 {
     setupCheckBoxConnections();
+
+    // 初始化格式转换下拉框
+    QStringList srcFormats = {"MP4", "AVI", "MKV", "MOV", "TS"};
+    QStringList dstFormats = {"MP4", "AVI", "MKV", "MOV", "GIF"};
+    ui->comboBoxSrc->addItems(srcFormats);
+    ui->comboBoxDst->addItems(dstFormats);
+    
+    ui->comboBoxSrc->setCurrentText("MP4");
+    ui->comboBoxDst->setCurrentText("MP4");
 }
 
 void effact::setupCheckBoxConnections()
@@ -184,4 +201,76 @@ void effact::on_exportFile_clicked()
         qDebug() << "初始化成功";
     }
 }
+
+void effact::on_btnImport_clicked()
+{
+    m_importPath = QFileDialog::getOpenFileName(this, "选择要转换的文件", "", "Video Files (*.mp4 *.avi *.mkv *.mov *.ts);;All Files (*.*)");
+    if (!m_importPath.isEmpty()) {
+        ui->lineEdit_Path->setText(m_importPath);
+        
+        // 自动识别源格式
+        QString ext = QFileInfo(m_importPath).suffix().toUpper();
+        int index = ui->comboBoxSrc->findText(ext);
+        if (index != -1) {
+            ui->comboBoxSrc->setCurrentIndex(index);
+        }
+    }
+}
+
+void effact::on_comboBoxSrc_currentIndexChanged(int index)
+{
+    Q_UNUSED(index);
+    // 这里可以根据源格式动态调整目标格式列表，暂不实现
+}
+
+void effact::on_pushButton_clicked()
+{
+    if (m_importPath.isEmpty()) {
+        qDebug() << "未选择输入文件";
+        return;
+    }
+
+    if (!m_processor) {
+        qDebug() << "处理器未初始化";
+        return;
+    }
+
+    QString srcFormat = ui->comboBoxSrc->currentText().toLower();
+    QString dstFormat = ui->comboBoxDst->currentText().toLower();
+    
+    QString outPath = QFileDialog::getSaveFileName(this, "选择输出路径", QDir::currentPath(), 
+                                                  QString("Video Files (*.%1)").arg(dstFormat));
+    
+    if (outPath.isEmpty()) return;
+
+    ui->pushButton->setEnabled(false);
+    qDebug() << "开始转换: " << srcFormat << " -> " << dstFormat;
+
+    std::string input = QDir::toNativeSeparators(m_importPath).toUtf8().constData();
+    std::string output = QDir::toNativeSeparators(outPath).toUtf8().constData();
+
+    QFuture<int> future = QtConcurrent::run([this, input, output, dstFormat]() -> int {
+        if (dstFormat == "gif") {
+            AVConfig config;
+            config.width = 480; // 默认缩放到 480 宽
+            config.frame_rate = 10;
+            return AVProcessor_Mp4ToGif(m_processor, input.c_str(), output.c_str(), &config);
+        } else {
+            // 简单转封装
+            return AVProcessor_Remux(m_processor, input.c_str(), output.c_str());
+        }
+    });
+
+    // 实际项目中建议使用 QFutureWatcher 来非阻塞等待，这里简化处理
+    int result = future.result();
+    
+    if (result == 0) {
+        qDebug() << "转换成功";
+    } else {
+        qDebug() << "转换失败，错误码: " << result;
+    }
+
+    ui->pushButton->setEnabled(true);
+}
+
 

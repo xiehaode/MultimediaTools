@@ -6,195 +6,276 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>786</width>
-    <height>491</height>
+    <width>1002</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>50</y>
-     <width>251</width>
-     <height>361</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>特效</string>
-   </property>
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>231</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QCheckBox" name="gray">
-         <property name="text">
-          <string>灰度</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="TextWatermark">
-         <property name="text">
-          <string>文字水印</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QCheckBox" name="customOilPaintApprox">
-         <property name="text">
-          <string>简易油画</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="OilPainting2">
-         <property name="text">
-          <string>标准油画</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QCheckBox" name="Mosaic">
-         <property name="text">
-          <string>马赛克</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="FrostedGlass">
-         <property name="text">
-          <string>毛玻璃</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="QCheckBox" name="SkinSmoothing">
-         <property name="text">
-          <string>磨皮</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="whitening">
-         <property name="text">
-          <string>美白1</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="QCheckBox" name="whitening2">
-         <property name="text">
-          <string>美白2</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="colorinvert">
-         <property name="text">
-          <string>色彩反转</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>630</x>
-     <y>120</y>
-     <width>95</width>
-     <height>261</height>
+     <x>20</x>
+     <y>10</y>
+     <width>691</width>
+     <height>351</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QHBoxLayout" name="horizontalLayout_8">
     <item>
-     <widget class="QPushButton" name="ok">
-      <property name="text">
-       <string>确定</string>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>特效</string>
       </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>231</width>
+         <height>311</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="gray">
+            <property name="text">
+             <string>灰度</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="TextWatermark">
+            <property name="text">
+             <string>文字水印</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="customOilPaintApprox">
+            <property name="text">
+             <string>简易油画</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="OilPainting2">
+            <property name="text">
+             <string>标准油画</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QCheckBox" name="Mosaic">
+            <property name="text">
+             <string>马赛克</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="FrostedGlass">
+            <property name="text">
+             <string>毛玻璃</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QCheckBox" name="SkinSmoothing">
+            <property name="text">
+             <string>磨皮</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="whitening">
+            <property name="text">
+             <string>美白1</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="whitening2">
+            <property name="text">
+             <string>美白2</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="colorinvert">
+            <property name="text">
+             <string>色彩反转</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="cancel">
-      <property name="text">
-       <string>取消</string>
-      </property>
-     </widget>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QToolButton" name="addFile">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>待处理文件</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../icon.qrc">
+          <normaloff>:/rc/addFile.svg</normaloff>:/rc/addFile.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="exportFile">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>输出位置</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../icon.qrc">
+          <normaloff>:/rc/export.svg</normaloff>:/rc/export.svg</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QPushButton" name="ok">
+        <property name="text">
+         <string>确定</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="cancel">
+        <property name="text">
+         <string>取消</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>420</x>
-     <y>170</y>
-     <width>141</width>
-     <height>171</height>
+     <x>20</x>
+     <y>370</y>
+     <width>691</width>
+     <height>191</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
-     <widget class="QToolButton" name="addFile">
-      <property name="minimumSize">
-       <size>
-        <width>100</width>
-        <height>60</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>待处理文件</string>
-      </property>
-      <property name="icon">
-       <iconset resource="../../../icon.qrc">
-        <normaloff>:/rc/addFile.svg</normaloff>:/rc/addFile.svg</iconset>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_7">
+      <item>
+       <widget class="QLineEdit" name="lineEdit_Path">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="placeholderText">
+         <string>请选择或拖入要转换的文件...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnImport">
+        <property name="text">
+         <string>导入文件</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QToolButton" name="exportFile">
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="labelSrc">
+          <property name="text">
+           <string>源类型</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBoxSrc"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>13</width>
+          <height>42</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QLabel" name="labelDst">
+          <property name="text">
+           <string>目标类型</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBoxDst"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
       <property name="minimumSize">
        <size>
-        <width>100</width>
-        <height>60</height>
+        <width>0</width>
+        <height>40</height>
        </size>
       </property>
       <property name="text">
-       <string>输出位置</string>
-      </property>
-      <property name="icon">
-       <iconset resource="../../../icon.qrc">
-        <normaloff>:/rc/export.svg</normaloff>:/rc/export.svg</iconset>
+       <string>开始转换</string>
       </property>
      </widget>
     </item>

@@ -42,12 +42,12 @@ void word::initContral()
 
     // 初始化下拉框
     ui->comboBoxSrc->clear();
-    ui->comboBoxSrc->addItem("PDF", pdf_type);
-    ui->comboBoxSrc->addItem("Word", word_type);
-    ui->comboBoxSrc->addItem("HTML", html_type);
-    ui->comboBoxSrc->addItem("PPT", ppt_type);
-    ui->comboBoxSrc->addItem("Image", image_type);
-    ui->comboBoxSrc->addItem("CSV/Excel", csv_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("PDF"), pdf_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("Word"), word_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("HTML"), html_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("PPT"), ppt_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("Image"), image_type);
+    ui->comboBoxSrc->addItem(QString::fromUtf8("CSV/Excel"), csv_type);
 
     // 默认选择第一个并更新目标下拉框
     on_comboBoxSrc_currentIndexChanged(0);
@@ -81,7 +81,7 @@ QString word::typeToString(type t)
 
 void word::on_btnImport_clicked()
 {
-    QString inputPath = QFileDialog::getOpenFileName(this, QStringLiteral("选择源文件"), "", "All Files (*.*)");
+    QString inputPath = QFileDialog::getOpenFileName(this, QString::fromUtf8("选择源文件"), "", "All Files (*.*)");
     if(inputPath.isEmpty()) return;
 
     ui->lineEdit_Path->setText(inputPath);
@@ -101,10 +101,10 @@ void word::on_btnImport_clicked()
         ui->comboBoxSrc->setCurrentIndex(foundIndex);
         // 手动触发一次更新，确保目标下拉框刷新
         on_comboBoxSrc_currentIndexChanged(foundIndex);
-        ui->listWidget->addItem(QStringLiteral("已导入: ") + QFileInfo(inputPath).fileName());
+        ui->listWidget->addItem(QString::fromUtf8("已导入: ") + QFileInfo(inputPath).fileName());
     } else {
 
-        ui->listWidget->addItem(QStringLiteral("警告: 无法识别的文件格式，请手动选择源类型"));
+        ui->listWidget->addItem(QString::fromUtf8("警告: 无法识别的文件格式，请手动选择源类型"));
     }
 }
 
@@ -112,7 +112,7 @@ void word::on_pushButton_clicked()
 {
     QString inputPath = ui->lineEdit_Path->text();
     if(inputPath.isEmpty()) {
-        QMessageBox::warning(this, QStringLiteral("提示"), QStringLiteral("请先导入需要转换的文件！"));
+        QMessageBox::warning(this, QString::fromUtf8("提示"), QString::fromUtf8("请先导入需要转换的文件！"));
         return;
     }
 
@@ -140,12 +140,14 @@ void word::on_pushButton_clicked()
     QStringList arguments;
     arguments << "--input" << inputPath << "--output" << outputPath;
 
-    // 解决乱码：强制 Python 使用 UTF-8 编码输出
+    // 解决乱码：强制 Python 使用 GBK 编码输出（对应 Windows 控制台）
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("PYTHONIOENCODING", "GBK");
     m_process->setProcessEnvironment(env);
 
-    ui->listWidget->addItem(QStringLiteral("开始转换: ") + QFileInfo(inputPath).fileName() + " -> " + ext);
+    ui->listWidget->addItem(QString::fromUtf8("开始转换: ") + QFileInfo(inputPath).fileName() + " -> " + ext);
+
+    qDebug() << "Executing:" << program << arguments.join(" ");
 
     ui->pushButton->setEnabled(false);
     
@@ -154,28 +156,60 @@ void word::on_pushButton_clicked()
 
 void word::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    // 进程结束时，处理缓冲区中可能残留的最后一行（如果没有换行符）
+    auto flushBuffer = [this](QByteArray& buffer, const QString& prefix) {
+        if (!buffer.isEmpty()) {
+            QString text = GBK2QString(buffer.trimmed());
+            static QRegularExpression ansiRegex("\x1B\\[[0-9;]*[a-zA-Z]");
+            text.remove(ansiRegex);
+            if (!text.trimmed().isEmpty()) {
+                ui->listWidget->addItem(prefix + text.trimmed());
+            }
+            buffer.clear();
+        }
+    };
+    flushBuffer(m_outputBuffer, "OUT: ");
+    flushBuffer(m_errorBuffer, "ERR: ");
+
     ui->pushButton->setEnabled(true);
     if(exitStatus == QProcess::NormalExit && exitCode == 0) {
-        ui->listWidget->addItem(" 转换成功");
-        QMessageBox::information(this, "成功", "文件转换完成！");
+        ui->listWidget->addItem(QString::fromUtf8(" 转换成功"));
+        QMessageBox::information(this, QString::fromUtf8("成功"), QString::fromUtf8("文件转换完成！"));
     } else {
-        ui->listWidget->addItem(" 转换失败 (代码: " + QString::number(exitCode) + ")");
-        QMessageBox::critical(this, "错误", "文件转换失败，请检查控制台输出或日志。");
+        ui->listWidget->addItem(QString::fromUtf8(" 转换失败 (代码: ") + QString::number(exitCode) + ")");
+        QMessageBox::critical(this, QString::fromUtf8("错误"), QString::fromUtf8("文件转换失败，请检查控制台输出或日志。"));
     }
 }
 
 void word::onProcessReadyRead()
 {
-    // 使用统一的编码转换工具
-    QByteArray outData = m_process->readAllStandardOutput();
-    if(!outData.isEmpty()) {
-        ui->listWidget->addItem("OUT: " + GBK2QString(outData).trimmed());
-    }
-    
-    QByteArray errData = m_process->readAllStandardError();
-    if(!errData.isEmpty()) {
-        ui->listWidget->addItem("ERR: " + GBK2QString(errData).trimmed());
-    }
+    m_outputBuffer.append(m_process->readAllStandardOutput());
+    m_errorBuffer.append(m_process->readAllStandardError());
+
+    auto processBuffer = [this](QByteArray& buffer, const QString& prefix) {
+        int lineEnd;
+        while ((lineEnd = buffer.indexOf('\n')) != -1) {
+            QByteArray lineData = buffer.left(lineEnd).trimmed();
+            buffer.remove(0, lineEnd + 1);
+
+            if (lineData.isEmpty()) continue;
+
+            QString text = GBK2QString(lineData);
+            
+            // 正则移除 ANSI 转义序列
+            static QRegularExpression ansiRegex("\x1B\\[[0-9;]*[a-zA-Z]");
+            text.remove(ansiRegex);
+
+            QString trimmedLine = text.trimmed();
+            if (!trimmedLine.isEmpty()) {
+                ui->listWidget->addItem(prefix + trimmedLine);
+            }
+        }
+        ui->listWidget->scrollToBottom();
+    };
+
+    processBuffer(m_outputBuffer, "OUT: ");
+    processBuffer(m_errorBuffer, "ERR: ");
 }
 
 

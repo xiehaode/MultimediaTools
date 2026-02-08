@@ -48,7 +48,8 @@ HEADERS += \
     src/base/pageBase.h \
     src/base/timedcmdexecutor.h \
     src/utils/myipcmgr.h \
-    src/utils/win32Util.h
+    src/utils/win32Util.h \
+    src/utils/lan_util.h
 
 FORMS += \
     src/gui/ui/ffmpegcmd.ui \
@@ -64,15 +65,15 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 
-win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lole32 -lPsapi -lDbghelp
+win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE -lole32 -lPsapi -lDbghelp
 
 
-INCLUDEPATH += $$PWD/../OpenCVTools
-DEPENDPATH += $$PWD/../OpenCVTools
+INCLUDEPATH += $$PWD/../OpenCVTools $$PWD/../formatChange
+DEPENDPATH += $$PWD/../OpenCVTools $$PWD/../formatChange
 
 RESOURCES += \
     icon.qrc
 
-unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS
+unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE
 
 DESTDIR = ../bin

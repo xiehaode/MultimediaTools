@@ -4,7 +4,75 @@
 #include <QTranslator>
 #include <QCommandLineParser>
 #include <QDebug>
-#include <Windows.h>
+
+#include <windows.h>
+#include <dbghelp.h>
+#include <iostream>
+#include <shlobj.h> // 用于创建目录
+#include <string>
+
+/** *************************************************************/
+// 如果不存在会递归创建
+void CreateFullDirectory(std::wstring path) {
+    size_t pos = 0;
+    do {
+        pos = path.find_first_of(L"\\/", pos + 1);
+        CreateDirectory(path.substr(0, pos).c_str(), NULL);
+    } while (pos != std::wstring::npos);
+}
+
+void CreateDumpFile(EXCEPTION_POINTERS* pException) {
+
+    // 方案 A: 自动获取 %LOCALAPPDATA% 路径
+    wchar_t path[MAX_PATH];
+    ExpandEnvironmentStrings(L"%LOCALAPPDATA%\\TestCrash\\", path, MAX_PATH);
+
+    // 方案 B: 指定路径
+    // wcscpy_s(path, L"D:\\MyDebugDumps\\");
+
+    // 1. 确保目标文件夹存在
+    CreateFullDirectory(path);
+
+    // 2. 构造带时间戳的文件名，避免覆盖
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    wchar_t fileName[MAX_PATH];
+    swprintf_s(fileName, L"%lsCrash_%04d%02d%02d_%02d%02d%02d.dmp",
+        path, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+    // 3. 创建文件
+    HANDLE hFile = CreateFile(fileName, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hFile != INVALID_HANDLE_VALUE) {
+        MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+        dumpInfo.ThreadId = GetCurrentThreadId();
+        dumpInfo.ExceptionPointers = pException;
+        dumpInfo.ClientPointers = TRUE;
+
+        BOOL bSuccess = MiniDumpWriteDump(
+            GetCurrentProcess(),
+            GetCurrentProcessId(),
+            hFile,
+            MiniDumpNormal,
+            &dumpInfo,
+            NULL,
+            NULL
+        );
+
+        if (bSuccess) {
+            std::wcout << L"Dump saved to: " << fileName << std::endl;
+        }
+        CloseHandle(hFile);
+    }
+}
+
+LONG WINAPI MyUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo) {
+    CreateDumpFile(ExceptionInfo);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+
+
 
 
 extern const QString IPC_PIPE_NAME = "MultiMediaTool-Unique-IPC-Pipe-2026";
@@ -12,6 +80,10 @@ extern const QString IPC_PIPE_NAME = "MultiMediaTool-Unique-IPC-Pipe-2026";
 
 int main(int argc, char *argv[])
 {
+
+
+    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+
     //qt不能mat多线程否则会导致卡死
 //    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 //    if (FAILED(hr)) {

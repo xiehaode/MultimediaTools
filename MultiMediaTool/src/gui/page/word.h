@@ -48,6 +48,8 @@ private:
     Ui::word *ui;
     QMap<type, QList<type>> supportMap;
     QProcess *m_process;
+    QByteArray m_outputBuffer;
+    QByteArray m_errorBuffer;
 };
 
 

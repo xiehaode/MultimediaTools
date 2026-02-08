@@ -1,6 +1,6 @@
 #include "ffmpegcmd.h"
 #include "ui_ffmpegcmd.h"
-#include "src/utils/encodinghelper.h"
+#include "src/utils/lan_util.h"
 
 #include "src/utils/encodinghelper.h"
 #include <QSettings>
@@ -60,7 +60,8 @@ void ffmpegCmd::initPresets()
     }
 
     // 分隔线
-    QListWidgetItem *separator = new QListWidgetItem("---------- 历史记录 ----------");
+    std::string str = gbk_to_utf8("---------历史记录-------------------");
+    QListWidgetItem *separator = new QListWidgetItem(str.c_str());
     separator->setFlags(Qt::NoItemFlags);
     ui->listWidget_History->addItem(separator);
 }
