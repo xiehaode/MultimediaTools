@@ -21,9 +21,9 @@ public:
     explicit Menu(QWidget *parent = nullptr);
 
 signals:
-    // ²à±ßÀ¸°´Å¥µã»÷ĞÅºÅ
+    // ä¾§è¾¹æ æŒ‰é’®ç‚¹å‡»ä¿¡å·
     void buttonClicked(int id);
-    // ×îĞ¡»¯°´Å¥µã»÷ĞÅºÅ
+    // æœ€å°åŒ–æŒ‰é’®ç‚¹å‡»ä¿¡å·
     void minimizeClicked();
 
 private slots:
@@ -33,18 +33,20 @@ private slots:
 private:
     void init();
     void setMenu(bool isMini);
-    // Í¨ÓÃ°´Å¥ÉèÖÃº¯Êı
+    // é€šç”¨æŒ‰é’®è®¾ç½®å‡½æ•°
     void setPushButton(QPushButton *button, const QString& iconUrl, const QString& text);
     void setPushButton(QPushButton *button, const QString& text);
 
-    // ³ÉÔ±±äÁ¿ÉùÃ÷£¨ĞŞ¸´Î´³õÊ¼»¯ÎÊÌâ£©
+    // æˆå‘˜å˜é‡å£°æ˜ï¼ˆä¿®å¤æœªåˆå§‹åŒ–é—®é¢˜ï¼‰
 
     QPushButton *newPage1BtnVideo;
     QPushButton *newPage2BtnWord;
     QPushButton *newPage3BtnVideoEffact;
     QPushButton *newPage4BtnPicture;
+    QPushButton *newPage5BtnFFmpeg;
     QButtonGroup buttonGroup;
-    bool isMinimized = false; // ²à±ßÀ¸×îĞ¡»¯×´Ì¬±ê¼Ç
+
+    bool isMinimized = false; // ä¾§è¾¹æ æœ€å°åŒ–çŠ¶æ€æ ‡è®°
 };
 
 #endif // MENU_H

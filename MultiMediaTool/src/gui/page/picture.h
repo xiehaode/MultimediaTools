@@ -25,6 +25,8 @@ private slots:
     void onCheckBoxClicked();
     void on_ok_clicked();
     void on_addFile_clicked();
+    void on_exportFile_clicked();
+
 
     void showLoading();
     void hideLoading();

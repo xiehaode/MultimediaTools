@@ -18,6 +18,7 @@ SOURCES += \
     src/gui/application.cpp \
     src/gui/basewindow.cpp \
     src/gui/mytitlebar.cpp \
+    src/gui/page/ffmpegcmd.cpp \
     src/main.cpp \
     src/gui/page/videopage.cpp \
     src/gui/menu.cpp \
@@ -36,6 +37,7 @@ HEADERS += \
     src/gui/application.h \
     src/gui/basewindow.h \
     src/gui/mytitlebar.h \
+    src/gui/page/ffmpegcmd.h \
     src/gui/page/videopage.h \
     src/gui/menu.h \
     src/gui/page/word.h \
@@ -45,9 +47,11 @@ HEADERS += \
     src/base/cmdexecutor.h \
     src/base/pageBase.h \
     src/base/timedcmdexecutor.h \
-    src/utils/myipcmgr.h
+    src/utils/myipcmgr.h \
+    src/utils/win32Util.h
 
 FORMS += \
+    src/gui/ui/ffmpegcmd.ui \
     src/gui/ui/videopage.ui\
     src/gui/ui/word.ui \
     src/gui/ui/effact.ui \
@@ -60,7 +64,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 
-win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lole32
+win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lole32 -lPsapi -lDbghelp
 
 
 INCLUDEPATH += $$PWD/../OpenCVTools

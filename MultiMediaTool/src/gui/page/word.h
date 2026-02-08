@@ -35,7 +35,8 @@ private slots:
     void on_btnImport_clicked();
     void on_pushButton_clicked();
 
-    void on_comboBox_currentIndexChanged(int index);
+    void on_comboBoxSrc_currentIndexChanged(int index);
+
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onProcessReadyRead();
 

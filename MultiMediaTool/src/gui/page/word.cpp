@@ -1,5 +1,7 @@
 #include "word.h"
 #include "ui_word.h"
+#include "src/utils/encodinghelper.h"
+
 
 #include <QTextCodec>
 
@@ -48,13 +50,14 @@ void word::initContral()
     ui->comboBoxSrc->addItem("CSV/Excel", csv_type);
 
     // 默认选择第一个并更新目标下拉框
-    on_comboBox_currentIndexChanged(0);
+    on_comboBoxSrc_currentIndexChanged(0);
 }
 
-void word::on_comboBox_currentIndexChanged(int index)
+void word::on_comboBoxSrc_currentIndexChanged(int index)
 {
     ui->comboBoxDst->clear();
     type selectedType = (type)ui->comboBoxSrc->currentData().toInt();
+
     
     QList<type> targets = supportMap.value(selectedType);
     for(type t : targets) {
@@ -96,8 +99,11 @@ void word::on_btnImport_clicked()
 
     if(foundIndex != -1) {
         ui->comboBoxSrc->setCurrentIndex(foundIndex);
+        // 手动触发一次更新，确保目标下拉框刷新
+        on_comboBoxSrc_currentIndexChanged(foundIndex);
         ui->listWidget->addItem(QStringLiteral("已导入: ") + QFileInfo(inputPath).fileName());
     } else {
+
         ui->listWidget->addItem(QStringLiteral("警告: 无法识别的文件格式，请手动选择源类型"));
     }
 }
@@ -160,17 +166,17 @@ void word::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
 void word::onProcessReadyRead()
 {
-    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-    
+    // 使用统一的编码转换工具
     QByteArray outData = m_process->readAllStandardOutput();
     if(!outData.isEmpty()) {
-        ui->listWidget->addItem("OUT: " + codec->toUnicode(outData).trimmed());
+        ui->listWidget->addItem("OUT: " + GBK2QString(outData).trimmed());
     }
     
     QByteArray errData = m_process->readAllStandardError();
     if(!errData.isEmpty()) {
-        ui->listWidget->addItem("ERR: " + codec->toUnicode(errData).trimmed());
+        ui->listWidget->addItem("ERR: " + GBK2QString(errData).trimmed());
     }
 }
+
 
 

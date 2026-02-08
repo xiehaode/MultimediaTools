@@ -41,7 +41,9 @@ picture::~picture()
 void picture::initUI()
 {
     setupCheckBoxConnections();
+    ui->paramGroupBox->hide();
 }
+
 
 void picture::setupCheckBoxConnections()
 {
@@ -56,10 +58,24 @@ void picture::setupCheckBoxConnections()
         connect(box, &QCheckBox::clicked, this, &picture::onCheckBoxClicked);
     }
     
-    // 连接按钮信号
-    connect(ui->addFile, &QPushButton::clicked, this, &picture::on_addFile_clicked);
+    // 连接按钮信号 - 使用 QAbstractButton::clicked 确保兼容 QToolButton 和 QPushButton
+    connect(ui->addFile, &QAbstractButton::clicked, this, &picture::on_addFile_clicked);
+    connect(ui->exportFile, &QAbstractButton::clicked, this, &picture::on_exportFile_clicked);
+    connect(ui->ok, &QAbstractButton::clicked, this, &picture::on_ok_clicked);
 
-    connect(ui->ok, &QPushButton::clicked, this, &picture::on_ok_clicked);
+    connect(ui->cancel, &QAbstractButton::clicked, [this]() {
+        // 取消逻辑：重置所有状态
+        for (QCheckBox* box : {
+            ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
+            ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
+            ui->whitening2, ui->colorinvert
+        }) {
+            box->setChecked(false);
+        }
+        effectType = noAction;
+        ui->paramGroupBox->hide();
+        file.clear();
+    });
 }
 
 void picture::onCheckBoxClicked()
@@ -67,7 +83,17 @@ void picture::onCheckBoxClicked()
     QCheckBox* senderBox = qobject_cast<QCheckBox*>(sender());
     if (!senderBox) return;
     
+    // 如果是取消勾选
+    if (!senderBox->isChecked()) {
+        effectType = noAction;
+        ui->paramGroupBox->hide();
+        return;
+    }
+    
     ensureSingleSelection(senderBox);
+    
+    // 隐藏参数面板，除非选中的是需要参数的特效
+    ui->paramGroupBox->hide();
     
     // 设置对应的特效类型
     if (senderBox == ui->gray) {
@@ -76,10 +102,29 @@ void picture::onCheckBoxClicked()
         effectType = addTextWatermark;
     } else if (senderBox == ui->customOilPaintApprox) {
         effectType = customOilPaintApprox;
+        ui->paramGroupBox->show();
+        ui->param1Label->setText("半径:");
+        ui->param2Label->setText("平滑度:");
+        ui->param1SpinBox->setValue(5);
+        ui->param2SpinBox->setValue(1.0);
+        ui->param2Label->show();
+        ui->param2SpinBox->show();
     } else if (senderBox == ui->OilPainting2) {
         effectType = applyOilPainting;
+        ui->paramGroupBox->show();
+        ui->param1Label->setText("半径:");
+        ui->param2Label->setText("平滑度:");
+        ui->param1SpinBox->setValue(5);
+        ui->param2SpinBox->setValue(1.0);
+        ui->param2Label->show();
+        ui->param2SpinBox->show();
     } else if (senderBox == ui->Mosaic) {
         effectType = applyMosaic;
+        ui->paramGroupBox->show();
+        ui->param1Label->setText("块大小:");
+        ui->param1SpinBox->setValue(10);
+        ui->param2Label->hide();
+        ui->param2SpinBox->hide();
     } else if (senderBox == ui->FrostedGlass) {
         effectType = FrostedGlass;
     } else if (senderBox == ui->SkinSmoothing) {
@@ -92,6 +137,8 @@ void picture::onCheckBoxClicked()
         effectType = invertImage;
     }
 }
+
+
 
 void picture::ensureSingleSelection(QCheckBox* checkedBox)
 {
@@ -131,8 +178,10 @@ void picture::on_ok_clicked()
         return;
     }
 
-    // 使用 getSaveFileName 允许用户指定文件名和位置
-    outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+    // 如果没有预选输出路径，则弹出对话框
+    if (outFile.isEmpty()) {
+        outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+    }
     
     if (outFile.isEmpty()) {
         qDebug() << "未选择输出文件";
@@ -149,6 +198,8 @@ void picture::on_ok_clicked()
     ui->addFile->setEnabled(false);
     ui->exportFile->setEnabled(false);
     ui->ok->setEnabled(false);
+    // ... 后面代码保持不变 ...
+
 
     if (!translator) {
         translator = CvTranslator_Create();
@@ -166,35 +217,43 @@ void picture::on_ok_clicked()
     }
 
     // 转换为本地路径并确保使用 UTF-8 编码传递给底层 C 接口
-    std::string utf8Input = QDir::toNativeSeparators(file).toUtf8().constData();
-    std::string utf8Output = QDir::toNativeSeparators(outFile).toUtf8().constData();
+    std::string utf8InputStr = QDir::toNativeSeparators(file).toUtf8().toStdString();
+    std::string utf8OutputStr = QDir::toNativeSeparators(outFile).toUtf8().toStdString();
 
     // 在独立线程中处理图片
-    QFuture<bool> future = QtConcurrent::run([this, &utf8Input, &utf8Output]() -> bool {
+    int p1 = ui->param1SpinBox->value();
+    double p2 = ui->param2SpinBox->value();
+    
+    // 注意：这里必须按值捕获字符串，因为它们是局部变量
+    QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
+        const char* inputPath = utf8InputStr.c_str();
+        const char* outputPath = utf8OutputStr.c_str();
+        
         switch (effectType) {
             case grayImage:
-                return CvTranslator_GrayImage_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_GrayImage_File(translator, inputPath, outputPath);
             case addTextWatermark:
-                return CvTranslator_AddTextWatermark_File(translator, utf8Input.c_str(), utf8Output.c_str(), "Watermark");
+                return CvTranslator_AddTextWatermark_File(translator, inputPath, outputPath, "Watermark");
             case customOilPaintApprox:
             case applyOilPainting:
-                return CvTranslator_OilPainting_File(translator, utf8Input.c_str(), utf8Output.c_str(), 5, 1.0);
+                return CvTranslator_OilPainting_File(translator, inputPath, outputPath, p1, p2);
             case applyMosaic:
-                return CvTranslator_Mosaic_File(translator, utf8Input.c_str(), utf8Output.c_str(), 0, 0, 0, 0, 10);
+                return CvTranslator_Mosaic_File(translator, inputPath, outputPath, 0, 0, 0, 0, p1);
             case FrostedGlass:
-                return CvTranslator_FrostedGlass_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_FrostedGlass_File(translator, inputPath, outputPath);
             case simpleSkinSmoothing:
-                return CvTranslator_SkinSmoothing_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_SkinSmoothing_File(translator, inputPath, outputPath);
             case Whitening:
-                return CvTranslator_Whitening_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_Whitening_File(translator, inputPath, outputPath);
             case Whitening2:
-                return CvTranslator_Whitening2_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_Whitening2_File(translator, inputPath, outputPath);
             case invertImage:
-                return CvTranslator_Invert_File(translator, utf8Input.c_str(), utf8Output.c_str());
+                return CvTranslator_Invert_File(translator, inputPath, outputPath);
             default:
                 return false;
         }
     });
+
     
     // 等待处理完成
     bool success = future.result();
@@ -214,11 +273,29 @@ void picture::on_ok_clicked()
 
 void picture::on_addFile_clicked()
 {
-    file = QFileDialog::getOpenFileName();
-    if (file.isEmpty()) {
-        qDebug() << "file is empty";
+    QString selectedFile = QFileDialog::getOpenFileName(this, "选择图片文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)");
+    if (!selectedFile.isEmpty()) {
+        file = selectedFile;
+        qDebug() << "Selected file:" << file;
+        // 如果没有选择输出路径，自动生成一个
+        if (outFile.isEmpty()) {
+            QFileInfo fileInfo(file);
+            outFile = fileInfo.absolutePath() + "/" + fileInfo.baseName() + "_processed." + fileInfo.suffix();
+        }
+    } else {
+        qDebug() << "file selection cancelled or empty";
     }
 }
+
+void picture::on_exportFile_clicked()
+{
+    QString selectedOutFile = QFileDialog::getSaveFileName(this, "选择输出文件", outFile.isEmpty() ? QDir::currentPath() : outFile, "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+    if (!selectedOutFile.isEmpty()) {
+        outFile = selectedOutFile;
+        qDebug() << "Output file set to:" << outFile;
+    }
+}
+
 
 
 

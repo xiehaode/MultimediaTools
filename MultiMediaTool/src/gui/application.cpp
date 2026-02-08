@@ -3,6 +3,7 @@
 #include "src/gui/page/effact.h"
 #include "src/gui/page/word.h"
 #include "src/gui/page/picture.h"
+#include "src/gui/page/ffmpegcmd.h"
 #include "src/utils/myipcmgr.h"
 
 extern const QString IPC_PIPE_NAME;
@@ -22,12 +23,15 @@ MainWindow::MainWindow(QWidget *parent)
 
         auto *pictureP3 = new picture;
         auto *effactP4 = new effact;
+        auto *ffmpegP5 = new ffmpegCmd;
 
         qStackedWidget->addWidget(videoP1);
         qStackedWidget->addWidget(wordP2);
 
         qStackedWidget->addWidget(effactP4);
         qStackedWidget->addWidget(pictureP3);
+        qStackedWidget->addWidget(ffmpegP5);
+
         this->createleftNavigationBar();
 
         // 绑定侧边栏按钮和主界面的控件

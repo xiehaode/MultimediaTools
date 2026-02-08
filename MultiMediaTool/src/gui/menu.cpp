@@ -11,7 +11,7 @@ Menu::Menu(QWidget *parent) :
     newPage2BtnWord = new QPushButton(this);
     newPage3BtnVideoEffact = new QPushButton(this);
     newPage4BtnPicture = new QPushButton(this);
-
+    newPage5BtnFFmpeg = new QPushButton(this);
     // 设置样式表，包括背景颜色
 //    QString styleSheet = "background-color: #A0A083;"
 //                         "border-radius: 7px;";
@@ -90,7 +90,25 @@ Menu::Menu(QWidget *parent) :
         }
         emit buttonClicked(4);
     });
+
+    connect(newPage5BtnFFmpeg, &QPushButton::clicked, this, [this]() {
+        for(QAbstractButton *b : buttonGroup.buttons()) {
+            if (b != newPage5BtnFFmpeg) {
+                b->setStyleSheet("background-color: transparent;"
+                                    "opacity: 0;"
+                                    "border-radius: 7px;");
+            }
+        }
+
+        // 更改选中按钮的样式
+        if (newPage5BtnFFmpeg) {
+            newPage5BtnFFmpeg->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
+                                  "border-radius: 7px;");
+        }
+        emit buttonClicked(5);
+    });
 }
+
 
 void Menu::init()
 {
@@ -112,12 +130,17 @@ void Menu::init()
     setPushButton(newPage3BtnVideoEffact, QString::fromUtf8(":/rc/effact.svg"), effact);
     QString picture = GBK2QString("图片处理");
     setPushButton(newPage4BtnPicture, QString::fromUtf8(":/rc/picture.svg"), picture);
+    QString ffmpeg = GBK2QString("命令行");
+    setPushButton(newPage5BtnFFmpeg, QString::fromUtf8(":/rc/record.svg"), ffmpeg);
+
 
     // 创建按钮组
     buttonGroup.addButton(newPage1BtnVideo, 1);
     buttonGroup.addButton(newPage2BtnWord, 2);
     buttonGroup.addButton(newPage3BtnVideoEffact, 3);
-    buttonGroup.addButton(newPage4BtnPicture,4);
+    buttonGroup.addButton(newPage4BtnPicture, 4);
+    buttonGroup.addButton(newPage5BtnFFmpeg, 5);
+
 
     // 使用样式表设置控件的背景透明和高度增加 字体设置
     QFont font("Microsoft YaHei", 10);              // 创建字体，指定字体名称和字体大小
@@ -143,6 +166,8 @@ void Menu::init()
     layout->addWidget(newPage2BtnWord);
     layout->addWidget(newPage3BtnVideoEffact);
     layout->addWidget(newPage4BtnPicture);
+    layout->addWidget(newPage5BtnFFmpeg);
+
 
 
     // 添加一个竖直方向的额弹簧
@@ -213,6 +238,7 @@ void Menu::setMenu(bool isMini)
         newPage2BtnWord->setText("文档");
         newPage3BtnVideoEffact->setText("视频效果");
         newPage4BtnPicture->setText("图片处理");
+        newPage5BtnFFmpeg->setText("命令行");
 
         // 设置按钮的图标
     }
@@ -226,6 +252,8 @@ void Menu::setMenu(bool isMini)
         newPage2BtnWord->setText(tr("Second page"));
         newPage3BtnVideoEffact->setText(tr("Third page"));
         newPage4BtnPicture->setText("图片处理");
+        newPage5BtnFFmpeg->setText("命令行工具");
 
     }
 }
+

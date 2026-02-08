@@ -28,9 +28,12 @@ videoPage::videoPage(QWidget *parent) :
     init();
 
     worker = AvWorker_Create();
+    if (!worker) {
+        qDebug() << "AvWorker_Create failed!";
+    }
     initableWidget();
-
 }
+
 
 videoPage::~videoPage()
 {
@@ -130,13 +133,17 @@ bool videoPage::initableWidget()
 
 //            AvWorker_GetVideoFirstFrame(worker,"1.mp4","1.bmp",false);
 
-            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMP·
+            QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp"; // BMP
+            QByteArray gbkVideoPath = QString2GBK(videoPath);
+            QByteArray gbkBmpPath = QString2GBK(bmpPath);
+
             bool getFrameOk = AvWorker_GetVideoFirstFrame(
                 worker,
-                QString2GBK(videoPath).toStdString().c_str(),
-                QString2GBK(bmpPath).toStdString().c_str(),
+                gbkVideoPath.constData(),
+                gbkBmpPath.constData(),
                 false
             );
+
 
 
             QWidget* nameWidget = new QWidget();
@@ -175,9 +182,11 @@ bool videoPage::initableWidget()
 
             qDebug() << "videoPath" << videoPath << " | " << QFile::exists(videoPath);
 
-            double duration = AvWorker_getDuration(worker,QString2GBK(videoPath).toStdString().c_str());
+            QByteArray gbkPath = QString2GBK(videoPath);
+            double duration = AvWorker_getDuration(worker, gbkPath.constData());
 
             //  :  3.716   "0:04"21.27   "0:21"
+
             int minutes = static_cast<int>(duration) / 60;
             int seconds = static_cast<int>(duration) % 60;
             QString durationStr = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
@@ -228,11 +237,12 @@ bool videoPage::initableWidget()
             btnWidget->setLayout(btnLayout);
             ui->tableWidget->setCellWidget(i, 4, btnWidget);
 
-            connect(openBtn, &QPushButton::clicked, this, [=]() {
+            connect(openBtn, &QPushButton::clicked, this, [this, videoPath]() {
                 if (!m_ipcMgr) {
-                    QProcess::startDetached("explorer.exe", QStringList() << "/select," << videoPath);
+                    QProcess::startDetached("explorer.exe", QStringList() << "/select," << QDir::toNativeSeparators(videoPath));
                     return;
                 }
+
 
                 QString mplayerPath = QDir::currentPath();
                 if (!QFile::exists(mplayerPath)) {
@@ -249,14 +259,19 @@ bool videoPage::initableWidget()
                 m_ipcMgr->activateWindow();
             });
 
-            connect(delBtn, &QPushButton::clicked, this, [=]() {
-                int ret = QMessageBox::question(this, GBK2QString(""),
-                                               GBK2QString("") + fileInfo.fileName());
+            connect(delBtn, &QPushButton::clicked, this, [this, videoPath, fileInfo]() {
+                int ret = QMessageBox::question(this, GBK2QString("确认删除"),
+                                               GBK2QString("确定要删除文件吗？\n") + fileInfo.fileName());
                 if (ret == QMessageBox::Yes) {
-                    QFile::remove(videoPath);
-                    ui->tableWidget->removeRow(i);
+                    if (QFile::remove(videoPath)) {
+                        // 重新加载列表以确保索引正确
+                        initableWidget();
+                    } else {
+                        QMessageBox::critical(this, GBK2QString("错误"), GBK2QString("文件删除失败，可能被占用。"));
+                    }
                 }
             });
+
         }
     }
 
