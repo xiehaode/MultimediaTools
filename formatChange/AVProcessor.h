@@ -1,6 +1,9 @@
 #pragma once
 #include "pch.h"
 #include "formatChange.h"
+#include <atomic>
+#include <mutex>
+#include <stdexcept>
 class AVProcessorException : public std::exception {
 public:
 	explicit AVProcessorException(const std::string& msg) : msg_(msg) {}
@@ -20,40 +23,45 @@ public:
 	AVProcessor(const AVProcessor&) = delete;
 	AVProcessor& operator=(const AVProcessor&) = delete;
 
+	// çº¿ç¨‹å®‰å…¨çš„èµ„æºç®¡ç†
+	void acquire();
+	void release();
+	bool isValid() const;
+
 	//AVProcessor(AVProcessor&&) noexcept;
 	//AVProcessor& operator=(AVProcessor&&) noexcept;
 
 	/**
-	 * @brief ÒôÊÓÆµ×ª·â×°£¨½ö¸Ä±äÈİÆ÷¸ñÊ½£¬²»ÖØĞÂ±àÂë£©
-	 * @param input_path ÊäÈëÎÄ¼şÂ·¾¶
-	 * @param output_path Êä³öÎÄ¼şÂ·¾¶
-	 * @return ³É¹¦·µ»Øtrue£¬Ê§°Ü·µ»Øfalse
+	 * @brief éŸ³è§†é¢‘è½¬å°è£…ï¼ˆä»…æ”¹å˜å®¹å™¨æ ¼å¼ï¼Œä¸é‡æ–°ç¼–ç ï¼‰
+	 * @param input_path è¾“å…¥æ–‡ä»¶è·¯å¾„
+	 * @param output_path è¾“å‡ºæ–‡ä»¶è·¯å¾„
+	 * @return æˆåŠŸè¿”å›trueï¼Œå¤±è´¥è¿”å›false
 	 */
 	bool remux(const std::string& input_path, const std::string& output_path);
 
 	/**
-	 * @brief ÒôÊÓÆµ×ªÂë£¨ÖØĞÂ±àÂë£¬¿ÉĞŞ¸Ä±àÂë¸ñÊ½/²ÎÊı£©
-	 * @param input_path ÊäÈëÎÄ¼şÂ·¾¶
-	 * @param output_path Êä³öÎÄ¼şÂ·¾¶
-	 * @param config ×ªÂëÅäÖÃ²ÎÊı
-	 * @return ³É¹¦·µ»Øtrue£¬Ê§°Ü·µ»Øfalse
+	 * @brief éŸ³è§†é¢‘è½¬ç ï¼ˆé‡æ–°ç¼–ç ï¼Œå¯ä¿®æ”¹ç¼–ç æ ¼å¼/å‚æ•°ï¼‰
+	 * @param input_path è¾“å…¥æ–‡ä»¶è·¯å¾„
+	 * @param output_path è¾“å‡ºæ–‡ä»¶è·¯å¾„
+	 * @param config è½¬ç é…ç½®å‚æ•°
+	 * @return æˆåŠŸè¿”å›trueï¼Œå¤±è´¥è¿”å›false
 	 */
 	bool transcode(const std::string& input_path, const std::string& output_path, const AVConfig& config);
 
 	/**
-	 * @brief MP4×ªGIF
-	 * @param mp4_path MP4ÎÄ¼şÂ·¾¶
-	 * @param gif_path GIFÊä³öÂ·¾¶
-	 * @param config ×ª»»ÅäÖÃ²ÎÊı£¨º¬³ß´ç¡¢Ö¡ÂÊ¡¢ÑÓ³ÙµÈ£©
-	 * @return ³É¹¦·µ»Øtrue£¬Ê§°Ü·µ»Øfalse
+	 * @brief MP4è½¬GIF
+	 * @param mp4_path MP4æ–‡ä»¶è·¯å¾„
+	 * @param gif_path GIFè¾“å‡ºè·¯å¾„
+	 * @param config è½¬æ¢é…ç½®å‚æ•°ï¼ˆå«å°ºå¯¸ã€å¸§ç‡ã€å»¶è¿Ÿç­‰ï¼‰
+	 * @return æˆåŠŸè¿”å›trueï¼Œå¤±è´¥è¿”å›false
 	 */
 	bool mp4ToGif(const std::string& mp4_path, const std::string& gif_path, const AVConfig& config);
 
 	/**
-	 * @brief Í¼Æ¬ĞòÁĞ×ªMP4
-	 * @param output_path MP4Êä³öÂ·¾¶
-	 * @param config ×ª»»ÅäÖÃ²ÎÊı
-	 * @return ³É¹¦·µ»Øtrue£¬Ê§°Ü·µ»Øfalse
+	 * @brief å›¾ç‰‡åºåˆ—è½¬MP4
+	 * @param output_path MP4è¾“å‡ºè·¯å¾„
+	 * @param config è½¬æ¢é…ç½®å‚æ•°
+	 * @return æˆåŠŸè¿”å›trueï¼Œå¤±è´¥è¿”å›false
 	 */
 	bool imgSeqToMp4(const std::string& output_path, const AVConfig& config);
 
@@ -62,11 +70,16 @@ private:
 
 	void closeOutput();
 
-	// FFmpegºËĞÄÉÏÏÂÎÄ¶ÔÏó
-	AVFormatContext* fmt_ctx_in_ = nullptr;   // ÊäÈë¸ñÊ½ÉÏÏÂÎÄ
-	AVFormatContext* fmt_ctx_out_ = nullptr;  // Êä³ö¸ñÊ½ÉÏÏÂÎÄ
-	AVCodecContext* codec_ctx_in_ = nullptr;  // ÊäÈë±à½âÂëÆ÷ÉÏÏÂÎÄ
-	AVCodecContext* codec_ctx_out_ = nullptr; // Êä³ö±à½âÂëÆ÷ÉÏÏÂÎÄ
+	// FFmpegæ ¸å¿ƒä¸Šä¸‹æ–‡å¯¹è±¡
+	AVFormatContext* fmt_ctx_in_ = nullptr;   // è¾“å…¥æ ¼å¼ä¸Šä¸‹æ–‡
+	AVFormatContext* fmt_ctx_out_ = nullptr;  // è¾“å‡ºæ ¼å¼ä¸Šä¸‹æ–‡
+	AVCodecContext* codec_ctx_in_ = nullptr;  // è¾“å…¥ç¼–è§£ç å™¨ä¸Šä¸‹æ–‡
+	AVCodecContext* codec_ctx_out_ = nullptr; // è¾“å‡ºç¼–è§£ç å™¨ä¸Šä¸‹æ–‡
+
+	// çº¿ç¨‹å®‰å…¨æ§åˆ¶
+	std::atomic<int> ref_count_{1};  // å¼•ç”¨è®¡æ•°
+	mutable std::mutex mutex_;       // ä¿æŠ¤ FFmpeg èµ„æºçš„äº’æ–¥é”ï¼ˆconstæ–¹æ³•ä¸­ä¹Ÿéœ€è¦ä½¿ç”¨ï¼‰
+	bool destroyed_{ false };         // æ ‡è®°æ˜¯å¦å·²é”€æ¯
 };
 
 

@@ -29,6 +29,7 @@ SOURCES += \
     src/base/cmdexecutor.cpp \
     src/base/pageBase.cpp \
     src/base/timedcmdexecutor.cpp \
+    src/utils/lan_util.cpp \
     src/utils/myipcmgr.cpp
 
 
