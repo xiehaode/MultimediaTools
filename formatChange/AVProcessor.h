@@ -11,25 +11,17 @@ private:
 	std::string msg_;
 };
 
-// 音视频配置结构体：用于传递转码/格式转换的参数
-
-
-// 音视频处理器核心类
 class AVProcessor {
 public:
-	// 构造函数：初始化FFmpeg环境
 	AVProcessor();
 
-	// 析构函数：释放资源
 	~AVProcessor();
 
-	// 禁用拷贝构造和赋值运算符（避免资源重复释放）
 	AVProcessor(const AVProcessor&) = delete;
 	AVProcessor& operator=(const AVProcessor&) = delete;
 
-	// 移动构造和赋值运算符（可选，按需启用）
-	AVProcessor(AVProcessor&&) noexcept;
-	AVProcessor& operator=(AVProcessor&&) noexcept;
+	//AVProcessor(AVProcessor&&) noexcept;
+	//AVProcessor& operator=(AVProcessor&&) noexcept;
 
 	/**
 	 * @brief 音视频转封装（仅改变容器格式，不重新编码）
@@ -60,16 +52,14 @@ public:
 	/**
 	 * @brief 图片序列转MP4
 	 * @param output_path MP4输出路径
-	 * @param config 转换配置参数（含图片路径模板、帧率等）
+	 * @param config 转换配置参数
 	 * @return 成功返回true，失败返回false
 	 */
 	bool imgSeqToMp4(const std::string& output_path, const AVConfig& config);
 
 private:
-	// 关闭输入资源
 	void closeInput();
 
-	// 关闭输出资源
 	void closeOutput();
 
 	// FFmpeg核心上下文对象

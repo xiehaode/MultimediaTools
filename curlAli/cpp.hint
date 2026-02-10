@@ -1,0 +1,2 @@
+#define CURLALI_API __declspec(dllexport)
+#define CURLALI_API __declspec(dllimport)

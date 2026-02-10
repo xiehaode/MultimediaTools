@@ -36,6 +36,7 @@
     <OutDir>../bin</OutDir>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="lan_util.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +93,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>$(SolutionDir)bin;C:\Users\28026\AppData\Local\Python\pythoncore-3.14-64\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OPENCVTOOLS.lib;FORMATCHANGE.lib;python314.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OPENCVTOOLS.lib;FORMATCHANGE.lib;python314.lib;CURLALI.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

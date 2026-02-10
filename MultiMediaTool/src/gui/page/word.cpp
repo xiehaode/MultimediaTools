@@ -140,7 +140,7 @@ void word::on_pushButton_clicked()
     QStringList arguments;
     arguments << "--input" << inputPath << "--output" << outputPath;
 
-    // 解决乱码：强制 Python 使用 GBK 编码输出（对应 Windows 控制台）
+
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("PYTHONIOENCODING", "GBK");
     m_process->setProcessEnvironment(env);

@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiMediaTool", "MultiMedi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "formatChange", "formatChange\formatChange.vcxproj", "{BCD74998-913F-4ADA-A7B2-CE2156EB51E2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "curlAli", "curlAli\curlAli.vcxproj", "{ED9BF707-B050-44C7-A078-623D057EE680}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,9 +73,22 @@ Global
 		{BCD74998-913F-4ADA-A7B2-CE2156EB51E2}.Release|x64.Build.0 = Release|x64
 		{BCD74998-913F-4ADA-A7B2-CE2156EB51E2}.Release|x86.ActiveCfg = Release|Win32
 		{BCD74998-913F-4ADA-A7B2-CE2156EB51E2}.Release|x86.Build.0 = Release|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Debug|x64.ActiveCfg = Debug|x64
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Debug|x64.Build.0 = Debug|x64
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Debug|x86.ActiveCfg = Debug|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Debug|x86.Build.0 = Debug|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Release|Any CPU.ActiveCfg = Release|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Release|x64.ActiveCfg = Release|x64
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Release|x64.Build.0 = Release|x64
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Release|x86.ActiveCfg = Release|Win32
+		{ED9BF707-B050-44C7-A078-623D057EE680}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+		{A3B81A71-2B70-34F6-967E-E7A3BA2A0040} = {ED9BF707-B050-44C7-A078-623D057EE680}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ECD513C0-7919-4E50-A6EC-47BB30B21901}
