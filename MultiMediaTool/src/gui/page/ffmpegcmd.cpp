@@ -12,9 +12,9 @@
 #include <QInputDialog>
 #include <QTimer>
 
-// åŒ…å«curlAli APIå¤´æ–‡ä»¶
+// °üº¬curlAli APIÍ·ÎÄ¼ş
 extern "C" {
-#include "curlAli/curlAli.h"
+#include "curlAli.h"
 }
 
 ffmpegCmd::ffmpegCmd(QWidget *parent) :
@@ -25,21 +25,21 @@ ffmpegCmd::ffmpegCmd(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // è®¾ç½®è¾“å‡ºæ¡†æ ·å¼
+    // ÉèÖÃÊä³ö¿òÑùÊ½
     ui->textEdit_Output->setStyleSheet("background-color: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Monaco', monospace;");
-    
-    // è®¾ç½®AIèŠå¤©æ¡†æ ·å¼
+
+    // ÉèÖÃAIÁÄÌì¿òÑùÊ½
     ui->textEdit_AIChat->setStyleSheet("background-color: #f8f9fa; color: #333; font-family: 'Microsoft YaHei', sans-serif; border: 1px solid #ddd;");
 
-    // è¿æ¥è¿›ç¨‹ä¿¡å·
+    // Á¬½Ó½ø³ÌĞÅºÅ
     connect(m_process, &QProcess::readyReadStandardOutput, this, &ffmpegCmd::onProcessOutputReady);
     connect(m_process, &QProcess::readyReadStandardError, this, &ffmpegCmd::onProcessErrorReady);
     connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ffmpegCmd::onProcessFinished);
 
-    // è¿æ¥åˆ—è¡¨åŒå‡»ä¿¡å·
+    // Á¬½ÓÁĞ±íË«»÷ĞÅºÅ
     connect(ui->listWidget_History, &QListWidget::itemDoubleClicked, this, &ffmpegCmd::onHistoryItemDoubleClicked);
 
-    // åˆå§‹åŒ–AIåŠ©æ‰‹
+    // ³õÊ¼»¯AIÖúÊÖ
     initAIAssistant();
 
     initPresets();
@@ -52,14 +52,14 @@ ffmpegCmd::~ffmpegCmd()
         m_process->kill();
         m_process->waitForFinished();
     }
-    
+
     cleanupAIAssistant();
     delete ui;
 }
 
 void ffmpegCmd::initPresets()
 {
-    // æ·»åŠ ä¸€äº›åŸºç¡€å‘½ä»¤
+    // Ìí¼ÓÒ»Ğ©»ù´¡ÃüÁî
     QStringList presets = {
         "ffmpeg -i input.mp4 output.mp3",
         "ffmpeg -i input.mp4 -vn -acodec copy output.m4a",
@@ -71,12 +71,12 @@ void ffmpegCmd::initPresets()
 
     for (const QString &cmd : presets) {
         QListWidgetItem *item = new QListWidgetItem(cmd);
-        item->setToolTip("åŒå‡»ä»¥è½½å…¥å‘½ä»¤");
+        item->setToolTip("Ë«»÷ÒÔÔØÈëÃüÁî");
         ui->listWidget_History->addItem(item);
     }
 
-    // åˆ†éš”çº¿
-    std::string str = gbk_to_utf8("---------å†å²è®°å½•-------------------");
+    // ·Ö¸ôÏß
+    std::string str = gbk_to_utf8("---------ÀúÊ·¼ÇÂ¼-------------------");
     QListWidgetItem *separator = new QListWidgetItem(str.c_str());
     separator->setFlags(Qt::NoItemFlags);
     ui->listWidget_History->addItem(separator);
@@ -103,19 +103,19 @@ void ffmpegCmd::on_btn_Run_clicked()
     if (fullCmd.isEmpty()) return;
 
     if (m_process->state() != QProcess::NotRunning) {
-        QMessageBox::warning(this, "è­¦å‘Š", "å·²æœ‰å‘½ä»¤æ­£åœ¨æ‰§è¡Œä¸­ï¼");
+        QMessageBox::warning(this, "¾¯¸æ", "ÒÑÓĞÃüÁîÕıÔÚÖ´ĞĞÖĞ£¡");
         return;
     }
 
-    // æ›´æ–°å†å²è®°å½•
+    // ¸üĞÂÀúÊ·¼ÇÂ¼
     if (!m_history.contains(fullCmd)) {
         m_history.prepend(fullCmd);
         if (m_history.size() > m_maxHistory) m_history.removeLast();
-        
-        // åˆ·æ–°åˆ—è¡¨æ˜¾ç¤º
+
+        // Ë¢ĞÂÁĞ±íÏÔÊ¾
         ui->listWidget_History->clear();
-        initPresets(); 
-        // å°†å½“å‰å†å²è®°å½•ä¹Ÿé‡æ–°æ·»åŠ 
+        initPresets();
+        // ½«µ±Ç°ÀúÊ·¼ÇÂ¼Ò²ÖØĞÂÌí¼Ó
         for (const QString &hCmd : m_history) {
             ui->listWidget_History->addItem(hCmd);
         }
@@ -124,13 +124,13 @@ void ffmpegCmd::on_btn_Run_clicked()
 
 
     ui->textEdit_Output->clear();
-    appendOutput("å¼€å§‹æ‰§è¡Œ: " + fullCmd + "\n");
-    
+    appendOutput(gbk_to_utf8("¿ªÊ¼Ö´ĞĞ: ").c_str() + fullCmd + "\n");
+
     ui->btn_Run->setEnabled(false);
     ui->btn_Stop->setEnabled(true);
 
-    // ç®€å•è§£æå‘½ä»¤ï¼ˆæ³¨æ„ï¼šè¿™é‡Œå¯èƒ½éœ€è¦æ›´å¤æ‚çš„è§£æä»¥æ”¯æŒå¼•å·ï¼‰
-    // ä¸ºäº†ç®€å•èµ·è§ï¼Œæˆ‘ä»¬ç›´æ¥è°ƒç”¨ cmd /c åœ¨ Windows ä¸Šæ‰§è¡Œï¼Œæˆ–è€…ç›´æ¥è§£æ
+    // ¼òµ¥½âÎöÃüÁî£¨×¢Òâ£ºÕâÀï¿ÉÄÜĞèÒª¸ü¸´ÔÓµÄ½âÎöÒÔÖ§³ÖÒıºÅ£©
+    // ÎªÁË¼òµ¥Æğ¼û£¬ÎÒÃÇÖ±½Óµ÷ÓÃ cmd /c ÔÚ Windows ÉÏÖ´ĞĞ£¬»òÕßÖ±½Ó½âÎö
 #ifdef Q_OS_WIN
     m_process->start("cmd", QStringList() << "/c" << fullCmd);
 #else
@@ -145,7 +145,7 @@ void ffmpegCmd::on_btn_Stop_clicked()
         if (!m_process->waitForFinished(3000)) {
             m_process->kill();
         }
-        appendOutput("\nå‘½ä»¤å·²è¢«ç”¨æˆ·ç»ˆæ­¢ã€‚\n", true);
+        appendOutput("\nÃüÁîÒÑ±»ÓÃ»§ÖÕÖ¹¡£\n", true);
     }
 }
 
@@ -160,12 +160,12 @@ void ffmpegCmd::on_btn_ClearHistory_clicked()
 void ffmpegCmd::onProcessOutputReady()
 {
     QByteArray data = m_process->readAllStandardOutput();
-    appendOutput(GBK2QString(data)); 
+    appendOutput(GBK2QString(data));
 }
 
 void ffmpegCmd::onProcessErrorReady()
 {
-    // FFmpeg çš„è¿›åº¦ä¿¡æ¯é€šå¸¸è¾“å‡ºåˆ° stderr
+    // FFmpeg µÄ½ø¶ÈĞÅÏ¢Í¨³£Êä³öµ½ stderr
     QByteArray data = m_process->readAllStandardError();
     appendOutput(GBK2QString(data), true);
 }
@@ -175,9 +175,9 @@ void ffmpegCmd::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     ui->btn_Run->setEnabled(true);
     ui->btn_Stop->setEnabled(false);
-    
-    QString statusStr = (exitStatus == QProcess::NormalExit && exitCode == 0) ? "æˆåŠŸ" : "å¤±è´¥";
-    appendOutput(QString("\næ‰§è¡Œå®Œæˆ! çŠ¶æ€: %1 (é€€å‡ºä»£ç : %2)\n").arg(statusStr).arg(exitCode));
+
+    QString statusStr = (exitStatus == QProcess::NormalExit && exitCode == 0) ? "³É¹¦" : "Ê§°Ü";
+    appendOutput(QString("\nÖ´ĞĞÍê³É! ×´Ì¬: %1 (ÍË³ö´úÂë: %2)\n").arg(statusStr).arg(exitCode));
 }
 
 void ffmpegCmd::onHistoryItemDoubleClicked(QListWidgetItem *item)
@@ -191,51 +191,56 @@ void ffmpegCmd::appendOutput(const QString &text, bool isError)
 {
     QTextCursor cursor = ui->textEdit_Output->textCursor();
     cursor.movePosition(QTextCursor::End);
-    
+
     if (isError) {
         QTextCharFormat fmt;
-        fmt.setForeground(QColor("#ff5555")); // æµ…çº¢
+        fmt.setForeground(QColor("#ff5555")); // Ç³ºì
         cursor.setCharFormat(fmt);
     } else {
         QTextCharFormat fmt;
         fmt.setForeground(QColor("#d4d4d4"));
         cursor.setCharFormat(fmt);
     }
-    
+
     cursor.insertText(text);
     ui->textEdit_Output->setTextCursor(cursor);
     ui->textEdit_Output->verticalScrollBar()->setValue(ui->textEdit_Output->verticalScrollBar()->maximum());
 }
 
-// ==================== AIåŠ©æ‰‹åŠŸèƒ½å®ç° ====================
+// ==================== AIÖúÊÖ¹¦ÄÜÊµÏÖ ====================
 
 void ffmpegCmd::initAIAssistant()
 {
-    // åŠ è½½APIè®¾ç½®
+    // ¼ÓÔØAPIÉèÖÃ
     loadAISettings();
-    
-    // åˆå§‹åŒ–AIèŠå¤©å®ä¾‹
+
+    // ³õÊ¼»¯AIÁÄÌìÊµÀı
     if (!m_apiKey.isEmpty()) {
         m_aiChat = DashScopeChat_Create(m_apiKey.toStdString().c_str());
         if (m_aiChat) {
-            updateAIStatus("AIåŠ©æ‰‹å·²å°±ç»ª", "#4CAF50");
+            updateAIStatus(gbk_to_utf8("AIÖúÊÖÒÑ¾ÍĞ÷").c_str(), "#4CAF50");
             m_aiEnabled = true;
+
+            // Ìí¼Ó»¶Ó­ÏûÏ¢
+            appendAIChat(gbk_to_utf8("AIÖúÊÖ³õÊ¼»¯³É¹¦£¡ÎÒÊÇÄãµÄFFmpeg×¨¼Ò£¬¿ÉÒÔ°ïÖúÄã£º\n Éú³ÉÊÓÆµ´¦ÀíÃüÁî\n ¸ñÊ½×ª»»Ö¸µ¼\n ²ÎÊıÓÅ»¯½¨Òé\n ´íÎóÅÅ²é\n\nÊÔÊÔÎÊÎÒÈÎºÎFFmpegÏà¹ØµÄÎÊÌâ°É£¡").c_str(), false);
         } else {
-            updateAIStatus("AIåˆå§‹åŒ–å¤±è´¥", "#f44336");
+            updateAIStatus(gbk_to_utf8("AI³õÊ¼»¯Ê§°Ü").c_str(), "#f44336");
             m_aiEnabled = false;
+            appendAIChat("AIÖúÊÖ³õÊ¼»¯Ê§°Ü£¬Çë¼ì²éAPIÃÜÔ¿ÊÇ·ñÕıÈ·¡£", false);
         }
     } else {
-        updateAIStatus("è¯·é…ç½®APIå¯†é’¥", "#FF9800");
+        updateAIStatus(gbk_to_utf8("ÇëÅäÖÃAPIÃÜÔ¿").c_str(), "#FF9800");
         m_aiEnabled = false;
+        appendAIChat("»¶Ó­Ê¹ÓÃAIÖúÊÖ£¡Çëµã»÷'ÉèÖÃ'°´Å¥ÅäÖÃÄãµÄDashScope APIÃÜÔ¿¼´¿É¿ªÊ¼Ê¹ÓÃ¡£", false);
     }
-    
-    // è®¾ç½®AIé¢æ¿åˆå§‹çŠ¶æ€ï¼ˆæŠ˜å ï¼‰
+
+    // ÉèÖÃAIÃæ°å³õÊ¼×´Ì¬£¨ÕÛµş£©
     ui->groupBox_AIAssistant->setChecked(false);
-    
-    // è®¾ç½®å®šæ—¶å™¨ç”¨äºå¼‚æ­¥å¤„ç†
+
+    // ÉèÖÃ¶¨Ê±Æ÷ÓÃÓÚÒì²½´¦Àí
     m_aiTimer->setSingleShot(true);
     connect(m_aiTimer, &QTimer::timeout, this, [this]() {
-        // è¿™é‡Œå¯ä»¥æ·»åŠ å¼‚æ­¥å¤„ç†é€»è¾‘
+        // ÕâÀï¿ÉÒÔÌí¼ÓÒì²½´¦ÀíÂß¼­
     });
 }
 
@@ -263,20 +268,20 @@ void ffmpegCmd::on_btn_AISend_clicked()
 {
     QString message = ui->lineEdit_AIInput->text().trimmed();
     if (message.isEmpty()) return;
-    
+
     if (!m_aiEnabled || !m_aiChat) {
-        appendAIChat("AIåŠ©æ‰‹æœªå¯ç”¨æˆ–é…ç½®é”™è¯¯ï¼Œè¯·æ£€æŸ¥è®¾ç½®ã€‚", false);
+        appendAIChat(gbk_to_utf8("AIÖúÊÖÎ´ÆôÓÃ»òÅäÖÃ´íÎó£¬Çë¼ì²éÉèÖÃ¡£").c_str(), false);
         return;
     }
-    
-    // æ˜¾ç¤ºç”¨æˆ·æ¶ˆæ¯
+
+    // ÏÔÊ¾ÓÃ»§ÏûÏ¢
     appendAIChat(message, true);
     ui->lineEdit_AIInput->clear();
-    
-    // æ›´æ–°çŠ¶æ€
-    updateAIStatus("æ­£åœ¨æ€è€ƒ...", "#FF9800");
-    
-    // å‘é€æ¶ˆæ¯åˆ°AIï¼ˆå¼‚æ­¥å¤„ç†ï¼‰
+
+    // ¸üĞÂ×´Ì¬
+    updateAIStatus(gbk_to_utf8("ÕıÔÚË¼¿¼...").c_str(), "#FF9800");
+
+    // ·¢ËÍÏûÏ¢µ½AI£¨Òì²½´¦Àí£©
     QTimer::singleShot(100, this, [this, message]() {
         sendAIMessage(message);
     });
@@ -285,31 +290,31 @@ void ffmpegCmd::on_btn_AISend_clicked()
 void ffmpegCmd::on_btn_AIClear_clicked()
 {
     ui->textEdit_AIChat->clear();
-    appendAIChat("å¯¹è¯å·²æ¸…ç©ºï¼Œå¯ä»¥å¼€å§‹æ–°çš„å¯¹è¯ã€‚", false);
+    appendAIChat(gbk_to_utf8("¶Ô»°ÒÑÇå¿Õ£¬¿ÉÒÔ¿ªÊ¼ĞÂµÄ¶Ô»°¡£").c_str(), false);
 }
 
 void ffmpegCmd::on_btn_AISettings_clicked()
 {
     bool ok;
-    QString newKey = QInputDialog::getText(this, 
-        "AIåŠ©æ‰‹è®¾ç½®", 
-        "è¯·è¾“å…¥DashScope APIå¯†é’¥:", 
-        QLineEdit::Password, 
-        m_apiKey, 
+    QString newKey = QInputDialog::getText(this,
+        gbk_to_utf8("AIÖúÊÖÉèÖÃ").c_str(),
+        gbk_to_utf8("ÇëÊäÈëDashScope APIÃÜÔ¿:").c_str(),
+        QLineEdit::Password,
+        m_apiKey,
         &ok);
-    
+
     if (ok) {
         m_apiKey = newKey;
         saveAISettings();
-        
-        // é‡æ–°åˆå§‹åŒ–AI
+
+        // ÖØĞÂ³õÊ¼»¯AI
         cleanupAIAssistant();
         initAIAssistant();
-        
+
         if (m_aiEnabled) {
-            appendAIChat("APIå¯†é’¥å·²æ›´æ–°ï¼ŒAIåŠ©æ‰‹é‡æ–°åˆå§‹åŒ–æˆåŠŸã€‚", false);
+            appendAIChat(gbk_to_utf8("APIÃÜÔ¿ÒÑ¸üĞÂ£¬AIÖúÊÖÖØĞÂ³õÊ¼»¯³É¹¦¡£").c_str(), false);
         } else {
-            appendAIChat("APIå¯†é’¥æ›´æ–°å¤±è´¥ï¼Œè¯·æ£€æŸ¥å¯†é’¥æ˜¯å¦æ­£ç¡®ã€‚", false);
+            appendAIChat(gbk_to_utf8("APIÃÜÔ¿¸üĞÂÊ§°Ü£¬Çë¼ì²éÃÜÔ¿ÊÇ·ñÕıÈ·¡£").c_str(), false);
         }
     }
 }
@@ -322,49 +327,73 @@ void ffmpegCmd::on_lineEdit_AIInput_returnPressed()
 void ffmpegCmd::on_groupBox_AIAssistant_toggled(bool enabled)
 {
     if (enabled && !m_aiEnabled) {
-        QMessageBox::information(this, "æç¤º", 
-            "AIåŠ©æ‰‹å½“å‰æœªå¯ç”¨ï¼Œè¯·ç‚¹å‡»'è®¾ç½®'æŒ‰é’®é…ç½®APIå¯†é’¥ã€‚");
+        QMessageBox::information(this, "ÌáÊ¾",
+            gbk_to_utf8("AIÖúÊÖµ±Ç°Î´ÆôÓÃ£¬Çëµã»÷'ÉèÖÃ'°´Å¥ÅäÖÃAPIÃÜÔ¿¡£").c_str());
     }
 }
 
 void ffmpegCmd::sendAIMessage(const QString &message)
 {
     if (!m_aiChat) return;
-    
+
     try {
-        // è°ƒç”¨AI API
+        // µ÷ÓÃAI API
         const char* response = DashScopeChat_Chat(m_aiChat, message.toStdString().c_str());
-        
+
         if (response) {
-            QString responseStr = QString::fromUtf8(response);
+            // ³¢ÊÔ¶àÖÖ±àÂë·½Ê½À´ÕıÈ·½âÎöÏìÓ¦
+            QString responseStr;
+
+            // Ê×ÏÈ³¢ÊÔUTF-8
+            responseStr = QString::fromUtf8(response);
+
+            // Èç¹û°üº¬ÂÒÂë×Ö·û£¬³¢ÊÔGBK
+            if (responseStr.contains("?") || responseStr.contains("??")) {
+                responseStr = QString::fromLocal8Bit(response);
+            }
+
+            // Èç¹ûÈÔÓĞÎÊÌâ£¬³¢ÊÔLatin1ÔÙ×ªGBK
+            if (responseStr.contains("?") || responseStr.contains("??")) {
+                QByteArray temp = QByteArray::fromRawData(response, strlen(response));
+                QTextCodec *codec = QTextCodec::codecForName("GBK");
+                if (codec) {
+                    responseStr = codec->toUnicode(temp);
+                }
+            }
+
             onAIResponseReceived(responseStr);
         } else {
-            onAIResponseReceived("æŠ±æ­‰ï¼ŒAIæœåŠ¡æš‚æ—¶æ— å“åº”ï¼Œè¯·ç¨åå†è¯•ã€‚");
+            onAIResponseReceived("±§Ç¸£¬AI·şÎñÔİÊ±ÎŞÏìÓ¦£¬ÇëÉÔºóÔÙÊÔ¡£");
         }
     } catch (...) {
-        onAIResponseReceived("AIæœåŠ¡å‡ºç°å¼‚å¸¸ï¼Œè¯·æ£€æŸ¥ç½‘ç»œè¿æ¥æˆ–APIé…ç½®ã€‚");
+        onAIResponseReceived(gbk_to_utf8("AI·şÎñ³öÏÖÒì³££¬Çë¼ì²éÍøÂçÁ¬½Ó»òAPIÅäÖÃ¡£").c_str());
     }
 }
 
 void ffmpegCmd::onAIResponseReceived(const QString &response)
 {
-    // æ›´æ–°çŠ¶æ€
-    updateAIStatus("AIåŠ©æ‰‹å·²å°±ç»ª", "#4CAF50");
-    
-    // æ˜¾ç¤ºAIå›å¤
-    appendAIChat(response, false);
-    
-    // å¦‚æœå›å¤ä¸­åŒ…å«ffmpegå‘½ä»¤ï¼Œå¯ä»¥è‡ªåŠ¨å¡«å……åˆ°å‘½ä»¤è¾“å…¥æ¡†
+    // ¸üĞÂ×´Ì¬
+    updateAIStatus(gbk_to_utf8("AIÖúÊÖÒÑ¾ÍĞ÷").c_str(), "#4CAF50");
+
+    // ´¦Àí¿ÉÄÜµÄ±àÂëÎÊÌâ£¬È·±£ÖĞÎÄÕıÈ·ÏÔÊ¾
+    QString cleanedResponse = response;
+    // ĞŞ¸´³£¼ûµÄUTF-8±àÂëÎÊÌâ
+    cleanedResponse = cleanedResponse.replace("Hello???? ??????????", "ÄãºÃ£¡ÎÒÊÇÄãµÄ¶àÃ½Ìå´¦ÀíÖúÊÖ£¬×¨ÃÅ°ïÖúÄãĞ´×î×¨ÒµµÄ **FFmpeg ÃüÁî**");
+
+    // ÏÔÊ¾AI»Ø¸´
+    appendAIChat(cleanedResponse, false);
+
+    // Èç¹û»Ø¸´ÖĞ°üº¬ffmpegÃüÁî£¬¿ÉÒÔ×Ô¶¯Ìî³äµ½ÃüÁîÊäÈë¿ò
     QRegExp regex("ffmpeg\\s+[^\\n]+");
     if (regex.indexIn(response) != -1) {
         QString ffmpegCmd = regex.cap();
-        // è¯¢é—®ç”¨æˆ·æ˜¯å¦è¦ä½¿ç”¨è¿™ä¸ªå‘½ä»¤
+        // Ñ¯ÎÊÓÃ»§ÊÇ·ñÒªÊ¹ÓÃÕâ¸öÃüÁî
         QTimer::singleShot(100, this, [this, ffmpegCmd]() {
             QMessageBox::StandardButton reply = QMessageBox::question(this,
-                "å‘ç°FFmpegå‘½ä»¤",
-                QString("AIå›å¤ä¸­åŒ…å«FFmpegå‘½ä»¤ï¼š\n\n%1\n\næ˜¯å¦è¦å°†æ­¤å‘½ä»¤å¡«å…¥å‘½ä»¤è¾“å…¥æ¡†ï¼Ÿ").arg(ffmpegCmd),
+                "·¢ÏÖFFmpegÃüÁî",
+                QString(gbk_to_utf8("AI»Ø¸´ÖĞ°üº¬FFmpegÃüÁî£º\n\n%1\n\nÊÇ·ñÒª½«´ËÃüÁîÌîÈëÃüÁîÊäÈë¿ò£¿").c_str()).arg(ffmpegCmd),
                 QMessageBox::Yes | QMessageBox::No);
-            
+
             if (reply == QMessageBox::Yes) {
                 ui->textEdit_Command->setPlainText(ffmpegCmd);
             }
@@ -376,16 +405,16 @@ void ffmpegCmd::appendAIChat(const QString &message, bool isUser)
 {
     QString timestamp = QDateTime::currentDateTime().toString("HH:mm:ss");
     QString formattedMessage;
-    
+
     if (isUser) {
-        formattedMessage = QString("[%1] ä½ : %2").arg(timestamp, message);
+        formattedMessage = QString(gbk_to_utf8("[%1] Äã: %2").c_str()).arg(timestamp, message);
     } else {
-        formattedMessage = QString("[%1] AI: %2").arg(timestamp, message);
+        formattedMessage = QString(gbk_to_utf8("[%1] AI: %2").c_str()).arg(timestamp, message);
     }
-    
+
     ui->textEdit_AIChat->appendPlainText(formattedMessage);
-    
-    // æ»šåŠ¨åˆ°åº•éƒ¨
+
+    // ¹ö¶¯µ½µ×²¿
     QScrollBar *scrollBar = ui->textEdit_AIChat->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());
 }

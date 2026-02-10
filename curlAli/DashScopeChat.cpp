@@ -108,10 +108,11 @@ std::string DashScopeChat::chat(const std::string& message)
 			
 			nlohmann::json messages = nlohmann::json::array();
 			
-			// 系统消息
+			// 系统消息 - 使用UTF-8字面量确保正确编码
 			nlohmann::json systemMsg = nlohmann::json::object();
 			systemMsg["role"] = "system";
-			systemMsg["content"] = "你是一个多媒体智能工具辅助机器人，帮助用户写ffmpeg命令来实现他们想要的效果.";
+			// 使用std::string构造函数确保UTF-8编码
+			systemMsg["content"] = std::string(u8"你是一个多媒体智能工具辅助机器人，帮助用户写ffmpeg命令来实现他们想要的效果.");
 			messages.push_back(systemMsg);
 			
 			// 用户消息 - 现在有了UTF-8编译器指令，应该能正确处理

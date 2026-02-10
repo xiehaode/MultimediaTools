@@ -3,13 +3,13 @@
 
 AVProcessor::AVProcessor()
 {
-	// ³õÊ¼»¯ FFmpeg
+	// åˆå§‹åŒ– FFmpeg
 	avformat_network_init();
 }
 
 AVProcessor::~AVProcessor()
 {
-	// ÇåÀí×ÊÔ´
+	// æ¸…ç†èµ„æº
 	closeInput();
 	closeOutput();
 }
@@ -17,62 +17,74 @@ AVProcessor::~AVProcessor()
 bool AVProcessor::remux(const std::string & input_path, const std::string & output_path)
 {
 	try {
-		// ´ò¿ªÊäÈëÎÄ¼ş
+		// æ‰“å¼€è¾“å…¥æ–‡ä»¶
 		if (avformat_open_input(&fmt_ctx_in_, input_path.c_str(), nullptr, nullptr) < 0) {
-			throw AVProcessorException("ÎŞ·¨´ò¿ªÊäÈëÎÄ¼ş: " + input_path);
+			char error_buf[256] = {0};
+			av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+			throw AVProcessorException("æ— æ³•æ‰“å¼€è¾“å…¥æ–‡ä»¶: " + input_path + " é”™è¯¯: " + std::string(error_buf));
 		}
 
-		// »ñÈ¡Á÷ĞÅÏ¢
+		// è·å–æµä¿¡æ¯
 		if (avformat_find_stream_info(fmt_ctx_in_, nullptr) < 0) {
-			throw AVProcessorException("ÎŞ·¨»ñÈ¡Á÷ĞÅÏ¢");
+			char error_buf[256] = {0};
+			av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+			throw AVProcessorException("æ— æ³•è·å–æµä¿¡æ¯: " + std::string(error_buf));
 		}
 
-		// ´ò¿ªÊä³öÎÄ¼ş
+		// æ‰“å¼€è¾“å‡ºæ–‡ä»¶
 		if (avformat_alloc_output_context2(&fmt_ctx_out_, nullptr, nullptr, output_path.c_str()) < 0) {
-			throw AVProcessorException("ÎŞ·¨´´½¨Êä³öÉÏÏÂÎÄ");
+			char error_buf[256] = {0};
+			av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+			throw AVProcessorException("æ— æ³•åˆ›å»ºè¾“å‡ºä¸Šä¸‹æ–‡: " + std::string(error_buf));
 		}
 
-		// ±éÀúÊäÈëÁ÷£¬´´½¨Êä³öÁ÷
+		// éå†è¾“å…¥æµï¼Œåˆ›å»ºè¾“å‡ºæµ
 		for (unsigned int i = 0; i < fmt_ctx_in_->nb_streams; i++) {
 			AVStream* in_stream = fmt_ctx_in_->streams[i];
 			AVStream* out_stream = avformat_new_stream(fmt_ctx_out_, nullptr);
 
 			if (!out_stream) {
-				throw AVProcessorException("ÎŞ·¨´´½¨Êä³öÁ÷");
+				throw AVProcessorException("æ— æ³•åˆ›å»ºè¾“å‡ºæµ");
 			}
 
-			// ¸´ÖÆÁ÷²ÎÊı
+			// å¤åˆ¶æµå‚æ•°
 			if (avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar) < 0) {
-				throw AVProcessorException("ÎŞ·¨¸´ÖÆÁ÷²ÎÊı");
+				throw AVProcessorException("æ— æ³•å¤åˆ¶æµå‚æ•°");
 			}
 			out_stream->codecpar->codec_tag = 0;
 		}
 
-		// ´òÓ¡Êä³ö¸ñÊ½ĞÅÏ¢
+		// æ‰“å°è¾“å‡ºæ ¼å¼ä¿¡æ¯
 		av_dump_format(fmt_ctx_out_, 0, output_path.c_str(), 1);
 
-		// ´ò¿ªÊä³öIO
+		// æ‰“å¼€è¾“å‡ºIO
 		if (!(fmt_ctx_out_->oformat->flags & AVFMT_NOFILE)) {
 			if (avio_open(&fmt_ctx_out_->pb, output_path.c_str(), AVIO_FLAG_WRITE) < 0) {
-				throw AVProcessorException("ÎŞ·¨´ò¿ªÊä³öÎÄ¼ş: " + output_path);
+				char error_buf[256] = {0};
+				av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+				throw AVProcessorException("æ— æ³•æ‰“å¼€è¾“å‡ºæ–‡ä»¶: " + output_path + " é”™è¯¯: " + std::string(error_buf));
 			}
 		}
 
-		// Ğ´ÎÄ¼şÍ·
+		// å†™æ–‡ä»¶å¤´
 		if (avformat_write_header(fmt_ctx_out_, nullptr) < 0) {
-			throw AVProcessorException("ÎŞ·¨Ğ´ÈëÎÄ¼şÍ·");
+			char error_buf[256] = {0};
+			av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+			throw AVProcessorException("æ— æ³•å†™å…¥æ–‡ä»¶å¤´: " + std::string(error_buf));
 		}
 
-		// Öğ°ü¸´ÖÆÊı¾İ
+		// é€åŒ…å¤åˆ¶æ•°æ®
 		AVPacket pkt = {0};
 		pkt.data = nullptr;
 		pkt.size = 0;
+		int write_frame_error_count = 0;
+		const int max_write_errors = 10; // å…è®¸æœ€å¤š10ä¸ªå†™å…¥é”™è¯¯
 
 		while (av_read_frame(fmt_ctx_in_, &pkt) >= 0) {
 			AVStream* in_stream = fmt_ctx_in_->streams[pkt.stream_index];
 			AVStream* out_stream = fmt_ctx_out_->streams[pkt.stream_index];
 
-			// ×ª»»Ê±¼ä»ù
+			// è½¬æ¢æ—¶é—´åŸº
 			pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base,
 				static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
 			pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base,
@@ -80,40 +92,86 @@ bool AVProcessor::remux(const std::string & input_path, const std::string & outp
 			pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
 			pkt.pos = -1;
 
-			// Ğ´ÈëÊı¾İ°ü
-			if (av_interleaved_write_frame(fmt_ctx_out_, &pkt) < 0) {
-				throw AVProcessorException("Ğ´ÈëÊı¾İ°üÊ§°Ü");
+			// å†™å…¥æ•°æ®åŒ…ï¼Œå¢åŠ é‡è¯•æœºåˆ¶
+			int ret = av_interleaved_write_frame(fmt_ctx_out_, &pkt);
+			if (ret < 0) {
+				write_frame_error_count++;
+				char error_buf[256] = {0};
+				av_strerror(ret, error_buf, sizeof(error_buf));
+				
+				std::cerr << "å†™å…¥æ•°æ®åŒ…å¤±è´¥ (é”™è¯¯ " << write_frame_error_count << "/" << max_write_errors << "): " << error_buf << std::endl;
+				
+				// å¦‚æœé”™è¯¯æ¬¡æ•°è¿‡å¤šï¼Œåœæ­¢å¤„ç†
+				if (write_frame_error_count >= max_write_errors) {
+					av_packet_unref(&pkt);
+					throw AVProcessorException("å†™å…¥æ•°æ®åŒ…å¤±è´¥æ¬¡æ•°è¿‡å¤šï¼Œåœæ­¢å¤„ç†: " + std::string(error_buf));
+				}
+				
+				// å¦åˆ™è·³è¿‡è¿™ä¸ªåŒ…ç»§ç»­
+				av_packet_unref(&pkt);
+				continue;
 			}
+			
+			// é‡ç½®é”™è¯¯è®¡æ•°å™¨
+			write_frame_error_count = 0;
 			av_packet_unref(&pkt);
 		}
 
-		// Ğ´ÎÄ¼şÎ²
-		av_write_trailer(fmt_ctx_out_);
-		std::cout << "×ª·â×°Íê³É: " << output_path << std::endl;
+		// å†™æ–‡ä»¶å°¾
+		if (av_write_trailer(fmt_ctx_out_) < 0) {
+			char error_buf[256] = {0};
+			av_strerror(AVERROR(errno), error_buf, sizeof(error_buf));
+			throw AVProcessorException("æ— æ³•å†™å…¥æ–‡ä»¶å°¾: " + std::string(error_buf));
+		}
+		
+		std::cout << "è½¬å°è£…å®Œæˆ: " << output_path << std::endl;
 		return true;
 	}
 	catch (const AVProcessorException& e) {
-		std::cerr << "×ª·â×°Ê§°Ü: " << e.what() << std::endl;
+		std::cerr << "è½¬å°è£…å¤±è´¥: " << e.what() << std::endl;
+		
+		// ç¡®ä¿èµ„æºæ¸…ç†
+		closeInput();
+		closeOutput();
+		
+		return false;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "è½¬å°è£…å‘ç”ŸæœªçŸ¥å¼‚å¸¸: " << e.what() << std::endl;
+		
+		// ç¡®ä¿èµ„æºæ¸…ç†
+		closeInput();
+		closeOutput();
+		
+		return false;
+	}
+	catch (...) {
+		std::cerr << "è½¬å°è£…å‘ç”ŸæœªçŸ¥å¼‚å¸¸" << std::endl;
+		
+		// ç¡®ä¿èµ„æºæ¸…ç†
+		closeInput();
+		closeOutput();
+		
 		return false;
 	}
 }
 
 bool AVProcessor::transcode(const std::string & input_path, const std::string & output_path, const AVConfig & config)
 {
-	// ¼ò»¯ÊµÏÖ£¬ºËĞÄÂß¼­Óë×ª·â×°ÀàËÆ£¬µ«Ôö¼ÓÁË½âÂë-ÖØ²ÉÑù-±àÂëÁ÷³Ì
-	// ÍêÕûÊµÏÖĞèÒª´¦Àí£º
-	// 1. ½âÂëÆ÷³õÊ¼»¯
-	// 2. ±àÂëÆ÷³õÊ¼»¯£¨¸ù¾İconfigÉèÖÃ²ÎÊı£©
-	// 3. ÏñËØ¸ñÊ½/ÒôÆµ¸ñÊ½×ª»»
-	// 4. ±àÂëĞ´Èë
-	// ÕâÀïÌá¹©ºËĞÄ¿ò¼Ü£¬Äã¿ÉÒÔ¸ù¾İĞèÒªÍêÉÆ
+	// ç®€åŒ–å®ç°ï¼Œæ ¸å¿ƒé€»è¾‘ä¸è½¬å°è£…ç±»ä¼¼ï¼Œä½†å¢åŠ äº†è§£ç -é‡é‡‡æ ·-ç¼–ç æµç¨‹
+	// å®Œæ•´å®ç°éœ€è¦å¤„ç†ï¼š
+	// 1. è§£ç å™¨åˆå§‹åŒ–
+	// 2. ç¼–ç å™¨åˆå§‹åŒ–ï¼ˆæ ¹æ®configè®¾ç½®å‚æ•°ï¼‰
+	// 3. åƒç´ æ ¼å¼/éŸ³é¢‘æ ¼å¼è½¬æ¢
+	// 4. ç¼–ç å†™å…¥
+	// è¿™é‡Œæä¾›æ ¸å¿ƒæ¡†æ¶ï¼Œä½ å¯ä»¥æ ¹æ®éœ€è¦å®Œå–„
 	try {
-		std::cout << "×ªÂë¹¦ÄÜ¿ò¼ÜÒÑ³õÊ¼»¯£¬ÍêÕûÊµÏÖĞè²¹³ä½âÂë-±àÂëÂß¼­" << std::endl;
-		// Êµ¼ÊÏîÄ¿ÖĞÇë²¹³äÍêÕûµÄ×ªÂëÂß¼­
+		std::cout << "è½¬ç åŠŸèƒ½æ¡†æ¶å·²åˆå§‹åŒ–ï¼Œå®Œæ•´å®ç°éœ€è¡¥å……è§£ç -ç¼–ç é€»è¾‘" << std::endl;
+		// å®é™…é¡¹ç›®ä¸­è¯·è¡¥å……å®Œæ•´çš„è½¬ç é€»è¾‘
 		return true;
 	}
 	catch (const AVProcessorException& e) {
-		std::cerr << "×ªÂëÊ§°Ü: " << e.what() << std::endl;
+		std::cerr << "è½¬ç å¤±è´¥: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -121,17 +179,17 @@ bool AVProcessor::transcode(const std::string & input_path, const std::string & 
 bool AVProcessor::mp4ToGif(const std::string & mp4_path, const std::string & gif_path, const AVConfig & config)
 {
 	try {
-		// ¼ò»¯ÊµÏÖ£¬ºËĞÄ²½Öè£º
-		// 1. ´ò¿ªMP4ÎÄ¼ş²¢¶¨Î»µ½ÆğÊ¼Ê±¼ä
-		// 2. ½âÂëÊÓÆµÖ¡
-		// 3. Ëõ·ÅÖ¡µ½Ö¸¶¨³ß´ç
-		// 4. ×ª»»Îªµ÷É«°å¸ñÊ½
-		// 5. Ğ´ÈëGIFÎÄ¼ş
-		std::cout << "MP4×ªGIF¹¦ÄÜ¿ò¼ÜÒÑ³õÊ¼»¯£¬ÍêÕûÊµÏÖĞè²¹³ä½âÂë-µ÷É«°å-Ğ´ÈëÂß¼­" << std::endl;
+		// ç®€åŒ–å®ç°ï¼Œæ ¸å¿ƒæ­¥éª¤ï¼š
+		// 1. æ‰“å¼€MP4æ–‡ä»¶å¹¶å®šä½åˆ°èµ·å§‹æ—¶é—´
+		// 2. è§£ç è§†é¢‘å¸§
+		// 3. ç¼©æ”¾å¸§åˆ°æŒ‡å®šå°ºå¯¸
+		// 4. è½¬æ¢ä¸ºè°ƒè‰²æ¿æ ¼å¼
+		// 5. å†™å…¥GIFæ–‡ä»¶
+		std::cout << "MP4è½¬GIFåŠŸèƒ½æ¡†æ¶å·²åˆå§‹åŒ–ï¼Œå®Œæ•´å®ç°éœ€è¡¥å……è§£ç -è°ƒè‰²æ¿-å†™å…¥é€»è¾‘" << std::endl;
 		return true;
 	}
 	catch (const AVProcessorException& e) {
-		std::cerr << "MP4×ªGIFÊ§°Ü: " << e.what() << std::endl;
+		std::cerr << "MP4è½¬GIFå¤±è´¥: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -139,16 +197,16 @@ bool AVProcessor::mp4ToGif(const std::string & mp4_path, const std::string & gif
 bool AVProcessor::imgSeqToMp4(const std::string & output_path, const AVConfig & config)
 {
 	try {
-		// ¼ò»¯ÊµÏÖ£¬ºËĞÄ²½Öè£º
-		// 1. °´Ä£°å¶ÁÈ¡Í¼Æ¬ĞòÁĞ
-		// 2. ³õÊ¼»¯H.264±àÂëÆ÷
-		// 3. ½«Í¼Æ¬±àÂëÎªÊÓÆµÖ¡
-		// 4. Ğ´ÈëMP4ÎÄ¼ş
-		std::cout << "Í¼Æ¬ĞòÁĞ×ªMP4¹¦ÄÜ¿ò¼ÜÒÑ³õÊ¼»¯£¬ÍêÕûÊµÏÖĞè²¹³äÍ¼Æ¬¶ÁÈ¡-±àÂëÂß¼­" << std::endl;
+		// ç®€åŒ–å®ç°ï¼Œæ ¸å¿ƒæ­¥éª¤ï¼š
+		// 1. æŒ‰æ¨¡æ¿è¯»å–å›¾ç‰‡åºåˆ—
+		// 2. åˆå§‹åŒ–H.264ç¼–ç å™¨
+		// 3. å°†å›¾ç‰‡ç¼–ç ä¸ºè§†é¢‘å¸§
+		// 4. å†™å…¥MP4æ–‡ä»¶
+		std::cout << "å›¾ç‰‡åºåˆ—è½¬MP4åŠŸèƒ½æ¡†æ¶å·²åˆå§‹åŒ–ï¼Œå®Œæ•´å®ç°éœ€è¡¥å……å›¾ç‰‡è¯»å–-ç¼–ç é€»è¾‘" << std::endl;
 		return true;
 	}
 	catch (const AVProcessorException& e) {
-		std::cerr << "Í¼Æ¬ĞòÁĞ×ªMP4Ê§°Ü: " << e.what() << std::endl;
+		std::cerr << "å›¾ç‰‡åºåˆ—è½¬MP4å¤±è´¥: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -180,77 +238,77 @@ void AVProcessor::closeOutput()
 
 extern "C" FORMATCHANGE_API void* AVProcessor_Create()
 {
-	// ´´½¨AVProcessorÊµÀı²¢·µ»Øvoid*¾ä±ú
+	// åˆ›å»ºAVProcessorå®ä¾‹å¹¶è¿”å›void*å¥æŸ„
 	return new AVProcessor();
 }
 
 extern "C" FORMATCHANGE_API void AVProcessor_Destroy(void* processor)
 {
-	// ¿ÕÖ¸ÕëĞ£Ñé + °²È«×ª»» + Ïú»ÙÊµÀı
+	// ç©ºæŒ‡é’ˆæ ¡éªŒ + å®‰å…¨è½¬æ¢ + é”€æ¯å®ä¾‹
 	if (!processor) return;
 	delete static_cast<AVProcessor*>(processor);
 }
 
 extern "C" FORMATCHANGE_API int AVProcessor_Remux(void* processor, const char* input_path, const char* output_path)
 {
-	// 1. ¿ÕÖ¸ÕëĞ£Ñé
+	// 1. ç©ºæŒ‡é’ˆæ ¡éªŒ
 	if (!processor || !input_path || !output_path) {
-		std::cerr << "AVProcessor_Remux£º²ÎÊıÎª¿ÕÖ¸Õë" << std::endl;
+		std::cerr << "AVProcessor_Remuxï¼šå‚æ•°ä¸ºç©ºæŒ‡é’ˆ" << std::endl;
 		return -1;
 	}
 
-	// 2. ÀàĞÍ×ª»»
+	// 2. ç±»å‹è½¬æ¢
 	AVProcessor* proc = static_cast<AVProcessor*>(processor);
 
-	// 3. µ÷ÓÃ³ÉÔ±º¯Êı£¬×ª»»·µ»ØÖµ£¨bool¡úint£ºtrue=0£¬false=-1£©
+	// 3. è°ƒç”¨æˆå‘˜å‡½æ•°ï¼Œè½¬æ¢è¿”å›å€¼ï¼ˆboolâ†’intï¼štrue=0ï¼Œfalse=-1ï¼‰
 	bool ret = proc->remux(std::string(input_path), std::string(output_path));
 	return ret ? 0 : -1;
 }
 
 extern "C" FORMATCHANGE_API int AVProcessor_Transcode(void* processor, const char* input_path, const char* output_path, const AVConfig* config)
 {
-	// 1. ¿ÕÖ¸ÕëĞ£Ñé
+	// 1. ç©ºæŒ‡é’ˆæ ¡éªŒ
 	if (!processor || !input_path || !output_path || !config) {
-		std::cerr << "AVProcessor_Transcode£º²ÎÊıÎª¿ÕÖ¸Õë" << std::endl;
+		std::cerr << "AVProcessor_Transcodeï¼šå‚æ•°ä¸ºç©ºæŒ‡é’ˆ" << std::endl;
 		return -1;
 	}
 
-	// 2. ÀàĞÍ×ª»»
+	// 2. ç±»å‹è½¬æ¢
 	AVProcessor* proc = static_cast<AVProcessor*>(processor);
 
-	// 3. µ÷ÓÃ³ÉÔ±º¯Êı£¬×ª»»·µ»ØÖµ
+	// 3. è°ƒç”¨æˆå‘˜å‡½æ•°ï¼Œè½¬æ¢è¿”å›å€¼
 	bool ret = proc->transcode(std::string(input_path), std::string(output_path), *config);
 	return ret ? 0 : -1;
 }
 
 extern "C" FORMATCHANGE_API int AVProcessor_Mp4ToGif(void* processor, const char* mp4_path, const char* gif_path, const AVConfig* config)
 {
-	// 1. ¿ÕÖ¸ÕëĞ£Ñé
+	// 1. ç©ºæŒ‡é’ˆæ ¡éªŒ
 	if (!processor || !mp4_path || !gif_path || !config) {
-		std::cerr << "AVProcessor_Mp4ToGif£º²ÎÊıÎª¿ÕÖ¸Õë" << std::endl;
+		std::cerr << "AVProcessor_Mp4ToGifï¼šå‚æ•°ä¸ºç©ºæŒ‡é’ˆ" << std::endl;
 		return -1;
 	}
 
-	// 2. ÀàĞÍ×ª»»
+	// 2. ç±»å‹è½¬æ¢
 	AVProcessor* proc = static_cast<AVProcessor*>(processor);
 
-	// 3. µ÷ÓÃ³ÉÔ±º¯Êı£¬×ª»»·µ»ØÖµ
+	// 3. è°ƒç”¨æˆå‘˜å‡½æ•°ï¼Œè½¬æ¢è¿”å›å€¼
 	bool ret = proc->mp4ToGif(std::string(mp4_path), std::string(gif_path), *config);
 	return ret ? 0 : -1;
 }
 
 extern "C" FORMATCHANGE_API int AVProcessor_ImgSeqToMp4(void* processor, const char* output_path, const AVConfig* config)
 {
-	// 1. ¿ÕÖ¸ÕëĞ£Ñé
+	// 1. ç©ºæŒ‡é’ˆæ ¡éªŒ
 	if (!processor || !output_path || !config) {
-		std::cerr << "AVProcessor_ImgSeqToMp4£º²ÎÊıÎª¿ÕÖ¸Õë" << std::endl;
+		std::cerr << "AVProcessor_ImgSeqToMp4ï¼šå‚æ•°ä¸ºç©ºæŒ‡é’ˆ" << std::endl;
 		return -1;
 	}
 
-	// 2. ÀàĞÍ×ª»»
+	// 2. ç±»å‹è½¬æ¢
 	AVProcessor* proc = static_cast<AVProcessor*>(processor);
 
-	// 3. µ÷ÓÃ³ÉÔ±º¯Êı£¬×ª»»·µ»ØÖµ
+	// 3. è°ƒç”¨æˆå‘˜å‡½æ•°ï¼Œè½¬æ¢è¿”å›å€¼
 	bool ret = proc->imgSeqToMp4(std::string(output_path), *config);
 	return ret ? 0 : -1;
 }

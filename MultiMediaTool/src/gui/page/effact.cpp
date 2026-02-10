@@ -37,7 +37,7 @@ void effact::initUI()
 {
     setupCheckBoxConnections();
 
-    // ³õÊ¼»¯¸ñÊ½×ª»»ÏÂÀ­¿ò
+    // åˆå§‹åŒ–æ ¼å¼è½¬æ¢ä¸‹æ‹‰æ¡†
     QStringList srcFormats = {"MP4", "AVI", "MKV", "MOV", "TS"};
     QStringList dstFormats = {"MP4", "AVI", "MKV", "MOV", "GIF"};
     ui->comboBoxSrc->addItems(srcFormats);
@@ -49,7 +49,7 @@ void effact::initUI()
 
 void effact::setupCheckBoxConnections()
 {
-    // Á¬½ÓËùÓĞ¸´Ñ¡¿òµÄclickedĞÅºÅµ½Í¬Ò»¸ö²Ûº¯Êı
+    // è¿æ¥æ‰€æœ‰å¤é€‰æ¡†çš„clickedä¿¡å·åˆ°åŒä¸€ä¸ªæ§½å‡½æ•°
     connect(ui->gray, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
     connect(ui->TextWatermark, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
     connect(ui->customOilPaintApprox, &QCheckBox::clicked, this, &effact::onCheckBoxClicked);
@@ -68,7 +68,7 @@ void effact::onCheckBoxClicked()
     if (clickedBox) {
         ensureSingleSelection(clickedBox);
         
-        // ¸ù¾İÑ¡ÖĞµÄ¸´Ñ¡¿òÈ·¶¨¶ÔÓ¦µÄfuncÃ¶¾ÙÖµ
+        // æ ¹æ®é€‰ä¸­çš„å¤é€‰æ¡†ç¡®å®šå¯¹åº”çš„funcæšä¸¾å€¼
 
         if (clickedBox == ui->gray) {
             effectType = grayImage;
@@ -99,7 +99,7 @@ void effact::onCheckBoxClicked()
 void effact::ensureSingleSelection(QCheckBox* checkedBox)
 {
     if (checkedBox->isChecked()) {
-        // Èç¹ûµ±Ç°¸´Ñ¡¿ò±»Ñ¡ÖĞ£¬È¡ÏûÆäËûËùÓĞ¸´Ñ¡¿òµÄÑ¡ÖĞ×´Ì¬
+        // å¦‚æœå½“å‰å¤é€‰æ¡†è¢«é€‰ä¸­ï¼Œå–æ¶ˆå…¶ä»–æ‰€æœ‰å¤é€‰æ¡†çš„é€‰ä¸­çŠ¶æ€
         QList<QCheckBox*> checkBoxes = {
             ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
@@ -117,24 +117,24 @@ void effact::ensureSingleSelection(QCheckBox* checkedBox)
 void effact::on_ok_clicked()
 {
     if (!trans) {
-        qDebug() << "´íÎó£º×ª»»Æ÷Î´³õÊ¼»¯¡£ÇëÏÈµã»÷'µ¼³ö'Ñ¡ÔñÂ·¾¶¡£";
+        qDebug() << "é”™è¯¯ï¼šè½¬æ¢å™¨æœªåˆå§‹åŒ–ã€‚è¯·å…ˆç‚¹å‡»'å¯¼å‡º'é€‰æ‹©è·¯å¾„ã€‚";
         return;
     }
 
-    // ½ûÓÃ°´Å¥·ÀÖ¹ÖØ¸´µã»÷
+    // ç¦ç”¨æŒ‰é’®é˜²æ­¢é‡å¤ç‚¹å‡»
     ui->ok->setEnabled(false);
     
-    qDebug() << "¿ªÊ¼´¦ÀíÊÓÆµ...";
+    qDebug() << "å¼€å§‹å¤„ç†è§†é¢‘...";
     int processRet = VideoTrans_Process(trans, effectType);
     
     if (processRet != 0) {
-        qDebug() << "ÊÓÆµ´¦ÀíÊ§°Ü£¬´íÎóÂë:" << processRet;
-        // Èç¹û´¦ÀíÊ§°Ü£¬½¨ÒéÏú»ÙÖØ½¨ÒÔÈ·±£×´Ì¬¸É¾»
+        qDebug() << "è§†é¢‘å¤„ç†å¤±è´¥ï¼Œé”™è¯¯ç :" << processRet;
+        // å¦‚æœå¤„ç†å¤±è´¥ï¼Œå»ºè®®é”€æ¯é‡å»ºä»¥ç¡®ä¿çŠ¶æ€å¹²å‡€
         VideoTrans_Destroy(trans);
         trans = nullptr;
     } else {
-        qDebug() << "ÊÓÆµ´¦ÀíÍê³É£¡";
-        // ´¦Àí³É¹¦ºó£¬ÖØÖÃµ×²ã×´Ì¬µ«±£ÁôÊµÀı£¬·½±ãÏÂ´ÎÖ±½ÓÊ¹ÓÃ
+        qDebug() << "è§†é¢‘å¤„ç†å®Œæˆï¼";
+        // å¤„ç†æˆåŠŸåï¼Œé‡ç½®åº•å±‚çŠ¶æ€ä½†ä¿ç•™å®ä¾‹ï¼Œæ–¹ä¾¿ä¸‹æ¬¡ç›´æ¥ä½¿ç”¨
         VideoTrans_Reset(trans); 
     }
 
@@ -154,20 +154,20 @@ void effact::on_addFile_clicked()
 void effact::on_exportFile_clicked()
 {
     if (file.isEmpty()) {
-        qDebug() << "Î´Ñ¡ÔñÊäÈëÎÄ¼ş";
+        qDebug() << "æœªé€‰æ‹©è¾“å…¥æ–‡ä»¶";
         return;
     }
 
-    // Ê¹ÓÃ getSaveFileName ÔÊĞíÓÃ»§Ö¸¶¨ÎÄ¼şÃûºÍÎ»ÖÃ£¬±ÜÃâÄ¿Â¼Æ´½Ó´íÎó
-    outFile = QFileDialog::getSaveFileName(this, "Ñ¡ÔñÊä³öÎÄ¼ş", QDir::currentPath(), "ÊÓÆµÎÄ¼ş (*.mp4)");
+    // ä½¿ç”¨ getSaveFileName å…è®¸ç”¨æˆ·æŒ‡å®šæ–‡ä»¶åå’Œä½ç½®ï¼Œé¿å…ç›®å½•æ‹¼æ¥é”™è¯¯
+    outFile = QFileDialog::getSaveFileName(this, "é€‰æ‹©è¾“å‡ºæ–‡ä»¶", QDir::currentPath(), "è§†é¢‘æ–‡ä»¶ (*.mp4)");
     
     if(outFile.isEmpty()){
-        qDebug() << "Î´Ñ¡ÔñÊä³öÎÄ¼ş";
+        qDebug() << "æœªé€‰æ‹©è¾“å‡ºæ–‡ä»¶";
         return;
     }
 
-    // ×ª»»Îª±¾µØÂ·¾¶²¢È·±£Ê¹ÓÃ UTF-8 ±àÂë´«µİ¸øµ×²ã C ½Ó¿Ú
-    // Ğí¶àµ×²ã¿â£¨Èç FFmpeg£©ÔÚ Windows ÉÏÆÚÍû UTF-8 Â·¾¶
+    // è½¬æ¢ä¸ºæœ¬åœ°è·¯å¾„å¹¶ç¡®ä¿ä½¿ç”¨ UTF-8 ç¼–ç ä¼ é€’ç»™åº•å±‚ C æ¥å£
+    // è®¸å¤šåº•å±‚åº“ï¼ˆå¦‚ FFmpegï¼‰åœ¨ Windows ä¸ŠæœŸæœ› UTF-8 è·¯å¾„
     std::string utf8Input = QDir::toNativeSeparators(file).toUtf8().constData();
     std::string utf8Output = QDir::toNativeSeparators(outFile).toUtf8().constData();
 
@@ -176,39 +176,39 @@ void effact::on_exportFile_clicked()
     }
 
     if (!trans) {
-        qDebug() << "ÎŞ·¨´´½¨ÊÓÆµ×ª»»Æ÷ÊµÀı";
+        qDebug() << "æ— æ³•åˆ›å»ºè§†é¢‘è½¬æ¢å™¨å®ä¾‹";
         return;
     }
 
-    // ÔÚ¶ÀÁ¢Ïß³ÌÖĞ³õÊ¼»¯£¬±ÜÃâSTA³åÍ»
+    // åœ¨ç‹¬ç«‹çº¿ç¨‹ä¸­åˆå§‹åŒ–ï¼Œé¿å…STAå†²çª
     QFuture<int> future = QtConcurrent::run([this, &utf8Input, &utf8Output]() -> int {
         return VideoTrans_Initialize(trans, utf8Input.c_str(), utf8Output.c_str());
     });
     
-    // µÈ´ı³õÊ¼»¯Íê³É
+    // ç­‰å¾…åˆå§‹åŒ–å®Œæˆ
     int initRet = future.result();
     
-    // Èç¹ûÒòÎª·Ö±æÂÊ·ÇÅ¼Êıµ¼ÖÂÊ§°Ü (-4)£¬³¢ÊÔ»ñÈ¡³ß´ç²¢¹æÕû£¨Èç¹ûµ×²ãÖ§³Ö»ñÈ¡ÊôĞÔ£©
-    // ×¢Òâ£ºÄ¿Ç°µÄµ×²ãÂß¼­ÔÚ Initialize Ê§°ÜÊ±»áÇåÀí×ÊÔ´£¬ËùÒÔÕâÀïÎÒÃÇÖ±½ÓÌáÊ¾ÓÃ»§
+    // å¦‚æœå› ä¸ºåˆ†è¾¨ç‡éå¶æ•°å¯¼è‡´å¤±è´¥ (-4)ï¼Œå°è¯•è·å–å°ºå¯¸å¹¶è§„æ•´ï¼ˆå¦‚æœåº•å±‚æ”¯æŒè·å–å±æ€§ï¼‰
+    // æ³¨æ„ï¼šç›®å‰çš„åº•å±‚é€»è¾‘åœ¨ Initialize å¤±è´¥æ—¶ä¼šæ¸…ç†èµ„æºï¼Œæ‰€ä»¥è¿™é‡Œæˆ‘ä»¬ç›´æ¥æç¤ºç”¨æˆ·
     if (initRet != 0) {
-        qDebug() << "³õÊ¼»¯Ê§°Ü£¬´íÎóÂë:" << initRet;
+        qDebug() << "åˆå§‹åŒ–å¤±è´¥ï¼Œé”™è¯¯ç :" << initRet;
         if (initRet == -4) {
-            qDebug() << "ÌáÊ¾£º±àÂëÆ÷ÒªÇóÊÓÆµ¿í¶ÈºÍ¸ß¶È±ØĞëÊÇÅ¼Êı¡£Çë¼ì²éÊäÈëÊÓÆµ·Ö±æÂÊ¡£";
+            qDebug() << "æç¤ºï¼šç¼–ç å™¨è¦æ±‚è§†é¢‘å®½åº¦å’Œé«˜åº¦å¿…é¡»æ˜¯å¶æ•°ã€‚è¯·æ£€æŸ¥è¾“å…¥è§†é¢‘åˆ†è¾¨ç‡ã€‚";
         }
         VideoTrans_Destroy(trans);
         trans = nullptr;
     } else {
-        qDebug() << "³õÊ¼»¯³É¹¦";
+        qDebug() << "åˆå§‹åŒ–æˆåŠŸ";
     }
 }
 
 void effact::on_btnImport_clicked()
 {
-    m_importPath = QFileDialog::getOpenFileName(this, "Ñ¡ÔñÒª×ª»»µÄÎÄ¼ş", "", "Video Files (*.mp4 *.avi *.mkv *.mov *.ts);;All Files (*.*)");
+    m_importPath = QFileDialog::getOpenFileName(this, "é€‰æ‹©è¦è½¬æ¢çš„æ–‡ä»¶", "", "Video Files (*.mp4 *.avi *.mkv *.mov *.ts);;All Files (*.*)");
     if (!m_importPath.isEmpty()) {
         ui->lineEdit_Path->setText(m_importPath);
         
-        // ×Ô¶¯Ê¶±ğÔ´¸ñÊ½
+        // è‡ªåŠ¨è¯†åˆ«æºæ ¼å¼
         QString ext = QFileInfo(m_importPath).suffix().toUpper();
         int index = ui->comboBoxSrc->findText(ext);
         if (index != -1) {
@@ -220,57 +220,97 @@ void effact::on_btnImport_clicked()
 void effact::on_comboBoxSrc_currentIndexChanged(int index)
 {
     Q_UNUSED(index);
-    // ÕâÀï¿ÉÒÔ¸ù¾İÔ´¸ñÊ½¶¯Ì¬µ÷ÕûÄ¿±ê¸ñÊ½ÁĞ±í£¬Ôİ²»ÊµÏÖ
+    // è¿™é‡Œå¯ä»¥æ ¹æ®æºæ ¼å¼åŠ¨æ€è°ƒæ•´ç›®æ ‡æ ¼å¼åˆ—è¡¨ï¼Œæš‚ä¸å®ç°
 }
 
 void effact::on_pushButton_clicked()
 {
     if (m_importPath.isEmpty()) {
-        qDebug() << "Î´Ñ¡ÔñÊäÈëÎÄ¼ş";
+        qDebug() << "æœªé€‰æ‹©è¾“å…¥æ–‡ä»¶";
+        QMessageBox::warning(this, "é”™è¯¯", "æœªé€‰æ‹©è¾“å…¥æ–‡ä»¶ï¼Œè¯·å…ˆé€‰æ‹©è¦è½¬æ¢çš„æ–‡ä»¶ã€‚");
         return;
     }
 
     if (!m_processor) {
-        qDebug() << "´¦ÀíÆ÷Î´³õÊ¼»¯";
+        qDebug() << "å¤„ç†å™¨æœªåˆå§‹åŒ–";
+        QMessageBox::warning(this, "é”™è¯¯", "å¤„ç†å™¨æœªåˆå§‹åŒ–ï¼Œè¯·é‡æ–°å¯åŠ¨ç¨‹åºæˆ–æ£€æŸ¥æ’ä»¶ã€‚");
         return;
     }
 
     QString srcFormat = ui->comboBoxSrc->currentText().toLower();
     QString dstFormat = ui->comboBoxDst->currentText().toLower();
     
-    QString outPath = QFileDialog::getSaveFileName(this, "Ñ¡ÔñÊä³öÂ·¾¶", QDir::currentPath(), 
+    QString outPath = QFileDialog::getSaveFileName(this, "é€‰æ‹©è¾“å‡ºè·¯å¾„", QDir::currentPath(), 
                                                   QString("Video Files (*.%1)").arg(dstFormat));
     
     if (outPath.isEmpty()) return;
 
     ui->pushButton->setEnabled(false);
-    qDebug() << "¿ªÊ¼×ª»»: " << srcFormat << " -> " << dstFormat;
+    qDebug() << "å¼€å§‹è½¬æ¢: " << srcFormat << " -> " << dstFormat;
 
     std::string input = QDir::toNativeSeparators(m_importPath).toUtf8().constData();
     std::string output = QDir::toNativeSeparators(outPath).toUtf8().constData();
 
-    QFuture<int> future = QtConcurrent::run([this, input, output, dstFormat]() -> int {
-        if (dstFormat == "gif") {
-            AVConfig config;
-            config.width = 480; // Ä¬ÈÏËõ·Åµ½ 480 ¿í
-            config.frame_rate = 10;
-            return AVProcessor_Mp4ToGif(m_processor, input.c_str(), output.c_str(), &config);
+    // ä½¿ç”¨ QFutureWatcher è¿›è¡Œå¼‚æ­¥å¤„ç†ï¼Œé¿å…é˜»å¡UI
+    QFutureWatcher<int>* watcher = new QFutureWatcher<int>(this);
+    
+    connect(watcher, &QFutureWatcher<int>::finished, this, [this, watcher, outPath, srcFormat, dstFormat]() {
+        int result = watcher->result();
+        
+        if (result == 0) {
+            qDebug() << "è½¬æ¢æˆåŠŸ";
+            QMessageBox::information(this, "æˆåŠŸ", QString("æ–‡ä»¶è½¬æ¢æˆåŠŸï¼\nè¾“å‡ºæ–‡ä»¶: %1").arg(outPath));
         } else {
-            // ¼òµ¥×ª·â×°
-            return AVProcessor_Remux(m_processor, input.c_str(), output.c_str());
+            qDebug() << "è½¬æ¢å¤±è´¥ï¼Œé”™è¯¯ç : " << result;
+            
+            // æ ¹æ®é”™è¯¯ç æä¾›æ›´å…·ä½“çš„é”™è¯¯ä¿¡æ¯
+            QString errorMsg;
+            switch (result) {
+                case -1:
+                    errorMsg = "è½¬å°è£…å¤±è´¥ï¼šå¯èƒ½æ˜¯æ–‡ä»¶æ ¼å¼ä¸æ”¯æŒæˆ–æ–‡ä»¶æŸåã€‚\nå»ºè®®ï¼š\n1. æ£€æŸ¥è¾“å…¥æ–‡ä»¶æ˜¯å¦å®Œæ•´\n2. å°è¯•è½¬æ¢ä¸ºå…¶ä»–æ ¼å¼\n3. ä½¿ç”¨ffmpegå‘½ä»¤è¡Œå·¥å…·è¯Šæ–­";
+                    break;
+                case -2:
+                    errorMsg = "å‚æ•°é”™è¯¯ï¼šè¾“å…¥å‚æ•°æ— æ•ˆã€‚";
+                    break;
+                case -3:
+                    errorMsg = "å†…å­˜ä¸è¶³ï¼šç³»ç»Ÿèµ„æºä¸å¤Ÿã€‚";
+                    break;
+                case -4:
+                    errorMsg = "ç¼–ç å™¨é”™è¯¯ï¼šè§†é¢‘å‚æ•°ä¸å…¼å®¹ã€‚\nå»ºè®®ï¼šæ£€æŸ¥è§†é¢‘åˆ†è¾¨ç‡æ˜¯å¦ä¸ºå¶æ•°ã€‚";
+                    break;
+                default:
+                    errorMsg = QString("æœªçŸ¥é”™è¯¯ï¼Œé”™è¯¯ç : %1\nå»ºè®®ï¼šæ£€æŸ¥æ–‡ä»¶æƒé™å’Œç£ç›˜ç©ºé—´").arg(result);
+            }
+            
+            QMessageBox::critical(this, "è½¬æ¢å¤±è´¥", QString("%1\n\n%2 -> %3")
+                                 .arg(errorMsg)
+                                 .arg(srcFormat.toUpper())
+                                 .arg(dstFormat.toUpper()));
         }
+
+        ui->pushButton->setEnabled(true);
+        watcher->deleteLater();
     });
 
-    // Êµ¼ÊÏîÄ¿ÖĞ½¨ÒéÊ¹ÓÃ QFutureWatcher À´·Ç×èÈûµÈ´ı£¬ÕâÀï¼ò»¯´¦Àí
-    int result = future.result();
+    // åœ¨ç‹¬ç«‹çº¿ç¨‹ä¸­æ‰§è¡Œè½¬æ¢
+    QFuture<int> future = QtConcurrent::run([this, input, output, dstFormat]() -> int {
+        try {
+            if (dstFormat == "gif") {
+                AVConfig config;
+                config.width = 480; // é»˜è®¤ç¼©æ”¾åˆ° 480 å®½
+                config.frame_rate = 10;
+                return AVProcessor_Mp4ToGif(m_processor, input.c_str(), output.c_str(), &config);
+            } else {
+                // ç®€å•è½¬å°è£…
+                return AVProcessor_Remux(m_processor, input.c_str(), output.c_str());
+            }
+        } catch (...) {
+            qDebug() << "è½¬æ¢è¿‡ç¨‹ä¸­å‘ç”Ÿå¼‚å¸¸";
+            return -999; // è‡ªå®šä¹‰å¼‚å¸¸é”™è¯¯ç 
+        }
+    });
     
-    if (result == 0) {
-        qDebug() << "×ª»»³É¹¦";
-    } else {
-        qDebug() << "×ª»»Ê§°Ü£¬´íÎóÂë: " << result;
-    }
-
-    ui->pushButton->setEnabled(true);
+    watcher->setFuture(future);
 }
 
 

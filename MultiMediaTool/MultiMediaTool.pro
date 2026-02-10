@@ -68,12 +68,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE -lole32 -lPsapi -lDbghelp
 
 
-INCLUDEPATH += $$PWD/../OpenCVTools $$PWD/../formatChange
-DEPENDPATH += $$PWD/../OpenCVTools $$PWD/../formatChange
+INCLUDEPATH += $$PWD/../OpenCVTools $$PWD/../formatChange $$PWD/../curlAli
+DEPENDPATH += $$PWD/../OpenCVTools $$PWD/../formatChange $$PWD/../curlAli
 
 RESOURCES += \
     icon.qrc
 
-unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE
+unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE -lCURLALI
 
 DESTDIR = ../bin
