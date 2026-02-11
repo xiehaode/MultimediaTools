@@ -44,7 +44,7 @@ void effact::initUI()
     QStringList dstFormats = {"MP4", "AVI", "MKV", "MOV", "GIF"};
     ui->comboBoxSrc->addItems(srcFormats);
     ui->comboBoxDst->addItems(dstFormats);
-    
+
     ui->comboBoxSrc->setCurrentText("MP4");
     ui->comboBoxDst->setCurrentText("MP4");
 }
@@ -69,7 +69,7 @@ void effact::onCheckBoxClicked()
     QCheckBox* clickedBox = qobject_cast<QCheckBox*>(sender());
     if (clickedBox) {
         ensureSingleSelection(clickedBox);
-        
+
         // 根据选中的复选框确定对应的func枚举值
 
         if (clickedBox == ui->gray) {
@@ -93,7 +93,7 @@ void effact::onCheckBoxClicked()
         } else if (clickedBox == ui->colorinvert) {
             effectType = invertImage;
         }
-        
+
 
     }
 }
@@ -107,7 +107,7 @@ void effact::ensureSingleSelection(QCheckBox* checkedBox)
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
             ui->whitening2, ui->colorinvert
         };
-        
+
         for (QCheckBox* box : checkBoxes) {
             if (box != checkedBox) {
                 box->setChecked(false);
@@ -118,73 +118,29 @@ void effact::ensureSingleSelection(QCheckBox* checkedBox)
 
 void effact::on_ok_clicked()
 {
-    if (file.isEmpty()) {
-        QMessageBox::warning(this, "错误", "请先选择要处理的视频文件。");
-        return;
-    }
-
-    if (outFile.isEmpty()) {
-        QMessageBox::warning(this, "错误", "请先点击'导出'按钮选择输出路径。");
+    if (!trans) {
+        qDebug() << "错误：转换器未初始化。请先点击'导出'选择路径。";
         return;
     }
 
     // 禁用按钮防止重复点击
     ui->ok->setEnabled(false);
-    
+
     qDebug() << "开始处理视频...";
-    
-    // ? 核心修复：为特效处理创建独立的 videoTrans 实例
-    void* trans_copy = VideoTrans_Create();
-    if (!trans_copy) {
-        QMessageBox::critical(this, "错误", "无法创建视频处理器副本");
-        ui->ok->setEnabled(true);
-        return;
+    int processRet = VideoTrans_Process(trans, effectType);
+
+    if (processRet != 0) {
+        qDebug() << "视频处理失败，错误码:" << processRet;
+        // 如果处理失败，建议销毁重建以确保状态干净
+        VideoTrans_Destroy(trans);
+        trans = nullptr;
+    } else {
+        qDebug() << "视频处理完成！";
+        // 处理成功后，重置底层状态但保留实例，方便下次直接使用
+        VideoTrans_Reset(trans);
     }
 
-    // 异步处理视频特效，避免UI阻塞
-    QFutureWatcher<int>* watcher = new QFutureWatcher<int>(this);
-    
-    connect(watcher, &QFutureWatcher<int>::finished, this, [this, watcher, trans_copy]() {
-        int processRet = watcher->result();
-        
-        // ? 确保异步任务完成后销毁副本
-        VideoTrans_Destroy(trans_copy);
-        
-        if (processRet == 0) {
-            QMessageBox::information(this, "成功", "视频特效处理完成！");
-            qDebug() << "视频处理完成！";
-        } else {
-            QString errorMsg = QString("视频处理失败，错误码: %1").arg(processRet);
-            QMessageBox::critical(this, "处理失败", errorMsg);
-            qDebug() << "视频处理失败，错误码:" << processRet;
-        }
-
-        ui->ok->setEnabled(true);
-        watcher->deleteLater();
-    });
-
-    // ? 使用独立副本进行异步特效处理
-    QFuture<int> future = QtConcurrent::run([this, trans_copy]() -> int {
-        try {
-            // 初始化副本
-            std::string input = QDir::toNativeSeparators(file).toUtf8().constData();
-            std::string output = QDir::toNativeSeparators(outFile).toUtf8().constData();
-            
-            int initRet = VideoTrans_Initialize(trans_copy, input.c_str(), output.c_str());
-            if (initRet != 0) {
-                qDebug() << "副本初始化失败，错误码:" << initRet;
-                return initRet;
-            }
-            
-            // 执行特效处理
-            return VideoTrans_Process(trans_copy, effectType);
-        } catch (...) {
-            qDebug() << "视频特效处理过程中发生异常";
-            return -999;
-        }
-    });
-    
-    watcher->setFuture(future);
+    ui->ok->setEnabled(true);
 }
 
 
@@ -206,7 +162,7 @@ void effact::on_exportFile_clicked()
 
     // 使用 getSaveFileName 允许用户指定文件名和位置，避免目录拼接错误
     outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "视频文件 (*.mp4)");
-    
+
     if(outFile.isEmpty()){
         qDebug() << "未选择输出文件";
         return;
@@ -230,10 +186,10 @@ void effact::on_exportFile_clicked()
     QFuture<int> future = QtConcurrent::run([this, &utf8Input, &utf8Output]() -> int {
         return VideoTrans_Initialize(trans, utf8Input.c_str(), utf8Output.c_str());
     });
-    
+
     // 等待初始化完成
     int initRet = future.result();
-    
+
     // 如果因为分辨率非偶数导致失败 (-4)，尝试获取尺寸并规整（如果底层支持获取属性）
     // 注意：目前的底层逻辑在 Initialize 失败时会清理资源，所以这里我们直接提示用户
     if (initRet != 0) {
@@ -253,7 +209,7 @@ void effact::on_btnImport_clicked()
     m_importPath = QFileDialog::getOpenFileName(this, "选择要转换的文件", "", "Video Files (*.mp4 *.avi *.mkv *.mov *.ts);;All Files (*.*)");
     if (!m_importPath.isEmpty()) {
         ui->lineEdit_Path->setText(m_importPath);
-        
+
         // 自动识别源格式
         QString ext = QFileInfo(m_importPath).suffix().toUpper();
         int index = ui->comboBoxSrc->findText(ext);
@@ -278,15 +234,15 @@ void effact::on_pushButton_clicked()
 
     QString srcFormat = ui->comboBoxSrc->currentText().toLower();
     QString dstFormat = ui->comboBoxDst->currentText().toLower();
-    
-    QString outPath = QFileDialog::getSaveFileName(this, "选择输出路径", 
-                                                  QDir::currentPath(), 
+
+    QString outPath = QFileDialog::getSaveFileName(this, "选择输出路径",
+                                                  QDir::currentPath(),
                                                   QString("Video Files (*.%1)").arg(dstFormat));
-    
+
     if (outPath.isEmpty()) return;
 
     ui->pushButton->setEnabled(false);
-    
+
     std::string input = QDir::toNativeSeparators(m_importPath).toUtf8().constData();
     std::string output = QDir::toNativeSeparators(outPath).toUtf8().constData();
 
@@ -299,15 +255,15 @@ void effact::on_pushButton_clicked()
     }
 
     QFutureWatcher<int>* watcher = new QFutureWatcher<int>(this);
-    
+
     connect(watcher, &QFutureWatcher<int>::finished, this, [this, watcher, outPath, srcFormat, dstFormat, processor_copy]() {
         int result = watcher->result();
-        
+
         //  确保异步任务完成后销毁副本
         AVProcessor_Destroy(processor_copy);
-        
+
         if (result == 0) {
-            QMessageBox::information(this, gbk_to_utf8("成功").c_str(), QString(gbk_to_utf8("文件转换成功！\n输出文件: %1").c_str()).arg(outPath));
+            QMessageBox::information(this, gbk_to_utf8("成功").c_str(), QString(gbk_to_utf8("成功").c_str()).arg(outPath));
         } else {
             QString errorMsg = QString("转换失败，错误码: %1").arg(result);
             QMessageBox::critical(this, "转换失败", errorMsg);
@@ -333,7 +289,7 @@ void effact::on_pushButton_clicked()
             return -999;
         }
     });
-    
+
     watcher->setFuture(future);
 }
 

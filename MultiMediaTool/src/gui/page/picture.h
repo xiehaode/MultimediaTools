@@ -8,6 +8,8 @@
 #include <QTimer>
 #include "../../OpenCVTools/OpenCVFFMpegTools.h"
 
+
+
 namespace Ui {
 class picture;
 }
@@ -22,12 +24,11 @@ public:
     void initUI();
 
 private slots:
-    void onCheckBoxClicked();
+    // 改用stateChanged信号（更稳定）
+    void onCheckBoxStateChanged(int state);
     void on_ok_clicked();
     void on_addFile_clicked();
     void on_exportFile_clicked();
-
-
     void showLoading();
     void hideLoading();
 
@@ -36,13 +37,13 @@ private:
     QString file;
     QString outFile;
     void *translator = nullptr;
-    func effectType = noAction;
+    func effectType = noAction;  // 确保类型统一
     bool isProcessing;
-    
+
     // 加载动画
     QLabel *loadingLabel;
     QMovie *loadingMovie;
-    
+
     void setupCheckBoxConnections();
     void ensureSingleSelection(QCheckBox* checkedBox);
 };

@@ -158,35 +158,29 @@
        </layout>
       </widget>
      </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_Center">
      <item>
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
+      <widget class="QToolButton" name="exportFile">
+       <property name="minimumSize">
         <size>
-         <width>20</width>
-         <height>40</height>
+         <width>120</width>
+         <height>80</height>
         </size>
        </property>
-      </spacer>
+       <property name="text">
+        <string>输出位置</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../../../icon.qrc">
+         <normaloff>:/rc/export.svg</normaloff>:/rc/export.svg</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QToolButton" name="addFile">
@@ -200,28 +194,8 @@
         <string>待处理文件</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="../../../icon.qrc">
          <normaloff>:/rc/addFile.svg</normaloff>:/rc/addFile.svg</iconset>
-       </property>
-       <property name="toolButtonStyle">
-        <enum>Qt::ToolButtonTextUnderIcon</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="exportFile">
-       <property name="minimumSize">
-        <size>
-         <width>120</width>
-         <height>80</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>输出位置</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:/rc/export.svg</normaloff>:/rc/export.svg</iconset>
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextUnderIcon</enum>
@@ -245,19 +219,6 @@
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_Right">
-     <item>
-      <spacer name="verticalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item>
       <widget class="QPushButton" name="ok">
        <property name="minimumSize">
@@ -301,6 +262,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../icon.qrc"/>
+ </resources>
  <connections/>
 </ui>

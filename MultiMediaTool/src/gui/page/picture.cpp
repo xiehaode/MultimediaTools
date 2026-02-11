@@ -7,11 +7,15 @@
 #include <QtConcurrent>
 
 picture::picture(QWidget *parent) :
-    ui(new Ui::picture), isProcessing(false)
+    QWidget(parent),  // 补充父类初始化
+    ui(new Ui::picture),
+    isProcessing(false),
+    loadingLabel(nullptr),
+    loadingMovie(nullptr)
 {
     ui->setupUi(this);
     initUI();
-    
+
     // 初始化加载动画
     loadingLabel = new QLabel(this);
     loadingMovie = new QMovie(":/res/loading.gif");
@@ -20,10 +24,10 @@ picture::picture(QWidget *parent) :
     loadingLabel->setAttribute(Qt::WA_TranslucentBackground);
     loadingLabel->setAlignment(Qt::AlignCenter);
     loadingLabel->setFixedSize(200, 200);
-    
+
     // 设置加载动画样式
     loadingLabel->setStyleSheet("QLabel { background-color: rgba(0, 0, 0, 150); border-radius: 10px; }");
-    
+
     translator = CvTranslator_Create();
     if (!translator) {
         qDebug() << "CvTranslator_Create failed";
@@ -35,6 +39,8 @@ picture::~picture()
     if (translator) {
         CvTranslator_Destroy(translator);
     }
+    delete loadingMovie;  // 释放资源
+    delete loadingLabel;
     delete ui;
 }
 
@@ -44,62 +50,71 @@ void picture::initUI()
     ui->paramGroupBox->hide();
 }
 
-
 void picture::setupCheckBoxConnections()
 {
-    // 连接所有复选框的点击信号
+    // 连接所有复选框的stateChanged信号（替代clicked）
     QList<QCheckBox*> checkBoxes = {
         ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
         ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
         ui->whitening2, ui->colorinvert
     };
-    
+
     for (QCheckBox* box : checkBoxes) {
-        connect(box, &QCheckBox::clicked, this, &picture::onCheckBoxClicked);
+        // 关键：改用stateChanged信号，确保勾选状态变化能被正确捕获
+        connect(box, &QCheckBox::stateChanged, this, &picture::onCheckBoxStateChanged);
     }
-    
-    // 连接按钮信号 - 使用 QAbstractButton::clicked 确保兼容 QToolButton 和 QPushButton
+
+    // 连接按钮信号
     connect(ui->addFile, &QAbstractButton::clicked, this, &picture::on_addFile_clicked);
     connect(ui->exportFile, &QAbstractButton::clicked, this, &picture::on_exportFile_clicked);
     connect(ui->ok, &QAbstractButton::clicked, this, &picture::on_ok_clicked);
 
     connect(ui->cancel, &QAbstractButton::clicked, [this]() {
         // 取消逻辑：重置所有状态
-        for (QCheckBox* box : {
+        QList<QCheckBox*> checkBoxes = {
             ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
             ui->whitening2, ui->colorinvert
-        }) {
+        };
+        for (QCheckBox* box : checkBoxes) {
             box->setChecked(false);
         }
         effectType = noAction;
         ui->paramGroupBox->hide();
         file.clear();
+        outFile.clear();
     });
 }
 
-void picture::onCheckBoxClicked()
+// 重构复选框状态变化处理函数（核心修复）
+void picture::onCheckBoxStateChanged(int state)
 {
     QCheckBox* senderBox = qobject_cast<QCheckBox*>(sender());
     if (!senderBox) return;
-    
-    // 如果是取消勾选
-    if (!senderBox->isChecked()) {
+
+    // 未勾选状态
+    if (state == Qt::Unchecked) {
         effectType = noAction;
         ui->paramGroupBox->hide();
+        qDebug() << "取消勾选：" << senderBox->objectName(); // 调试：打印取消的复选框
         return;
     }
-    
-    ensureSingleSelection(senderBox);
-    
-    // 隐藏参数面板，除非选中的是需要参数的特效
+
+    // 勾选状态：先确保单选
+    //ensureSingleSelection(senderBox);
+
+    // 隐藏参数面板（默认）
     ui->paramGroupBox->hide();
-    
-    // 设置对应的特效类型
+
+    // 设置对应的特效类型 + 打印调试信息（确认赋值生效）
+    qDebug() << "勾选：" << senderBox->objectName();
     if (senderBox == ui->gray) {
         effectType = grayImage;
+        // 可选：给灰度功能加个UI反馈（比如状态栏提示）
+        qDebug() << "选中灰度效果";
     } else if (senderBox == ui->TextWatermark) {
         effectType = addTextWatermark;
+        qDebug() << "选中文字水印效果";
     } else if (senderBox == ui->customOilPaintApprox) {
         effectType = customOilPaintApprox;
         ui->paramGroupBox->show();
@@ -109,6 +124,7 @@ void picture::onCheckBoxClicked()
         ui->param2SpinBox->setValue(1.0);
         ui->param2Label->show();
         ui->param2SpinBox->show();
+        qDebug() << "选中自定义油画效果，显示参数面板";
     } else if (senderBox == ui->OilPainting2) {
         effectType = applyOilPainting;
         ui->paramGroupBox->show();
@@ -118,6 +134,7 @@ void picture::onCheckBoxClicked()
         ui->param2SpinBox->setValue(1.0);
         ui->param2Label->show();
         ui->param2SpinBox->show();
+        qDebug() << "选中油画2效果，显示参数面板";
     } else if (senderBox == ui->Mosaic) {
         effectType = applyMosaic;
         ui->paramGroupBox->show();
@@ -125,39 +142,46 @@ void picture::onCheckBoxClicked()
         ui->param1SpinBox->setValue(10);
         ui->param2Label->hide();
         ui->param2SpinBox->hide();
+        qDebug() << "选中马赛克效果，显示参数面板";
     } else if (senderBox == ui->FrostedGlass) {
         effectType = FrostedGlass;
+        qDebug() << "选中磨砂玻璃效果";
     } else if (senderBox == ui->SkinSmoothing) {
         effectType = simpleSkinSmoothing;
+        qDebug() << "选中磨皮效果";
     } else if (senderBox == ui->whitening) {
         effectType = Whitening;
+        qDebug() << "选中美白1效果";
     } else if (senderBox == ui->whitening2) {
         effectType = Whitening2;
+        qDebug() << "选中美白2效果";
     } else if (senderBox == ui->colorinvert) {
         effectType = invertImage;
+        qDebug() << "选中颜色反转效果";
     }
+
+    // 通用UI反馈：打印当前选中的特效类型
+    qDebug() << "当前特效类型：" << effectType;
 }
 
-
-
+// 修复单选逻辑（确保其他复选框被取消）
 void picture::ensureSingleSelection(QCheckBox* checkedBox)
 {
-    if (checkedBox->isChecked()) {
-        // 如果当前复选框被选中，取消其他所有复选框的选中状态
-        QList<QCheckBox*> checkBoxes = {
-            ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
-            ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
-            ui->whitening2, ui->colorinvert
-        };
-        
-        for (QCheckBox* box : checkBoxes) {
-            if (box != checkedBox) {
-                box->setChecked(false);
-            }
+    QList<QCheckBox*> checkBoxes = {
+        ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
+        ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
+        ui->whitening2, ui->colorinvert
+    };
+
+    for (QCheckBox* box : checkBoxes) {
+        if (box != checkedBox && box->isChecked()) {
+            box->setChecked(false);
+            qDebug() << "取消其他复选框：" << box->objectName();
         }
     }
 }
 
+// 以下代码保持不变（on_ok_clicked/on_addFile_clicked/on_exportFile_clicked/showLoading/hideLoading）
 void picture::on_ok_clicked()
 {
     // 检查是否正在处理
@@ -182,7 +206,7 @@ void picture::on_ok_clicked()
     if (outFile.isEmpty()) {
         outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp)");
     }
-    
+
     if (outFile.isEmpty()) {
         qDebug() << "未选择输出文件";
         return;
@@ -190,16 +214,14 @@ void picture::on_ok_clicked()
 
     // 显示加载动画
     showLoading();
-    
+
     // 设置处理标志
     isProcessing = true;
-    
+
     // 禁用按钮
     ui->addFile->setEnabled(false);
     ui->exportFile->setEnabled(false);
     ui->ok->setEnabled(false);
-    // ... 后面代码保持不变 ...
-
 
     if (!translator) {
         translator = CvTranslator_Create();
@@ -223,12 +245,12 @@ void picture::on_ok_clicked()
     // 在独立线程中处理图片
     int p1 = ui->param1SpinBox->value();
     double p2 = ui->param2SpinBox->value();
-    
+
     // 注意：这里必须按值捕获字符串，因为它们是局部变量
     QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
         const char* inputPath = utf8InputStr.c_str();
         const char* outputPath = utf8OutputStr.c_str();
-        
+
         switch (effectType) {
             case grayImage:
                 return CvTranslator_GrayImage_File(translator, inputPath, outputPath);
@@ -254,16 +276,15 @@ void picture::on_ok_clicked()
         }
     });
 
-    
     // 等待处理完成
     bool success = future.result();
-    
+
     hideLoading();
     isProcessing = false;
     ui->addFile->setEnabled(true);
     ui->exportFile->setEnabled(true);
     ui->ok->setEnabled(true);
-    
+
     if (success) {
         QMessageBox::information(this, "成功", "图片处理完成！");
     } else {
@@ -296,16 +317,13 @@ void picture::on_exportFile_clicked()
     }
 }
 
-
-
-
 void picture::showLoading()
 {
     // 设置加载动画在窗口中心
     loadingLabel->move((this->width() - 200) / 2, (this->height() - 200) / 2);
     loadingLabel->show();
     loadingMovie->start();
-    
+
     // 禁用父窗口
     setEnabled(false);
 }
@@ -314,7 +332,7 @@ void picture::hideLoading()
 {
     loadingMovie->stop();
     loadingLabel->hide();
-    
+
     // 启用父窗口
     setEnabled(true);
 }
