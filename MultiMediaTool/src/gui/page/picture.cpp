@@ -5,28 +5,22 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QtConcurrent>
+#include <QApplication>
+#include <QCheckBox>
+#include <QToolButton>
+#include <QSpinBox>
+#include <QFileInfo>
+#include <QPixmap>
 
 picture::picture(QWidget *parent) :
     QWidget(parent),  // 补充父类初始化
     ui(new Ui::picture),
-    isProcessing(false),
-    loadingLabel(nullptr),
-    loadingMovie(nullptr)
+    isProcessing(false)
 {
     ui->setupUi(this);
     initUI();
 
-    // 初始化加载动画
-    loadingLabel = new QLabel(this);
-    loadingMovie = new QMovie(":/res/loading.gif");
-    loadingLabel->setMovie(loadingMovie);
-    loadingLabel->setWindowFlags(Qt::FramelessWindowHint);
-    loadingLabel->setAttribute(Qt::WA_TranslucentBackground);
-    loadingLabel->setAlignment(Qt::AlignCenter);
-    loadingLabel->setFixedSize(200, 200);
 
-    // 设置加载动画样式
-    loadingLabel->setStyleSheet("QLabel { background-color: rgba(0, 0, 0, 150); border-radius: 10px; }");
 
     translator = CvTranslator_Create();
     if (!translator) {
@@ -39,15 +33,29 @@ picture::~picture()
     if (translator) {
         CvTranslator_Destroy(translator);
     }
-    delete loadingMovie;  // 释放资源
-    delete loadingLabel;
     delete ui;
 }
 
 void picture::initUI()
 {
     setupCheckBoxConnections();
-    ui->paramGroupBox->hide();
+    
+    // 设置参数控件的默认值和范围
+    ui->spinBox->setRange(1, 50);
+    ui->spinBox->setValue(5);
+    ui->spinBox->setSuffix(" px");
+    ui->spinBox->setToolTip("参数一：影响效果的强度或范围");
+    
+    ui->spinBox_2->setRange(1, 50);
+    ui->spinBox_2->setValue(3);
+    ui->spinBox_2->setSuffix(" level");
+    ui->spinBox_2->setToolTip("参数二：调整细节程度");
+    
+    // 设置按钮的提示信息
+    ui->addFile->setToolTip("选择要处理的图片文件");
+    ui->exportFile->setToolTip("选择处理后文件的保存位置");
+    ui->ok->setToolTip("开始处理图片");
+    ui->cancel->setToolTip("重置所有选项");
 }
 
 void picture::setupCheckBoxConnections()
@@ -76,73 +84,68 @@ void picture::setupCheckBoxConnections()
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
             ui->whitening2, ui->colorinvert
         };
+        
+        // ? 关键修复：阻止信号循环
         for (QCheckBox* box : checkBoxes) {
+            box->blockSignals(true);
             box->setChecked(false);
+            box->blockSignals(false);
         }
+        
         effectType = noAction;
-        ui->paramGroupBox->hide();
         file.clear();
         outFile.clear();
+        
+        // 重置按钮文本
+        ui->addFile->setText("待处理文件");
+        ui->exportFile->setText("输出位置");
+        
+        // 重置参数控件
+        ui->spinBox->setValue(5);
+        ui->spinBox_2->setValue(3);
     });
 }
 
 // 重构复选框状态变化处理函数（核心修复）
 void picture::onCheckBoxStateChanged(int state)
 {
+    qDebug()<<"you check the CheckBox";
     QCheckBox* senderBox = qobject_cast<QCheckBox*>(sender());
     if (!senderBox) return;
+
+    // 阻止信号循环处理
+    if (senderBox->signalsBlocked()) {
+        return;  // 如果信号被阻止，不处理
+    }
 
     // 未勾选状态
     if (state == Qt::Unchecked) {
         effectType = noAction;
-        ui->paramGroupBox->hide();
-        qDebug() << "取消勾选：" << senderBox->objectName(); // 调试：打印取消的复选框
         return;
     }
 
-    // 勾选状态：先确保单选
-    //ensureSingleSelection(senderBox);
 
-    // 隐藏参数面板（默认）
-    ui->paramGroupBox->hide();
+    ensureSingleSelection(senderBox);
 
     // 设置对应的特效类型 + 打印调试信息（确认赋值生效）
     qDebug() << "勾选：" << senderBox->objectName();
     if (senderBox == ui->gray) {
         effectType = grayImage;
-        // 可选：给灰度功能加个UI反馈（比如状态栏提示）
         qDebug() << "选中灰度效果";
     } else if (senderBox == ui->TextWatermark) {
         effectType = addTextWatermark;
         qDebug() << "选中文字水印效果";
     } else if (senderBox == ui->customOilPaintApprox) {
         effectType = customOilPaintApprox;
-        ui->paramGroupBox->show();
-        ui->param1Label->setText("半径:");
-        ui->param2Label->setText("平滑度:");
-        ui->param1SpinBox->setValue(5);
-        ui->param2SpinBox->setValue(1.0);
-        ui->param2Label->show();
-        ui->param2SpinBox->show();
-        qDebug() << "选中自定义油画效果，显示参数面板";
+
     } else if (senderBox == ui->OilPainting2) {
         effectType = applyOilPainting;
-        ui->paramGroupBox->show();
-        ui->param1Label->setText("半径:");
-        ui->param2Label->setText("平滑度:");
-        ui->param1SpinBox->setValue(5);
-        ui->param2SpinBox->setValue(1.0);
-        ui->param2Label->show();
-        ui->param2SpinBox->show();
-        qDebug() << "选中油画2效果，显示参数面板";
+
     } else if (senderBox == ui->Mosaic) {
         effectType = applyMosaic;
-        ui->paramGroupBox->show();
-        ui->param1Label->setText("块大小:");
-        ui->param1SpinBox->setValue(10);
-        ui->param2Label->hide();
-        ui->param2SpinBox->hide();
-        qDebug() << "选中马赛克效果，显示参数面板";
+
+        senderBox->setFocus();
+        
     } else if (senderBox == ui->FrostedGlass) {
         effectType = FrostedGlass;
         qDebug() << "选中磨砂玻璃效果";
@@ -159,6 +162,9 @@ void picture::onCheckBoxStateChanged(int state)
         effectType = invertImage;
         qDebug() << "选中颜色反转效果";
     }
+    
+    //  强制刷新UI，确保状态立即生效
+    QApplication::processEvents();
 
     // 通用UI反馈：打印当前选中的特效类型
     qDebug() << "当前特效类型：" << effectType;
@@ -173,12 +179,56 @@ void picture::ensureSingleSelection(QCheckBox* checkedBox)
         ui->whitening2, ui->colorinvert
     };
 
+    qDebug() << "ensureSingleSelection 开始执行，当前点击：" << checkedBox->objectName();
+    
     for (QCheckBox* box : checkBoxes) {
-        if (box != checkedBox && box->isChecked()) {
-            box->setChecked(false);
-            qDebug() << "取消其他复选框：" << box->objectName();
+        if (box != checkedBox) {
+            bool wasChecked = box->isChecked();
+            qDebug() << "检查复选框：" << box->objectName() << "，状态：" << wasChecked;
+            
+            if (wasChecked) {
+                //  关键修复：阻止信号循环，避免互相干扰
+                qDebug() << "正在取消：" << box->objectName();
+                box->blockSignals(true);
+                
+                //  强制刷新UI，确保状态更新
+                QApplication::processEvents();
+                
+                box->setChecked(false);
+                
+                //  清除可能的焦点问题
+                if (box->hasFocus()) {
+                    box->clearFocus();
+                }
+                
+                box->blockSignals(false);
+                qDebug() << "已取消：" << box->objectName();
+            }
         }
     }
+    
+    qDebug() << "ensureSingleSelection 执行完成";
+}
+
+bool picture::isValidImageFile(const QString& filePath)
+{
+    QFileInfo fileInfo(filePath);
+    
+    // 检查文件是否存在
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        return false;
+    }
+    
+    // 检查文件扩展名
+    QString suffix = fileInfo.suffix().toLower();
+    QStringList validExtensions = {"png", "jpg", "jpeg", "bmp", "gif", "tiff", "webp"};
+    if (!validExtensions.contains(suffix)) {
+        return false;
+    }
+    
+    // 尝试加载图片验证完整性
+    QPixmap pixmap(filePath);
+    return !pixmap.isNull();
 }
 
 // 以下代码保持不变（on_ok_clicked/on_addFile_clicked/on_exportFile_clicked/showLoading/hideLoading）
@@ -199,6 +249,14 @@ void picture::on_ok_clicked()
     // 检查是否已经选择了输入文件
     if (file.isEmpty()) {
         QMessageBox::information(this, "提示", "请先选择输入文件");
+        return;
+    }
+    
+    // 验证输入文件是否仍然有效
+    if (!QFileInfo::exists(file)) {
+        QMessageBox::warning(this, "错误", "选择的输入文件不存在或已被移动！");
+        file.clear();
+        ui->addFile->setText("待处理文件");
         return;
     }
 
@@ -242,10 +300,10 @@ void picture::on_ok_clicked()
     std::string utf8InputStr = QDir::toNativeSeparators(file).toUtf8().toStdString();
     std::string utf8OutputStr = QDir::toNativeSeparators(outFile).toUtf8().toStdString();
 
-    // 在独立线程中处理图片
-    int p1 = ui->param1SpinBox->value();
-    double p2 = ui->param2SpinBox->value();
-
+    // 获取参数值
+    int p1 = ui->spinBox->value();
+    int p2 = ui->spinBox_2->value();
+    
     // 注意：这里必须按值捕获字符串，因为它们是局部变量
     QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
         const char* inputPath = utf8InputStr.c_str();
@@ -296,11 +354,25 @@ void picture::on_addFile_clicked()
 {
     QString selectedFile = QFileDialog::getOpenFileName(this, "选择图片文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)");
     if (!selectedFile.isEmpty()) {
+        // 验证文件是否为有效图片
+        if (!isValidImageFile(selectedFile)) {
+            QMessageBox::warning(this, "警告", "选择的文件不是有效的图片文件或文件已损坏！");
+            return;
+        }
+        
         file = selectedFile;
         qDebug() << "Selected file:" << file;
+        
+        // 更新按钮文本显示文件名
+        QFileInfo fileInfo(file);
+        QString shortFileName = fileInfo.fileName();
+        if (shortFileName.length() > 20) {
+            shortFileName = shortFileName.left(17) + "...";
+        }
+        ui->addFile->setText("已选择:\n" + shortFileName);
+        
         // 如果没有选择输出路径，自动生成一个
         if (outFile.isEmpty()) {
-            QFileInfo fileInfo(file);
             outFile = fileInfo.absolutePath() + "/" + fileInfo.baseName() + "_processed." + fileInfo.suffix();
         }
     } else {
@@ -314,15 +386,19 @@ void picture::on_exportFile_clicked()
     if (!selectedOutFile.isEmpty()) {
         outFile = selectedOutFile;
         qDebug() << "Output file set to:" << outFile;
+        
+        // 更新按钮文本显示输出文件名
+        QFileInfo fileInfo(outFile);
+        QString shortFileName = fileInfo.fileName();
+        if (shortFileName.length() > 20) {
+            shortFileName = shortFileName.left(17) + "...";
+        }
+        ui->exportFile->setText("输出到:\n" + shortFileName);
     }
 }
 
 void picture::showLoading()
 {
-    // 设置加载动画在窗口中心
-    loadingLabel->move((this->width() - 200) / 2, (this->height() - 200) / 2);
-    loadingLabel->show();
-    loadingMovie->start();
 
     // 禁用父窗口
     setEnabled(false);
@@ -330,8 +406,6 @@ void picture::showLoading()
 
 void picture::hideLoading()
 {
-    loadingMovie->stop();
-    loadingLabel->hide();
 
     // 启用父窗口
     setEnabled(true);

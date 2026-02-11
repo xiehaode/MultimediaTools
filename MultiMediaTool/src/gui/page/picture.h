@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QMovie>
 #include <QTimer>
+#include <QSpinBox>
 #include "../../OpenCVTools/OpenCVFFMpegTools.h"
 
 
@@ -40,12 +41,10 @@ private:
     func effectType = noAction;  // 确保类型统一
     bool isProcessing;
 
-    // 加载动画
-    QLabel *loadingLabel;
-    QMovie *loadingMovie;
 
     void setupCheckBoxConnections();
     void ensureSingleSelection(QCheckBox* checkedBox);
+    bool isValidImageFile(const QString& filePath);
 };
 
 #endif // PICTURE_H
