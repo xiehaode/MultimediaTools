@@ -58,7 +58,7 @@ OpenCVTools/3rd/ffmpeg/lib/
 OpenCVTools/3rd/opencv/bin/
 OpenCVTools/3rd/opencv/lib/
 OpenCVTools/3rd/opencv/x64/
-
+mediaServer/cmake-build-debug
 formatChange/3rd/
 WordToPdf/build/
 WordToPdf/release/

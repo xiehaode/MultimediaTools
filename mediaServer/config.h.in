@@ -1,0 +1,21 @@
+// 项目配置头文件（由 CMake 自动生成，不要手动修改）
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// 项目版本信息
+#define PROJECT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define PROJECT_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define PROJECT_VERSION "@PROJECT_VERSION@"
+
+// HTTP 后端配置
+#cmakedefine WITH_CPPRESTSDK
+#cmakedefine SIMPLE_HTTP
+
+// MySQL 支持
+#cmakedefine MYSQL_FOUND
+
+// 项目名称
+#define PROJECT_NAME "@PROJECT_NAME@"
+
+#endif // CONFIG_H
