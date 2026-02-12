@@ -22,8 +22,8 @@ AVProcessor::~AVProcessor()
 
 bool AVProcessor::remux(const std::string & input_path, const std::string & output_path)
 {
-	// 线程安全检查
-	acquire();  // 增加引用计数
+	
+	acquire();  
 	
 	// 使用 RAII 确保资源释放
 	struct ReleaseGuard {

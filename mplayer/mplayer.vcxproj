@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{50BDEAF6-1743-3208-8B12-B64DB4926FD2}</ProjectGuid>
+    <RootNamespace>mplayer</RootNamespace>
+    <Keyword>Qt4VSv1.0</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+    <OutputDirectory>..\bin\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>release\</IntermediateDirectory>
+    <PrimaryOutput>mplayer</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+    <OutputDirectory>..\bin\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>Application</ConfigurationType>
+    <IntermediateDirectory>debug\</IntermediateDirectory>
+    <PrimaryOutput>mplayer</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists(&apos;$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props&apos;)" />
+  </ImportGroup>
+  <ImportGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists(&apos;$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props&apos;)" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">..\bin\</OutDir>
+    <IntDir Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\</IntDir>
+    <TargetName Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">mplayer</TargetName>
+    <IgnoreImportLibrary Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">false</LinkIncremental>
+    <OutDir Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">..\bin\</OutDir>
+    <IntDir Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\</IntDir>
+    <TargetName Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">mplayer</TargetName>
+    <IgnoreImportLibrary Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;3rd\include;..\..\..\5.12\5.12.11\msvc2017_64\include;..\..\..\5.12\5.12.11\msvc2017_64\include\QtOpenGL;..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets;..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui;..\..\..\5.12\5.12.11\msvc2017_64\include\QtANGLE;..\..\..\5.12\5.12.11\msvc2017_64\include\QtNetwork;..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore;release;/include;..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\win32-msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>release\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>release\</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;WIN32_LEAN_AND_MEAN;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_CORE_LIB;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <ProgramDataBaseFileName></ProgramDataBaseFileName>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Strmiids.lib;uuid.lib;D:\masm32\lib\kernel32.lib;D:\masm32\lib\user32.lib;D:\masm32\lib\gdi32.lib;D:\masm32\lib\opengl32.lib;D:\masm32\lib\glu32.lib;D:\masm32\lib\ole32.lib;D:\masm32\lib\oleaut32.lib;strmiids.lib;D:\masm32\lib\ws2_32.lib;D:\masm32\lib\secur32.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avcodec.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avdevice.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avfilter.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avformat.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avutil.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\swresample.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\swscale.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5OpenGL.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Widgets.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Gui.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Network.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Core.lib;D:\5.12\5.12.11\msvc2017_64\lib\qtmain.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64;C:\openssl\lib;C:\Utils\my_sql\mysql-5.6.11-winx64\lib;C:\Utils\postgresql\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>&quot;/MANIFESTDEPENDENCY:type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos; processorArchitecture=&apos;*&apos;&quot; %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkIncremental>false</LinkIncremental>
+      <OutputFile>$(OutDir)\mplayer.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;WIN32_LEAN_AND_MEAN;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;3rd\include;..\..\..\5.12\5.12.11\msvc2017_64\include;..\..\..\5.12\5.12.11\msvc2017_64\include\QtOpenGL;..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets;..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui;..\..\..\5.12\5.12.11\msvc2017_64\include\QtANGLE;..\..\..\5.12\5.12.11\msvc2017_64\include\QtNetwork;..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore;debug;/include;..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\win32-msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /utf-8 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>debug\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4577;4467;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>debug\</ObjectFileName>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;WIN32_LEAN_AND_MEAN;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Strmiids.lib;uuid.lib;D:\masm32\lib\kernel32.lib;D:\masm32\lib\user32.lib;D:\masm32\lib\gdi32.lib;D:\masm32\lib\opengl32.lib;D:\masm32\lib\glu32.lib;D:\masm32\lib\ole32.lib;D:\masm32\lib\oleaut32.lib;strmiids.lib;D:\masm32\lib\ws2_32.lib;D:\masm32\lib\secur32.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avcodec.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avdevice.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avfilter.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avformat.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\avutil.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\swresample.lib;D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64\swscale.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5OpenGLd.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Widgetsd.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Guid.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Networkd.lib;D:\5.12\5.12.11\msvc2017_64\lib\Qt5Cored.lib;D:\5.12\5.12.11\msvc2017_64\lib\qtmaind.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\vsPro\MultiMediaTool\mplayer\3rd\lib\x64;C:\openssl\lib;C:\Utils\my_sql\mysql-5.6.11-winx64\lib;C:\Utils\postgresql\pgsql\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>&quot;/MANIFESTDEPENDENCY:type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos; processorArchitecture=&apos;*&apos;&quot; %(AdditionalOptions)</AdditionalOptions>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <OutputFile>$(OutDir)\mplayer.exe</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;WIN32_LEAN_AND_MEAN;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ipcmgrbase.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\mdevice.cpp" />
+    <ClCompile Include="src\mglwidget.cpp" />
+    <ClCompile Include="src\mplayer.cpp" />
+    <ClCompile Include="src\myipcmgr.cpp" />
+    <ClCompile Include="src\player.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ffmpeg_util.h" />
+    <CustomBuild Include="src\ipcmgrbase.h">
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">src\ipcmgrbase.h;release\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\ipcmgrbase.h -o release\moc_ipcmgrbase.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">MOC src/ipcmgrbase.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_ipcmgrbase.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">src\ipcmgrbase.h;debug\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\ipcmgrbase.h -o debug\moc_ipcmgrbase.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">MOC src/ipcmgrbase.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_ipcmgrbase.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="src\lan_util.h" />
+    <ClInclude Include="src\mdevice.h" />
+    <ClInclude Include="src\mframe.h" />
+    <CustomBuild Include="src\mglwidget.h">
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">src\mglwidget.h;release\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\mglwidget.h -o release\moc_mglwidget.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">MOC src/mglwidget.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_mglwidget.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">src\mglwidget.h;debug\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\mglwidget.h -o debug\moc_mglwidget.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">MOC src/mglwidget.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_mglwidget.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="src\mplayer.h">
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">src\mplayer.h;release\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\mplayer.h -o release\moc_mplayer.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">MOC src/mplayer.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_mplayer.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">src\mplayer.h;debug\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\mplayer.h -o debug\moc_mplayer.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">MOC src/mplayer.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_mplayer.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="src\myipcmgr.h">
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">src\myipcmgr.h;release\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\myipcmgr.h -o release\moc_myipcmgr.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">MOC src/myipcmgr.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_myipcmgr.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">src\myipcmgr.h;debug\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\myipcmgr.h -o debug\moc_myipcmgr.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">MOC src/myipcmgr.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_myipcmgr.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="src\player.h">
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">src\player.h;release\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\player.h -o release\moc_player.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">MOC src/player.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_player.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">src\player.h;debug\moc_predefs.h;D:\5.12\5.12.11\msvc2017_64\bin\moc.exe;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">D:\5.12\5.12.11\msvc2017_64\bin\moc.exe  -DUNICODE -D_UNICODE -DWIN32 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -DWIN64 -DWIN32_LEAN_AND_MEAN -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/mplayer/debug/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/mplayer -ID:/vsPro/MultiMediaTool/mplayer/3rd/include -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtOpenGL -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -ID:\masm32\include src\player.h -o debug\moc_player.cpp</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">MOC src/player.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_player.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="debug\moc_ipcmgrbase.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_ipcmgrbase.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_mglwidget.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_mglwidget.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_mplayer.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_mplayer.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_myipcmgr.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_myipcmgr.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="debug\moc_player.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="release\moc_player.cpp">
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </ClCompile>
+    <CustomBuild Include="debug\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">true</ExcludedFromBuild>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">cl -BxD:\5.12\5.12.11\msvc2017_64\bin\qmake.exe -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /utf-8 -Zi -MDd -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;debug\moc_predefs.h</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">Generate moc_predefs.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">debug\moc_predefs.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="release\moc_predefs.h.cbt">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\data\dummy.cpp;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">cl -BxD:\5.12\5.12.11\msvc2017_64\bin\qmake.exe -nologo -Zc:wchar_t -FS -Zc:rvalueCast -Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:referenceBinding -Zc:__cplusplus /utf-8 -O2 -MD -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577 -wd4467 -E ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\data\dummy.cpp 2&gt;NUL &gt;release\moc_predefs.h</Command>
+      <Message Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">Generate moc_predefs.h</Message>
+      <Outputs Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Release|x64&apos;">release\moc_predefs.h;%(Outputs)</Outputs>
+      <ExcludedFromBuild Condition="&apos;$(Configuration)|$(Platform)&apos;==&apos;Debug|x64&apos;">true</ExcludedFromBuild>
+    </CustomBuild>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
