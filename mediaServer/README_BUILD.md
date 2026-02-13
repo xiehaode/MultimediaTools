@@ -5,10 +5,7 @@
 ### 1. 安装依赖
 
 ```bash
-# 方法1: 使用依赖安装脚本
-./install_deps.sh
 
-# 方法2: 手动安装
 sudo apt update
 sudo apt install -y build-essential cmake git pkg-config
 sudo apt install -y libssl-dev libmysqlclient-dev libboost-all-dev
@@ -29,12 +26,7 @@ mysql -u root -p multimediatool < mysql_schema.sql
 
 ### 3. 编译服务器
 
-```bash
-# 完整版本（需要cpprestsdk）
-./build.sh
-
-# 简化版本（不依赖cpprestsdk）
-./simple_build.sh
+CLion
 ```
 
 ## 构建选项
