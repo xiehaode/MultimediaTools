@@ -20,6 +20,7 @@ SOURCES += \
     src/gui/mytitlebar.cpp \
     src/gui/page/ffmpegclientwidget.cpp \
     src/gui/page/ffmpegcmd.cpp \
+    src/core/ApiManager.cpp \
     src/main.cpp \
     src/gui/page/videopage.cpp \
     src/gui/menu.cpp \
@@ -41,6 +42,7 @@ HEADERS += \
     src/gui/mytitlebar.h \
     src/gui/page/ffmpegclientwidget.h \
     src/gui/page/ffmpegcmd.h \
+    src/core/ApiManager.h \
     src/gui/page/videopage.h \
     src/gui/menu.h \
     src/gui/page/word.h \

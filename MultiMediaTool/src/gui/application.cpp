@@ -4,6 +4,7 @@
 #include "src/gui/page/word.h"
 #include "src/gui/page/picture.h"
 #include "src/gui/page/ffmpegcmd.h"
+#include "src/gui/page/ffmpegclientwidget.h"
 #include "src/utils/myipcmgr.h"
 
 extern const QString IPC_PIPE_NAME;
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
         auto *pictureP3 = new picture;
         auto *effactP4 = new effact;
         auto *ffmpegP5 = new ffmpegCmd;
+        auto *ffmpegClientP6 = new FfmpegClientWidget;
 
         qStackedWidget->addWidget(videoP1);
         qStackedWidget->addWidget(wordP2);
@@ -31,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
         qStackedWidget->addWidget(effactP4);
         qStackedWidget->addWidget(pictureP3);
         qStackedWidget->addWidget(ffmpegP5);
+        qStackedWidget->addWidget(ffmpegClientP6);
 
         this->createleftNavigationBar();
 

@@ -44,6 +44,7 @@ private:
     QPushButton *newPage3BtnVideoEffact;
     QPushButton *newPage4BtnPicture;
     QPushButton *newPage5BtnFFmpeg;
+    QPushButton *newPage6BtnFFmpegClient;
     QButtonGroup buttonGroup;
 
     bool isMinimized = false; // 侧边栏最小化状态标记

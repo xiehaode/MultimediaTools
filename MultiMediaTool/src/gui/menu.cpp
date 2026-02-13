@@ -12,6 +12,8 @@ Menu::Menu(QWidget *parent) :
     newPage3BtnVideoEffact = new QPushButton(this);
     newPage4BtnPicture = new QPushButton(this);
     newPage5BtnFFmpeg = new QPushButton(this);
+    newPage6BtnFFmpegClient = new QPushButton(this);
+
     // 设置样式表，包括背景颜色
 //    QString styleSheet = "background-color: #A0A083;"
 //                         "border-radius: 7px;";
@@ -107,6 +109,23 @@ Menu::Menu(QWidget *parent) :
         }
         emit buttonClicked(5);
     });
+
+    connect(newPage6BtnFFmpegClient, &QPushButton::clicked, this, [this]() {
+        for(QAbstractButton *b : buttonGroup.buttons()) {
+            if (b != newPage6BtnFFmpegClient) {
+                b->setStyleSheet("background-color: transparent;"
+                                    "opacity: 0;"
+                                    "border-radius: 7px;");
+            }
+        }
+
+        // 更改选中按钮的样式
+        if (newPage6BtnFFmpegClient) {
+            newPage6BtnFFmpegClient->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
+                                  "border-radius: 7px;");
+        }
+        emit buttonClicked(6);
+    });
 }
 
 
@@ -132,6 +151,8 @@ void Menu::init()
     setPushButton(newPage4BtnPicture, QString::fromUtf8(":/rc/picture.svg"), picture);
     QString ffmpeg = GBK2QString("命令行");
     setPushButton(newPage5BtnFFmpeg, QString::fromUtf8(":/rc/record.svg"), ffmpeg);
+    QString ffmpegClient = GBK2QString("FFmpeg客户端");
+    setPushButton(newPage6BtnFFmpegClient, QString::fromUtf8(":/rc/record.svg"), ffmpegClient);
 
 
     // 创建按钮组
@@ -140,6 +161,7 @@ void Menu::init()
     buttonGroup.addButton(newPage3BtnVideoEffact, 3);
     buttonGroup.addButton(newPage4BtnPicture, 4);
     buttonGroup.addButton(newPage5BtnFFmpeg, 5);
+    buttonGroup.addButton(newPage6BtnFFmpegClient, 6);
 
 
     // 使用样式表设置控件的背景透明和高度增加 字体设置
@@ -167,6 +189,7 @@ void Menu::init()
     layout->addWidget(newPage3BtnVideoEffact);
     layout->addWidget(newPage4BtnPicture);
     layout->addWidget(newPage5BtnFFmpeg);
+    layout->addWidget(newPage6BtnFFmpegClient);
 
 
 

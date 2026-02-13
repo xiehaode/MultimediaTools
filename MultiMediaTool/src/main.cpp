@@ -30,17 +30,17 @@ void CreateDumpFile(EXCEPTION_POINTERS* pException) {
     // 方案 B: 指定路径
     // wcscpy_s(path, L"D:\\MyDebugDumps\\");
 
-    // 1. 确保目标文件夹存在
+    //  确保目标文件夹存在
     CreateFullDirectory(path);
 
-    // 2. 构造带时间戳的文件名，避免覆盖
+    //构造带时间戳的文件名，避免覆盖
     SYSTEMTIME st;
     GetLocalTime(&st);
     wchar_t fileName[MAX_PATH];
     swprintf_s(fileName, L"%lsCrash_%04d%02d%02d_%02d%02d%02d.dmp",
         path, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
-    // 3. 创建文件
+    // 创建文件
     HANDLE hFile = CreateFile(fileName, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
     SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
 
-    //qt不能mat多线程否则会导致卡死
+    //qt不能mta多线程否则会导致卡死
 //    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 //    if (FAILED(hr)) {
 //        qCritical() << "COM MTA模式初始化失败：" << hr;

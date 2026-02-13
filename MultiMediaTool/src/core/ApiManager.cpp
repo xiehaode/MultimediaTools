@@ -17,21 +17,27 @@ ApiManager::ApiManager(QObject *parent)
     , timeout(10000)
     , loggedIn(false)
 {
-    // åˆå§‹åŒ–ç½‘ç»œç®¡ç†å™¨
+    // ³õÊ¼»¯ÍøÂç¹ÜÀíÆ÷
     connect(networkManager, &QNetworkAccessManager::finished,
             this, &ApiManager::handleNetworkReply);
     
-    // è®¾ç½®è¶…æ—¶å®šæ—¶å™¨
+    // ÉèÖÃ³¬Ê±¶¨Ê±Æ÷
     timeoutTimer->setSingleShot(true);
     connect(timeoutTimer, &QTimer::timeout, this, &ApiManager::onTimeout);
     
-    // åŠ è½½è®¾ç½®
+    // ¼ÓÔØÉèÖÃ
     loadSettings();
     
-    // é…ç½®SSL
+    // ÅäÖÃSSL
+    QNetworkRequest request(QUrl("https://your-api-url.com"));
     QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
-    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
-    networkManager->setConfiguration(sslConfig);
+    //sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    //networkManager->setConfiguration(sslConfig);
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone); // ½ö²âÊÔ»·¾³
+    request.setSslConfiguration(sslConfig); // ÕýÈ·£ºÉèÖÃµ½requestÉÏ
+
+    // 2. ·¢ËÍÇëÇó£¨networkManagerÎÞÐèÉèÖÃSSL£©
+    networkManager->get(request);
 }
 
 ApiManager::~ApiManager()
@@ -71,7 +77,7 @@ void ApiManager::login(const QString& username, const QString& password)
     QJsonObject loginData;
     loginData["username"] = username;
     
-    // å¯†ç å“ˆå¸Œå¤„ç†
+    // ÃÜÂë¹þÏ£´¦Àí
     QString hashedPassword = hashPassword(password, username);
     loginData["password"] = hashedPassword;
     
@@ -84,7 +90,7 @@ void ApiManager::registerUser(const QString& username, const QString& email, con
     registerData["username"] = username;
     registerData["email"] = email;
     
-    // å¯†ç å“ˆå¸Œå¤„ç†
+    // ÃÜÂë¹þÏ£´¦Àí
     QString salt = generateSalt();
     QString hashedPassword = hashPassword(password, salt);
     registerData["password"] = hashedPassword;
@@ -176,16 +182,16 @@ void ApiManager::uploadFile(const QString& filePath, const QString& fileType)
     
     QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
     
-    // æ·»åŠ æ–‡ä»¶
+    // Ìí¼ÓÎÄ¼þ
     QHttpPart filePart;
     filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
                        QString("form-data; name=\"file\"; filename=\"%1\"").arg(QFileInfo(filePath).fileName()));
     filePart.setBodyDevice(file);
-    file->setParent(multiPart); // ç¡®ä¿æ–‡ä»¶éšmultiPartä¸€èµ·åˆ é™¤
+    file->setParent(multiPart); // È·±£ÎÄ¼þËæmultiPartÒ»ÆðÉ¾³ý
     
     multiPart->append(filePart);
     
-    // æ·»åŠ æ–‡ä»¶ç±»åž‹
+    // Ìí¼ÓÎÄ¼þÀàÐÍ
     QHttpPart typePart;
     typePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"type\"");
     typePart.setBody(fileType.toUtf8());
@@ -198,7 +204,7 @@ void ApiManager::uploadFile(const QString& filePath, const QString& fileType)
     QNetworkReply* reply = networkManager->post(request, multiPart);
     pendingRequests[reply] = "uploadFile";
     
-    // è¿žæŽ¥è¿›åº¦ä¿¡å·
+    // Á¬½Ó½ø¶ÈÐÅºÅ
     connect(reply, &QNetworkReply::uploadProgress, this, &ApiManager::onUploadProgress);
     
     startTimeoutTimer();
@@ -218,7 +224,7 @@ void ApiManager::downloadFile(const QString& fileId, const QString& savePath)
     QNetworkReply* reply = networkManager->get(request);
     pendingRequests[reply] = "downloadFile";
     
-    // è¿žæŽ¥è¿›åº¦ä¿¡å·
+    // Á¬½Ó½ø¶ÈÐÅºÅ
     connect(reply, &QNetworkReply::downloadProgress, this, &ApiManager::onDownloadProgress);
     
     startTimeoutTimer();
@@ -248,7 +254,7 @@ void ApiManager::loadSettings()
     currentToken = settings.value("auth/token", "").toString();
     
     if (!currentToken.isEmpty()) {
-        // è‡ªåŠ¨éªŒè¯token
+        // ×Ô¶¯ÑéÖ¤token
         validateToken();
     }
 }
@@ -378,7 +384,7 @@ void ApiManager::parseResponse(const QByteArray& data, const QString& requestTyp
         return;
     }
     
-    // æ ¹æ®è¯·æ±‚ç±»åž‹å¤„ç†å“åº”
+    // ¸ù¾ÝÇëÇóÀàÐÍ´¦ÀíÏìÓ¦
     if (requestType == "login") {
         parseLoginResponse(response);
     } else if (requestType == "register") {
@@ -565,22 +571,22 @@ void ApiManager::handleNetworkError(QNetworkReply::NetworkError error, const QSt
     QString errorMessage;
     switch (error) {
     case QNetworkReply::ConnectionRefusedError:
-        errorMessage = "æœåŠ¡å™¨æ‹’ç»è¿žæŽ¥";
+        errorMessage = "·þÎñÆ÷¾Ü¾øÁ¬½Ó";
         break;
     case QNetworkReply::TimeoutError:
-        errorMessage = "è¿žæŽ¥è¶…æ—¶";
+        errorMessage = "Á¬½Ó³¬Ê±";
         break;
     case QNetworkReply::HostNotFoundError:
-        errorMessage = "æœåŠ¡å™¨åœ°å€æœªæ‰¾åˆ°";
+        errorMessage = "·þÎñÆ÷µØÖ·Î´ÕÒµ½";
         break;
     case QNetworkReply::AuthenticationRequiredError:
-        errorMessage = "éœ€è¦è®¤è¯";
+        errorMessage = "ÐèÒªÈÏÖ¤";
         break;
     case QNetworkReply::ContentNotFoundError:
-        errorMessage = "è¯·æ±‚çš„èµ„æºä¸å­˜åœ¨";
+        errorMessage = "ÇëÇóµÄ×ÊÔ´²»´æÔÚ";
         break;
     default:
-        errorMessage = "ç½‘ç»œé”™è¯¯";
+        errorMessage = "ÍøÂç´íÎó";
         break;
     }
     
@@ -590,13 +596,13 @@ void ApiManager::handleNetworkError(QNetworkReply::NetworkError error, const QSt
 
 void ApiManager::onTimeout()
 {
-    // å–æ¶ˆæ‰€æœ‰æœªå®Œæˆçš„è¯·æ±‚
+    // È¡ÏûËùÓÐÎ´Íê³ÉµÄÇëÇó
     for (auto it = pendingRequests.begin(); it != pendingRequests.end(); ++it) {
         QNetworkReply* reply = it.key();
         QString requestType = it.value();
         
         reply->abort();
-        handleError("è¯·æ±‚è¶…æ—¶", requestType);
+        handleError("ÇëÇó³¬Ê±", requestType);
     }
     
     pendingRequests.clear();

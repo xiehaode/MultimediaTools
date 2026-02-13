@@ -4,6 +4,7 @@
 #include "basewindow.h"
 #include "menu.h"
 #include "src/gui/page/videopage.h"
+#include "src/gui/page/ffmpegclientwidget.h"
 #include <QStackedWidget>
 #include <QSplitter>
 #include <QVBoxLayout>
