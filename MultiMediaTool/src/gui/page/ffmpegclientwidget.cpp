@@ -13,6 +13,8 @@
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QSplitter>
+#include <QSslConfiguration>
+#include <QSslSocket>
 
 FfmpegClientWidget::FfmpegClientWidget(QWidget *parent)
     : QWidget(parent)
@@ -23,6 +25,7 @@ FfmpegClientWidget::FfmpegClientWidget(QWidget *parent)
     , m_mainLayout(nullptr)
     , m_stackedLayout(nullptr)
     , m_loginWidget(nullptr)
+    , m_registerWidget(nullptr)
     , m_mainWidget(nullptr)
     , m_tabWidget(nullptr)
     , m_commandTab(nullptr)
@@ -31,6 +34,11 @@ FfmpegClientWidget::FfmpegClientWidget(QWidget *parent)
 {
     // 初始化API管理器
     m_apiManager = std::make_unique<ApiManager>();
+    
+    // 配置SSL忽略（用于开发测试）
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    QSslConfiguration::setDefaultConfiguration(sslConfig);
     
     // 设置定时器
     m_statusTimer->setInterval(30000); // 30秒检查一次状态
@@ -110,6 +118,7 @@ void FfmpegClientWidget::initializeUI()
     m_stackedLayout = new QStackedLayout();
     
     initializeLoginPage();
+    initializeRegisterPage();
     initializeMainPage();
     
     m_mainLayout->addLayout(m_stackedLayout);
@@ -153,12 +162,22 @@ void FfmpegClientWidget::initializeLoginPage()
     m_rememberServerCheckBox = new QCheckBox(tr(gbk_to_utf8("记住服务器地址").c_str()), this);
     formLayout->addWidget(m_rememberServerCheckBox);
     
-    // 登录按钮
+    // 登录和注册按钮
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    
     m_loginButton = new QPushButton(tr(gbk_to_utf8("登录").c_str()), this);
     m_loginButton->setStyleSheet("QPushButton { background-color: #3498db; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
                                  "QPushButton:hover { background-color: #2980b9; }");
     connect(m_loginButton, &QPushButton::clicked, this, &FfmpegClientWidget::onLoginClicked);
-    formLayout->addWidget(m_loginButton);
+    
+    m_registerButton = new QPushButton(tr(gbk_to_utf8("注册").c_str()), this);
+    m_registerButton->setStyleSheet("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                    "QPushButton:hover { background-color: #229954; }");
+    connect(m_registerButton, &QPushButton::clicked, this, &FfmpegClientWidget::onShowRegisterPage);
+    
+    buttonLayout->addWidget(m_loginButton);
+    buttonLayout->addWidget(m_registerButton);
+    formLayout->addLayout(buttonLayout);
     
     loginLayout->addWidget(loginGroup);
     
@@ -175,6 +194,90 @@ void FfmpegClientWidget::initializeLoginPage()
     connect(m_passwordEdit, &QLineEdit::returnPressed, this, &FfmpegClientWidget::onLoginClicked);
     
     m_stackedLayout->addWidget(m_loginWidget);
+}
+
+void FfmpegClientWidget::initializeRegisterPage()
+{
+    m_registerWidget = new QWidget();
+    QVBoxLayout *registerLayout = new QVBoxLayout(m_registerWidget);
+    
+    // 标题
+    QLabel *titleLabel = new QLabel(tr("FFmpeg Media Server - 注册"), this);
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;");
+    registerLayout->addWidget(titleLabel);
+    
+    // 注册表单
+    QGroupBox *registerGroup = new QGroupBox(tr(gbk_to_utf8("创建新账户").c_str()), this);
+    QVBoxLayout *formLayout = new QVBoxLayout(registerGroup);
+    
+    // 服务器地址
+    formLayout->addWidget(new QLabel(tr(gbk_to_utf8("服务器地址:").c_str())));
+    m_regServerUrlEdit = new QLineEdit("http://localhost:8080", this);
+    m_regServerUrlEdit->setPlaceholderText(tr(gbk_to_utf8("输入服务器地址，如: http://localhost:8080").c_str()));
+    formLayout->addWidget(m_regServerUrlEdit);
+    
+    // 用户名
+    formLayout->addWidget(new QLabel(tr(gbk_to_utf8("用户名:").c_str())));
+    m_regUsernameEdit = new QLineEdit(this);
+    m_regUsernameEdit->setPlaceholderText(tr(gbk_to_utf8("输入用户名（至少3个字符）").c_str()));
+    formLayout->addWidget(m_regUsernameEdit);
+    
+    // 邮箱
+    formLayout->addWidget(new QLabel(tr(gbk_to_utf8("邮箱:").c_str())));
+    m_regEmailEdit = new QLineEdit(this);
+    m_regEmailEdit->setPlaceholderText(tr(gbk_to_utf8("输入邮箱地址").c_str()));
+    m_regEmailEdit->setStyleSheet("QLineEdit { font-family: monospace; }");
+    formLayout->addWidget(m_regEmailEdit);
+    
+    // 密码
+    formLayout->addWidget(new QLabel(tr(gbk_to_utf8("密码:").c_str())));
+    m_regPasswordEdit = new QLineEdit(this);
+    m_regPasswordEdit->setEchoMode(QLineEdit::Password);
+    m_regPasswordEdit->setPlaceholderText(tr(gbk_to_utf8("输入密码（至少6个字符）").c_str()));
+    formLayout->addWidget(m_regPasswordEdit);
+    
+    // 确认密码
+    formLayout->addWidget(new QLabel(tr(gbk_to_utf8("确认密码:").c_str())));
+    m_regConfirmPasswordEdit = new QLineEdit(this);
+    m_regConfirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    m_regConfirmPasswordEdit->setPlaceholderText(tr(gbk_to_utf8("再次输入密码").c_str()));
+    formLayout->addWidget(m_regConfirmPasswordEdit);
+    
+    // 按钮布局
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    
+    m_submitRegisterButton = new QPushButton(tr(gbk_to_utf8("注册").c_str()), this);
+    m_submitRegisterButton->setStyleSheet("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                         "QPushButton:hover { background-color: #229954; }");
+    connect(m_submitRegisterButton, &QPushButton::clicked, this, &FfmpegClientWidget::onRegisterClicked);
+    
+    m_backToLoginButton = new QPushButton(tr(gbk_to_utf8("返回登录").c_str()), this);
+    m_backToLoginButton->setStyleSheet("QPushButton { background-color: #95a5a6; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                       "QPushButton:hover { background-color: #7f8c8d; }");
+    connect(m_backToLoginButton, &QPushButton::clicked, this, &FfmpegClientWidget::onShowLoginPage);
+    
+    buttonLayout->addWidget(m_backToLoginButton);
+    buttonLayout->addWidget(m_submitRegisterButton);
+    formLayout->addLayout(buttonLayout);
+    
+    registerLayout->addWidget(registerGroup);
+    
+    // 状态标签
+    m_registerStatusLabel = new QLabel(tr(gbk_to_utf8("准备就绪").c_str()), this);
+    m_registerStatusLabel->setAlignment(Qt::AlignCenter);
+    m_registerStatusLabel->setStyleSheet("color: #7f8c8d;");
+    registerLayout->addWidget(m_registerStatusLabel);
+    
+    registerLayout->addStretch();
+    
+    // 支持回车键注册
+    connect(m_regUsernameEdit, &QLineEdit::returnPressed, m_regEmailEdit, QOverload<>::of(&QLineEdit::setFocus));
+    connect(m_regEmailEdit, &QLineEdit::returnPressed, m_regPasswordEdit, QOverload<>::of(&QLineEdit::setFocus));
+    connect(m_regPasswordEdit, &QLineEdit::returnPressed, m_regConfirmPasswordEdit, QOverload<>::of(&QLineEdit::setFocus));
+    connect(m_regConfirmPasswordEdit, &QLineEdit::returnPressed, this, &FfmpegClientWidget::onRegisterClicked);
+    
+    m_stackedLayout->addWidget(m_registerWidget);
 }
 
 void FfmpegClientWidget::initializeMainPage()
@@ -415,14 +518,21 @@ void FfmpegClientWidget::setupCommandPresets()
 
 void FfmpegClientWidget::showLoginPage()
 {
-    m_stackedLayout->setCurrentIndex(0);
+    m_stackedLayout->setCurrentWidget(m_loginWidget);
     setLoginEnabled(true);
+}
+
+void FfmpegClientWidget::showRegisterPage()
+{
+    m_stackedLayout->setCurrentWidget(m_registerWidget);
+    setRegisterEnabled(true);
 }
 
 void FfmpegClientWidget::showMainPage()
 {
-    m_stackedLayout->setCurrentIndex(1);
+    m_stackedLayout->setCurrentWidget(m_mainWidget);
     setLoginEnabled(false);
+    setRegisterEnabled(false);
     setCommandEnabled(true);
     
     // 加载历史记录
@@ -432,9 +542,21 @@ void FfmpegClientWidget::showMainPage()
 void FfmpegClientWidget::setLoginEnabled(bool enabled)
 {
     if (m_loginButton) m_loginButton->setEnabled(enabled);
+    if (m_registerButton) m_registerButton->setEnabled(enabled);
     if (m_usernameEdit) m_usernameEdit->setEnabled(enabled);
     if (m_passwordEdit) m_passwordEdit->setEnabled(enabled);
     if (m_serverUrlEdit) m_serverUrlEdit->setEnabled(enabled);
+}
+
+void FfmpegClientWidget::setRegisterEnabled(bool enabled)
+{
+    if (m_submitRegisterButton) m_submitRegisterButton->setEnabled(enabled);
+    if (m_backToLoginButton) m_backToLoginButton->setEnabled(enabled);
+    if (m_regUsernameEdit) m_regUsernameEdit->setEnabled(enabled);
+    if (m_regEmailEdit) m_regEmailEdit->setEnabled(enabled);
+    if (m_regPasswordEdit) m_regPasswordEdit->setEnabled(enabled);
+    if (m_regConfirmPasswordEdit) m_regConfirmPasswordEdit->setEnabled(enabled);
+    if (m_regServerUrlEdit) m_regServerUrlEdit->setEnabled(enabled);
 }
 
 void FfmpegClientWidget::setCommandEnabled(bool enabled)
@@ -477,6 +599,148 @@ void FfmpegClientWidget::onLogoutClicked()
     logout();
 }
 
+void FfmpegClientWidget::onShowRegisterPage()
+{
+    // 预填充服务器地址
+    m_regServerUrlEdit->setText(m_serverUrlEdit->text().trimmed());
+    
+    // 清空注册表单
+    m_regUsernameEdit->clear();
+    m_regEmailEdit->clear();
+    m_regPasswordEdit->clear();
+    m_regConfirmPasswordEdit->clear();
+    
+    m_registerStatusLabel->setText(tr(gbk_to_utf8("准备就绪").c_str()));
+    
+    // 显示注册页面
+    m_stackedLayout->setCurrentWidget(m_registerWidget);
+}
+
+void FfmpegClientWidget::onShowLoginPage()
+{
+    // 预填充服务器地址
+    m_serverUrlEdit->setText(m_regServerUrlEdit->text().trimmed());
+    
+    m_loginStatusLabel->setText(tr(gbk_to_utf8("准备就绪").c_str()));
+    
+    // 显示登录页面
+    m_stackedLayout->setCurrentWidget(m_loginWidget);
+}
+
+void FfmpegClientWidget::onRegisterClicked()
+{
+    const QString serverUrl = m_regServerUrlEdit->text().trimmed();
+    const QString username = m_regUsernameEdit->text().trimmed();
+    const QString email = m_regEmailEdit->text().trimmed();
+    const QString password = m_regPasswordEdit->text();
+    const QString confirmPassword = m_regConfirmPasswordEdit->text();
+    
+    if (serverUrl.isEmpty()) {
+        showErrorMessage(tr(gbk_to_utf8("请输入服务器地址").c_str()));
+        return;
+    }
+    
+    if (username.isEmpty()) {
+        showErrorMessage(tr(gbk_to_utf8("请输入用户名").c_str()));
+        return;
+    }
+    
+    if (username.length() < 3) {
+        showErrorMessage(tr(gbk_to_utf8("用户名至少需要3个字符").c_str()));
+        return;
+    }
+    
+    if (email.isEmpty()) {
+        showErrorMessage(tr(gbk_to_utf8("请输入邮箱地址").c_str()));
+        return;
+    }
+    
+    // 简单的邮箱格式验证
+    if (!email.contains("@") || !email.contains(".")) {
+        showErrorMessage(tr(gbk_to_utf8("请输入有效的邮箱地址").c_str()));
+        return;
+    }
+    
+    if (password.isEmpty()) {
+        showErrorMessage(tr(gbk_to_utf8("请输入密码").c_str()));
+        return;
+    }
+    
+    if (password.length() < 6) {
+        showErrorMessage(tr(gbk_to_utf8("密码至少需要6个字符").c_str()));
+        return;
+    }
+    
+    if (password != confirmPassword) {
+        showErrorMessage(tr(gbk_to_utf8("两次输入的密码不一致").c_str()));
+        return;
+    }
+    
+    setRegisterEnabled(false);
+    m_registerStatusLabel->setText(tr(gbk_to_utf8("正在注册...").c_str()));
+    
+    sendRegisterRequest(username, password, email);
+}
+
+void FfmpegClientWidget::onRegisterReply()
+{
+    if (!m_currentReply) {
+        setRegisterEnabled(true);
+        return;
+    }
+    
+    QByteArray responseData = m_currentReply->readAll();
+    int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    
+    m_currentReply->deleteLater();
+    m_currentReply = nullptr;
+    
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
+    
+    if (parseError.error != QJsonParseError::NoError) {
+        showErrorMessage(tr(gbk_to_utf8("服务器响应格式错误").c_str()));
+        setRegisterEnabled(true);
+        return;
+    }
+    
+    QJsonObject responseObj = doc.object();
+    
+    if (statusCode >= 200 && statusCode < 300) {
+        if (responseObj.contains("success") && responseObj["success"].toBool()) {
+            showSuccessMessage(tr(gbk_to_utf8("注册成功！请登录").c_str()));
+            
+            // 预填充登录表单
+            m_serverUrlEdit->setText(m_regServerUrlEdit->text().trimmed());
+            m_usernameEdit->setText(m_regUsernameEdit->text().trimmed());
+            m_passwordEdit->clear();
+            
+            // 切换到登录页面
+            onShowLoginPage();
+        } else {
+            QString errorMsg = tr(gbk_to_utf8("注册失败").c_str());
+            if (responseObj.contains("message")) {
+                errorMsg = responseObj["message"].toString();
+            } else if (responseObj.contains("error")) {
+                errorMsg = responseObj["error"].toString();
+            }
+            showErrorMessage(errorMsg);
+        }
+    } else {
+        QString errorMsg = tr(gbk_to_utf8("注册失败").c_str());
+        if (responseObj.contains("message")) {
+            errorMsg = responseObj["message"].toString();
+        } else if (responseObj.contains("error")) {
+            errorMsg = responseObj["error"].toString();
+        } else {
+            errorMsg = tr(gbk_to_utf8("HTTP错误: %1").c_str()).arg(statusCode);
+        }
+        showErrorMessage(errorMsg);
+    }
+    
+    setRegisterEnabled(true);
+}
+
 void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString &password)
 {
     QJsonObject requestObj;
@@ -488,6 +752,7 @@ void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString
     QUrl url(m_serverUrl + "/api/auth/login");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    configureNetworkRequest(request);
     
     if (m_currentReply) {
         m_currentReply->deleteLater();
@@ -794,6 +1059,30 @@ void FfmpegClientWidget::updateServerStatus()
     }
 }
 
+void FfmpegClientWidget::sendRegisterRequest(const QString &username, const QString &password, const QString &email)
+{
+    m_serverUrl = m_regServerUrlEdit->text().trimmed();
+    
+    QJsonObject requestObj;
+    requestObj["username"] = username;
+    requestObj["password"] = password;
+    requestObj["email"] = email;
+    
+    QJsonDocument doc(requestObj);
+    
+    QUrl url(m_serverUrl + "/api/auth/register");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    configureNetworkRequest(request);
+    
+    if (m_currentReply) {
+        m_currentReply->deleteLater();
+    }
+    
+    m_currentReply = m_networkManager->post(request, doc.toJson());
+    connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onRegisterReply);
+}
+
 void FfmpegClientWidget::sendValidateTokenRequest()
 {
     QUrl url(m_serverUrl + "/api/auth/validate");
@@ -847,6 +1136,14 @@ void FfmpegClientWidget::showErrorMessage(const QString &message)
 void FfmpegClientWidget::showSuccessMessage(const QString &message)
 {
     QMessageBox::information(this, tr("成功"), message);
+}
+
+void FfmpegClientWidget::configureNetworkRequest(QNetworkRequest &request)
+{
+    // 配置SSL忽略（用于开发测试）
+    QSslConfiguration sslConfig = request.sslConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+    request.setSslConfiguration(sslConfig);
 }
 
 void FfmpegClientWidget::loadCommandPresets()

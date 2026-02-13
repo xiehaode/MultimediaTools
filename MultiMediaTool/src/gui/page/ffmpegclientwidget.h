@@ -54,6 +54,12 @@ private slots:
     void onLoginReply();
     void onValidateTokenReply();
     
+    // 注册相关
+    void onRegisterClicked();
+    void onShowRegisterPage();
+    void onShowLoginPage();
+    void onRegisterReply();
+    
     // FFmpeg命令相关
     void onExecuteCommandClicked();
     void onCommandHistoryClicked();
@@ -75,6 +81,7 @@ private:
     // 初始化UI
     void initializeUI();
     void initializeLoginPage();
+    void initializeRegisterPage();
     void initializeMainPage();
     void initializeCommandTab();
     void initializeFileTab();
@@ -83,14 +90,17 @@ private:
     // 网络请求
     void sendLoginRequest(const QString &username, const QString &password);
     void sendValidateTokenRequest();
+    void sendRegisterRequest(const QString &username, const QString &password, const QString &email);
     void sendExecuteCommandRequest(const QString &commandName, const QString &commandLine);
     void sendLoadCommandsRequest();
     void sendFileUploadRequest(const QString &filePath);
     
     // UI状态管理
     void showLoginPage();
+    void showRegisterPage();
     void showMainPage();
     void setLoginEnabled(bool enabled);
+    void setRegisterEnabled(bool enabled);
     void setCommandEnabled(bool enabled);
     void updateCommandHistory(const QJsonArray &commands);
     
@@ -98,6 +108,9 @@ private:
     void handleError(const QString &error, QNetworkReply *reply = nullptr);
     void showErrorMessage(const QString &message);
     void showSuccessMessage(const QString &message);
+    
+    // 网络配置
+    void configureNetworkRequest(QNetworkRequest &request);
 
 private:
     // 登录状态
@@ -126,8 +139,20 @@ private:
     QLineEdit *m_passwordEdit;
     QLineEdit *m_serverUrlEdit;
     QPushButton *m_loginButton;
+    QPushButton *m_registerButton;
     QLabel *m_loginStatusLabel;
     QCheckBox *m_rememberServerCheckBox;
+    
+    // 注册页面控件
+    QWidget *m_registerWidget;
+    QLineEdit *m_regUsernameEdit;
+    QLineEdit *m_regPasswordEdit;
+    QLineEdit *m_regConfirmPasswordEdit;
+    QLineEdit *m_regEmailEdit;
+    QLineEdit *m_regServerUrlEdit;
+    QPushButton *m_submitRegisterButton;
+    QPushButton *m_backToLoginButton;
+    QLabel *m_registerStatusLabel;
     
     // 主页面控件
     QWidget *m_mainWidget;

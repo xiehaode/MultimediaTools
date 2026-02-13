@@ -2,7 +2,9 @@
 -- 解决 1295/1304 错误，兼容 MySQL 8.0 所有语法
 
 -- 1. 创建/切换数据库
-CREATE DATABASE IF NOT EXISTS multimediatool;
+CREATE DATABASE IF NOT EXISTS multimediatool 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
 USE multimediatool;
 
 -- 2. 手动删除旧存储过程（避免重复创建冲突）
@@ -32,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_user_active_role (is_active, role),
     INDEX idx_username (username),
     INDEX idx_email (email)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS ffmpeg_commands (
     id INT AUTO_INCREMENT PRIMARY KEY,
