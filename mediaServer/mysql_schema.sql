@@ -7,7 +7,12 @@ CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 USE multimediatool;
 
--- 2. 手动删除旧存储过程（避免重复创建冲突）
+-- 2. 强制设置会话字符集
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET character_set_connection = utf8mb4;
+SET collation_connection = utf8mb4_unicode_ci;
+
+-- 3. 手动删除旧存储过程（避免重复创建冲突）
 DROP PROCEDURE IF EXISTS RegisterUser;
 DROP PROCEDURE IF EXISTS AuthenticateUser;
 DROP PROCEDURE IF EXISTS CreateUserSession;
@@ -16,9 +21,8 @@ DROP PROCEDURE IF EXISTS SaveFFmpegCommand;
 DROP PROCEDURE IF EXISTS UpdateCommandStatus;
 DROP PROCEDURE IF EXISTS GetUserCommands;
 DROP PROCEDURE IF EXISTS LogLoginAttempt;
-DROP PROCEDURE IF EXISTS CreateMissingIndexes; -- 新增：删除临时索引创建存储过程
 
--- 3. 创建表结构（优化复合索引，减少冗余）
+-- 4. 创建表结构（优化复合索引，减少冗余）
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -84,10 +88,10 @@ CREATE TABLE IF NOT EXISTS login_logs (
     INDEX idx_login_time (login_time)
 );
 
--- 4. 创建存储过程（MySQL 8.0 兼容语法）
+-- 5. 创建存储过程（MySQL 8.0 兼容语法，使用BINARY比较避免字符集问题）
 DELIMITER //
 
--- 4.1 用户注册
+-- 5.1 用户注册
 CREATE PROCEDURE RegisterUser(
     IN p_username VARCHAR(50),
     IN p_email VARCHAR(100),
@@ -99,55 +103,63 @@ CREATE PROCEDURE RegisterUser(
     OUT p_message VARCHAR(255)
 )
 BEGIN
+    DECLARE v_count INT DEFAULT 0;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         GET DIAGNOSTICS CONDITION 1
         @errno = MYSQL_ERRNO, @state = RETURNED_SQLSTATE, @text = MESSAGE_TEXT;
         SET p_status = 'error';
-        SET p_message = CONCAT('数据库操作失败 (', @errno, ': ', @text, ')');
-        SET p_user_id = NULL;
+        SET p_message = CONCAT('数据库错误: ', @text);
+        SET p_user_id = 0;
     END;
     
     START TRANSACTION;
     
-    -- 检查用户名是否已存在
-    IF EXISTS (SELECT 1 FROM users WHERE username = p_username) THEN
+    -- 使用BINARY比较避免字符集问题
+    SELECT COUNT(*) INTO v_count FROM users WHERE BINARY username = BINARY p_username;
+    
+    IF v_count > 0 THEN
         SET p_status = 'exists';
         SET p_message = '用户名已存在';
-        SET p_user_id = NULL;
-    ELSEIF EXISTS (SELECT 1 FROM users WHERE email = p_email) THEN
-        SET p_status = 'exists';
-        SET p_message = '邮箱已存在';
-        SET p_user_id = NULL;
-    ELSE
-        -- 插入新用户
-        INSERT INTO users (username, email, password_hash, salt, role)
-        VALUES (p_username, p_email, p_password_hash, p_salt, p_role);
-        
-        -- 获取插入的用户ID
-        SET p_user_id = LAST_INSERT_ID();
-        
-        -- 检查插入是否成功
-        IF p_user_id IS NULL OR p_user_id = 0 THEN
-            ROLLBACK;
-            SET p_status = 'error';
-            SET p_message = '用户创建失败，无法获取用户ID';
-        ELSE
-            SET p_status = 'success';
-            SET p_message = '用户注册成功';
-        END IF;
-    END IF;
-    
-    -- 根据状态决定提交或回滚
-    IF p_status = 'success' THEN
-        COMMIT;
-    ELSE
+        SET p_user_id = 0;
         ROLLBACK;
+    ELSE
+        SELECT COUNT(*) INTO v_count FROM users WHERE BINARY email = BINARY p_email;
+        
+        IF v_count > 0 THEN
+            SET p_status = 'exists';
+            SET p_message = '邮箱已存在';
+            SET p_user_id = 0;
+            ROLLBACK;
+        ELSE
+            -- 插入用户，使用CAST确保字符集一致
+            INSERT INTO users (username, email, password_hash, salt, role)
+            VALUES (
+                CAST(p_username AS CHAR(50) CHARACTER SET utf8mb4),
+                CAST(p_email AS CHAR(100) CHARACTER SET utf8mb4),
+                CAST(p_password_hash AS CHAR(255) CHARACTER SET utf8mb4),
+                CAST(p_salt AS CHAR(64) CHARACTER SET utf8mb4),
+                CAST(p_role AS CHAR(10) CHARACTER SET utf8mb4)
+            );
+            
+            SET p_user_id = LAST_INSERT_ID();
+            
+            IF p_user_id > 0 THEN
+                SET p_status = 'success';
+                SET p_message = '用户注册成功';
+                COMMIT;
+            ELSE
+                SET p_status = 'error';
+                SET p_message = '用户创建失败';
+                SET p_user_id = 0;
+                ROLLBACK;
+            END IF;
+        END IF;
     END IF;
 END //
 
--- 4.2 用户登录验证
+-- 5.2 用户登录验证
 CREATE PROCEDURE AuthenticateUser(
     IN p_username VARCHAR(50),
     IN p_password_hash VARCHAR(255),
@@ -166,21 +178,26 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         SET p_status = 'error';
-        SET p_message = '数据库操作失败';
+        SET p_message = '认证失败';
+        SET p_user_id = 0;
+        SET p_role = '';
     END;
     
+    -- 使用BINARY比较
     SELECT id, password_hash, salt, role, is_active
     INTO v_found_user_id, v_password_hash, v_salt, v_role, v_is_active
-    FROM users WHERE username = p_username LIMIT 1;
+    FROM users WHERE BINARY username = BINARY p_username LIMIT 1;
     
     IF v_found_user_id IS NULL THEN
         SET p_status = 'not_found';
         SET p_message = '用户不存在';
         SET p_user_id = 0;
+        SET p_role = '';
     ELSEIF NOT v_is_active THEN
         SET p_status = 'inactive';
         SET p_message = '账户已被禁用';
         SET p_user_id = 0;
+        SET p_role = '';
     ELSEIF v_password_hash = p_password_hash THEN
         SET p_user_id = v_found_user_id;
         SET p_role = v_role;
@@ -191,10 +208,11 @@ BEGIN
         SET p_status = 'invalid_password';
         SET p_message = '密码错误';
         SET p_user_id = 0;
+        SET p_role = '';
     END IF;
 END //
 
--- 4.3 创建用户会话
+-- 5.3 创建用户会话
 CREATE PROCEDURE CreateUserSession(
     IN p_user_id INT,
     IN p_session_token VARCHAR(255),
@@ -217,7 +235,7 @@ BEGIN
     SET p_status = 'success';
 END //
 
--- 4.4 验证会话
+-- 5.4 验证会话
 CREATE PROCEDURE ValidateSession(
     IN p_session_token VARCHAR(255),
     OUT p_user_id INT,
@@ -249,7 +267,7 @@ BEGIN
     END IF;
 END //
 
--- 4.5 保存FFmpeg命令
+-- 5.5 保存FFmpeg命令
 CREATE PROCEDURE SaveFFmpegCommand(
     IN p_user_id INT,
     IN p_command_name VARCHAR(100),
@@ -275,7 +293,7 @@ BEGIN
     SET p_status = 'success';
 END //
 
--- 4.6 更新命令状态
+-- 5.6 更新命令状态
 CREATE PROCEDURE UpdateCommandStatus(
     IN p_command_id INT,
     IN p_status VARCHAR(20),
@@ -299,7 +317,7 @@ BEGIN
     SET p_result_status = 'success';
 END //
 
--- 4.7 获取用户命令历史
+-- 5.7 获取用户命令历史
 CREATE PROCEDURE GetUserCommands(
     IN p_user_id INT,
     IN p_limit INT,
@@ -315,7 +333,7 @@ BEGIN
     LIMIT p_limit OFFSET p_offset;
 END //
 
--- 4.8 记录登录日志
+-- 5.8 记录登录日志
 CREATE PROCEDURE LogLoginAttempt(
     IN p_user_id INT,
     IN p_username VARCHAR(50),
@@ -332,40 +350,16 @@ BEGIN
     );
 END //
 
--- 4.9 临时存储过程：创建缺失的索引
-CREATE PROCEDURE CreateMissingIndexes()
+-- 5.9 创建简化测试函数
+CREATE FUNCTION safe_strcmp(str1 VARCHAR(255), str2 VARCHAR(255)) 
+RETURNS INT
+READS SQL DATA
+DETERMINISTIC
 BEGIN
-    -- 检查并创建 idx_login_username_status 索引
-    DECLARE index_exists INT DEFAULT 0;
-    SELECT COUNT(*) INTO index_exists 
-    FROM INFORMATION_SCHEMA.STATISTICS 
-    WHERE table_schema = DATABASE() 
-      AND table_name = 'login_logs' 
-      AND index_name = 'idx_login_username_status';
-    
-    IF index_exists = 0 THEN
-        CREATE INDEX idx_login_username_status ON login_logs(username, status);
-    END IF;
-
-    -- 检查并创建 idx_cmd_completed_at 索引
-    SET index_exists = 0;
-    SELECT COUNT(*) INTO index_exists 
-    FROM INFORMATION_SCHEMA.STATISTICS 
-    WHERE table_schema = DATABASE() 
-      AND table_name = 'ffmpeg_commands' 
-      AND index_name = 'idx_cmd_completed_at';
-    
-    IF index_exists = 0 THEN
-        CREATE INDEX idx_cmd_completed_at ON ffmpeg_commands(completed_at);
-    END IF;
+    RETURN BINARY str1 = BINARY str2;
 END //
 
 DELIMITER ;
-
--- 5. 执行索引创建存储过程
-CALL CreateMissingIndexes();
--- 删除临时存储过程
-DROP PROCEDURE IF EXISTS CreateMissingIndexes;
 
 -- 6. 初始化默认管理员
 INSERT IGNORE INTO users (username, email, password_hash, salt, role) 
@@ -385,6 +379,10 @@ SELECT
 FROM users u
 LEFT JOIN ffmpeg_commands fc ON u.id = fc.user_id
 GROUP BY u.id, u.username;
+
+-- 8. 清理测试数据
+DELETE FROM users WHERE username IN ('root', 'testuser', 'testuser2', 'testuser3', 'testfinal') 
+   OR email IN ('2802625868@qq.com', 'test@example.com', 'test2@example.com', 'test3@example.com', 'test@final.com');
 
 -- 执行完成提示
 SELECT '✅ Schema initialization completed successfully (MySQL 8.0.45 compatible!)' as status;
