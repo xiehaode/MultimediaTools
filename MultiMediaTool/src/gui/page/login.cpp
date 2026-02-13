@@ -1,5 +1,6 @@
 #include "login.h"
 #include "ui_login.h"
+#include "src/utils/lan_util.h"
 #include <QSettings>
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -38,7 +39,7 @@ login::~login()
 void login::initUI()
 {
     // 设置窗口标题
-    setWindowTitle("MultiMediaTool - 登录");
+    setWindowTitle(gbk_to_utf8("MultiMediaTool - 登录").c_str());
     
     // 设置窗口大小和位置
     setFixedSize(400, 500);

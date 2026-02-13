@@ -111,6 +111,9 @@ private:
     
     // 网络配置
     void configureNetworkRequest(QNetworkRequest &request);
+    void configureNetworkDebugging();
+    void logNetworkRequest(const QNetworkRequest &request, const QByteArray &data = QByteArray());
+    void logNetworkResponse(QNetworkReply *reply);
 
 private:
     // 登录状态

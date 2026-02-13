@@ -102,25 +102,49 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
+        GET DIAGNOSTICS CONDITION 1
+        @errno = MYSQL_ERRNO, @state = RETURNED_SQLSTATE, @text = MESSAGE_TEXT;
         SET p_status = 'error';
-        SET p_message = '数据库操作失败';
+        SET p_message = CONCAT('数据库操作失败 (', @errno, ': ', @text, ')');
+        SET p_user_id = NULL;
     END;
     
     START TRANSACTION;
+    
+    -- 检查用户名是否已存在
     IF EXISTS (SELECT 1 FROM users WHERE username = p_username) THEN
         SET p_status = 'exists';
         SET p_message = '用户名已存在';
+        SET p_user_id = NULL;
     ELSEIF EXISTS (SELECT 1 FROM users WHERE email = p_email) THEN
-        SET p_message = '邮箱已存在';
         SET p_status = 'exists';
+        SET p_message = '邮箱已存在';
+        SET p_user_id = NULL;
     ELSE
+        -- 插入新用户
         INSERT INTO users (username, email, password_hash, salt, role)
         VALUES (p_username, p_email, p_password_hash, p_salt, p_role);
+        
+        -- 获取插入的用户ID
         SET p_user_id = LAST_INSERT_ID();
-        SET p_status = 'success';
-        SET p_message = '用户注册成功';
+        
+        -- 检查插入是否成功
+        IF p_user_id IS NULL OR p_user_id = 0 THEN
+            ROLLBACK;
+            SET p_status = 'error';
+            SET p_message = '用户创建失败，无法获取用户ID';
+        ELSE
+            SET p_status = 'success';
+            SET p_message = '用户注册成功';
+        END IF;
     END IF;
-    COMMIT;
+    
+    -- 根据状态决定提交或回滚
+    IF p_status = 'success' THEN
+        COMMIT;
+    ELSE
+        ROLLBACK;
+    END IF;
 END //
 
 -- 4.2 用户登录验证

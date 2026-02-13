@@ -1,4 +1,5 @@
 #include "mytitlebar.h"
+#include "src/utils/lan_util.h"
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QFile>
@@ -52,10 +53,10 @@ void myTitleBar::initControl()
     m_pButtonMax->setObjectName("ButtonMax");
     m_pButtonClose->setObjectName("ButtonClose");
 
-    QString minstr = tr("最小化");
-    QString Restorestr = tr("最大化恢复");
-    QString Maxstr = tr("最大化");
-    QString Closestr = tr("关闭");
+    QString minstr = tr(gbk_to_utf8("最小化").c_str());
+    QString Restorestr = tr(gbk_to_utf8("最大化恢复").c_str());
+    QString Maxstr = tr(gbk_to_utf8("最大化").c_str());
+    QString Closestr = tr(gbk_to_utf8("关闭").c_str());
 
     m_pButtonMin->setToolTip(minstr.toUtf8());
     m_pButtonRestore->setToolTip(Restorestr.toUtf8());

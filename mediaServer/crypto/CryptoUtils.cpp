@@ -90,8 +90,11 @@ std::vector<uint8_t> CryptoUtils::pbkdf2(const std::string& password, const std:
                                          int iterations, int keyLength) {
     std::vector<uint8_t> result(keyLength);
     
+    // 解码Base64编码的salt
+    std::vector<uint8_t> saltBytes = base64Decode(salt);
+    
     if (PKCS5_PBKDF2_HMAC(password.c_str(), password.length(),
-                           reinterpret_cast<const unsigned char*>(salt.c_str()), salt.length(),
+                           saltBytes.data(), saltBytes.size(),
                            iterations, EVP_sha256(),
                            keyLength, result.data()) != 1) {
         throw std::runtime_error("PBKDF2 failed");
@@ -385,5 +388,6 @@ std::string CryptoUtils::generateRandomBytes(size_t length) {
         throw std::runtime_error("Failed to generate random bytes");
     }
     
-    return std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+    // 转换为Base64编码，确保字符串安全
+    return base64Encode(buffer);
 }

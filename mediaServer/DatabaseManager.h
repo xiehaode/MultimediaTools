@@ -58,6 +58,12 @@ public:
     
     bool getUserById(int userId, User& user);
     
+    // 获取用户salt和哈希用于密码验证
+    bool getUserSalt(const std::string& username, std::string& salt, std::string& hash);
+    
+    // 根据用户名获取完整用户信息（包括salt和password hash）
+    bool getUserByUsername(const std::string& username, User& user, std::string& storedHash, std::string& salt);
+    
     // 会话管理
     bool createSession(int userId, const std::string& sessionToken,
                       const std::string& ipAddress, const std::string& userAgent,

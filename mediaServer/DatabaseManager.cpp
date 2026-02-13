@@ -120,17 +120,45 @@ bool DatabaseManager::registerUser(const std::string& username, const std::strin
         return false;
     }
     
+    // 处理存储过程可能返回的结果集
+    while (mysql_stmt_next_result(stmt) == 0) {
+        MYSQL_RES* proc_result = mysql_stmt_result_metadata(stmt);
+        if (proc_result) {
+            // 消费存储过程中的结果集
+            while (mysql_stmt_fetch(stmt) == 0) {
+                // 丢弃行数据
+            }
+            mysql_free_result(proc_result);
+        }
+    }
+    
     mysql_stmt_close(stmt);
     
     // 获取输出参数
     query = "SELECT @user_id, @status, @message";
+    if (mysql_query(connection_, query.c_str()) != 0) {
+        message = "查询输出参数失败: " + getMySQLError();
+        userId = 0;
+        return false;
+    }
+    
     MYSQL_RES* result = mysql_store_result(connection_);
     if (result) {
         MYSQL_ROW row = mysql_fetch_row(result);
-        if (row && row[0] && row[1] && row[2]) {
-            userId = std::stoi(row[0]);
+        if (row && row[1] && row[2]) {
             std::string status = row[1];
             message = row[2];
+            
+            // 处理用户ID，可能为NULL
+            if (row[0] && row[0] != nullptr && strlen(row[0]) > 0) {
+                try {
+                    userId = std::stoi(row[0]);
+                } catch (const std::exception& e) {
+                    userId = 0;
+                }
+            } else {
+                userId = 0;
+            }
             
             mysql_free_result(result);
             return (status == "success");
@@ -139,6 +167,7 @@ bool DatabaseManager::registerUser(const std::string& username, const std::strin
     }
     
     message = "获取结果失败";
+    userId = 0;
     return false;
 }
 
@@ -196,18 +225,44 @@ bool DatabaseManager::authenticateUser(const std::string& username, const std::s
         return false;
     }
     
+    // 处理存储过程可能返回的结果集
+    while (mysql_stmt_next_result(stmt) == 0) {
+        MYSQL_RES* proc_result = mysql_stmt_result_metadata(stmt);
+        if (proc_result) {
+            // 消费存储过程中的结果集
+            while (mysql_stmt_fetch(stmt) == 0) {
+                // 丢弃行数据
+            }
+            mysql_free_result(proc_result);
+        }
+    }
+    
     mysql_stmt_close(stmt);
     
     // 获取输出参数
     query = "SELECT @user_id, @role, @status, @message";
+    if (mysql_query(connection_, query.c_str()) != 0) {
+        message = "查询输出参数失败: " + getMySQLError();
+        return false;
+    }
+    
     MYSQL_RES* result = mysql_store_result(connection_);
     if (result) {
         MYSQL_ROW row = mysql_fetch_row(result);
-        if (row && row[0] && row[1] && row[2] && row[3]) {
-            int userId = std::stoi(row[0]);
+        if (row && row[1] && row[2] && row[3]) {
             std::string role = row[1];
             std::string status = row[2];
             message = row[3];
+            
+            // 处理用户ID，可能为NULL
+            int userId = 0;
+            if (row[0] && row[0] != nullptr && strlen(row[0]) > 0) {
+                try {
+                    userId = std::stoi(row[0]);
+                } catch (const std::exception& e) {
+                    userId = 0;
+                }
+            }
             
             mysql_free_result(result);
             
@@ -224,6 +279,76 @@ bool DatabaseManager::authenticateUser(const std::string& username, const std::s
     }
     
     message = "获取结果失败";
+    return false;
+}
+
+bool DatabaseManager::getUserSalt(const std::string& username, std::string& salt, std::string& hash) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (!isConnected()) {
+        return false;
+    }
+    
+    std::string query = "SELECT salt, password_hash FROM users WHERE username = ? LIMIT 1";
+    
+    MYSQL_STMT* stmt = mysql_stmt_init(connection_);
+    if (!stmt) {
+        return false;
+    }
+    
+    if (mysql_stmt_prepare(stmt, query.c_str(), query.length()) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+    
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = (void*)username.c_str();
+    bind[0].buffer_length = username.length();
+    
+    if (mysql_stmt_bind_param(stmt, bind) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    if (mysql_stmt_execute(stmt) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    MYSQL_RES* result = mysql_stmt_result_metadata(stmt);
+    if (result) {
+        MYSQL_BIND result_bind[2];
+        memset(result_bind, 0, sizeof(result_bind));
+        
+        char salt_str[65], hash_str[256];
+        unsigned long salt_len, hash_len;
+        
+        result_bind[0].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[0].buffer = salt_str;
+        result_bind[0].buffer_length = sizeof(salt_str);
+        result_bind[0].length = &salt_len;
+        
+        result_bind[1].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[1].buffer = hash_str;
+        result_bind[1].buffer_length = sizeof(hash_str);
+        result_bind[1].length = &hash_len;
+        
+        if (mysql_stmt_bind_result(stmt, result_bind) == 0 && mysql_stmt_fetch(stmt) == 0) {
+            salt = std::string(salt_str, salt_len);
+            hash = std::string(hash_str, hash_len);
+            
+            mysql_free_result(result);
+            mysql_stmt_close(stmt);
+            return true;
+        }
+        
+        mysql_free_result(result);
+    }
+    
+    mysql_stmt_close(stmt);
     return false;
 }
 
@@ -903,4 +1028,101 @@ bool DatabaseManager::getUserStats(int userId, std::map<std::string, int>& stats
     }
     
     return true;
+}
+
+bool DatabaseManager::getUserByUsername(const std::string& username, User& user, std::string& storedHash, std::string& salt) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (!isConnected()) {
+        return false;
+    }
+    
+    std::string query = "SELECT id, username, email, role, password_hash, salt, is_active, last_login FROM users WHERE username = ? LIMIT 1";
+    
+    MYSQL_STMT* stmt = mysql_stmt_init(connection_);
+    if (!stmt) {
+        return false;
+    }
+    
+    if (mysql_stmt_prepare(stmt, query.c_str(), query.length()) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+    
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = (void*)username.c_str();
+    bind[0].buffer_length = username.length();
+    
+    if (mysql_stmt_bind_param(stmt, bind) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    if (mysql_stmt_execute(stmt) != 0) {
+        mysql_stmt_close(stmt);
+        return false;
+    }
+    
+    MYSQL_RES* result = mysql_stmt_result_metadata(stmt);
+    if (result) {
+        MYSQL_BIND result_bind[8];
+        memset(result_bind, 0, sizeof(result_bind));
+        
+        int id, is_active;
+        char db_username[101], email[101], role[51], password_hash[256], salt_str[256], last_login[20];
+        unsigned long username_len, email_len, role_len, password_hash_len, salt_len, last_login_len;
+        
+        // Bind result columns
+        result_bind[0].buffer_type = MYSQL_TYPE_LONG;
+        result_bind[0].buffer = &id;
+        result_bind[1].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[1].buffer = db_username;
+        result_bind[1].buffer_length = sizeof(db_username);
+        result_bind[1].length = &username_len;
+        result_bind[2].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[2].buffer = email;
+        result_bind[2].buffer_length = sizeof(email);
+        result_bind[2].length = &email_len;
+        result_bind[3].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[3].buffer = role;
+        result_bind[3].buffer_length = sizeof(role);
+        result_bind[3].length = &role_len;
+        result_bind[4].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[4].buffer = password_hash;
+        result_bind[4].buffer_length = sizeof(password_hash);
+        result_bind[4].length = &password_hash_len;
+        result_bind[5].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[5].buffer = salt_str;
+        result_bind[5].buffer_length = sizeof(salt_str);
+        result_bind[5].length = &salt_len;
+        result_bind[6].buffer_type = MYSQL_TYPE_LONG;
+        result_bind[6].buffer = &is_active;
+        result_bind[7].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[7].buffer = last_login;
+        result_bind[7].buffer_length = sizeof(last_login);
+        result_bind[7].length = &last_login_len;
+        
+        if (mysql_stmt_bind_result(stmt, result_bind) == 0 && mysql_stmt_fetch(stmt) == 0) {
+            user.id = id;
+            user.username = std::string(db_username, username_len);
+            user.email = std::string(email, email_len);
+            user.role = std::string(role, role_len);
+            user.isActive = (is_active != 0);
+            user.lastLogin = std::string(last_login, last_login_len);
+            storedHash = std::string(password_hash, password_hash_len);
+            salt = std::string(salt_str, salt_len);
+            
+            mysql_free_result(result);
+            mysql_stmt_close(stmt);
+            return true;
+        }
+        
+        mysql_free_result(result);
+    }
+    
+    mysql_stmt_close(stmt);
+    return false;
 }
