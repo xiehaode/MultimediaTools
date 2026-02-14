@@ -13,5 +13,6 @@
         <file>rc/network.svg</file>
         <file>rc/addFile.svg</file>
         <file>rc/export.svg</file>
+        <file>rc/login.svg</file>
     </qresource>
 </RCC>

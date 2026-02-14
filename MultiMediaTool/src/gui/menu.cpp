@@ -151,8 +151,8 @@ void Menu::init()
     setPushButton(newPage4BtnPicture, QString::fromUtf8(":/rc/picture.svg"), picture);
     QString ffmpeg = GBK2QString("命令行");
     setPushButton(newPage5BtnFFmpeg, QString::fromUtf8(":/rc/record.svg"), ffmpeg);
-    QString ffmpegClient = GBK2QString("FFmpeg客户端");
-    setPushButton(newPage6BtnFFmpegClient, QString::fromUtf8(":/rc/record.svg"), ffmpegClient);
+    QString ffmpegClient = GBK2QString("登录");
+    setPushButton(newPage6BtnFFmpegClient, QString::fromUtf8(":/rc/login.svg"), ffmpegClient);
 
 
     // 创建按钮组

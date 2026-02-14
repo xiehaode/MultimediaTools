@@ -86,24 +86,6 @@ void HttpServer::setupRoutes() {
         } else if (method == "PUT" && path == "/api/user/profile") {
             handleUpdateUserProfile(request);
         }
-        // FFmpeg命令相关路由
-        else if (method == "POST" && path == "/api/commands") {
-            handleSaveCommand(request);
-        } else if (method == "PUT" && path == "/api/commands") {
-            handleUpdateCommandStatus(request);
-        } else if (method == "GET" && path == "/api/commands") {
-            handleGetCommand(request);
-        } else if (method == "GET" && path == "/api/commands/user") {
-            handleGetUserCommands(request);
-        } else if (method == "GET" && path == "/api/commands/stats") {
-            handleGetUserStats(request);
-        }
-        // 文件相关路由
-        else if (method == "POST" && path == "/api/files/upload") {
-            handleFileUpload(request);
-        } else if (method == "GET" && path == "/api/files/download") {
-            handleFileDownload(request);
-        }
         // 404 Not Found
         else {
             sendError(request, "Not Found", status_codes::NotFound);
@@ -172,15 +154,28 @@ void HttpServer::handleLogin(const http_request& request) {
             return;
         }
 
+        std::cout << "[HttpServer] Login attempt - Username: " << username << std::endl;
+
         auto& db = DatabaseManager::getInstance();
         std::string message;
         User user;
         auto& crypto = CryptoUtils::getInstance();
 
+        std::cout << "[HttpServer] Calling getUserByUsername..." << std::endl;
+
         // 修复1：先从数据库获取用户的salt（这是正确的验证流程）
         // 第一步：根据用户名查用户信息（包括salt和存的哈希）
         std::string storedHash, salt;
-        if (!db.getUserByUsername(username, user, storedHash, salt)) {
+        bool userFound = false;
+        try {
+            userFound = db.getUserByUsername(username, user, storedHash, salt);
+            std::cout << "[HttpServer] getUserByUsername returned: " << (userFound ? "true" : "false") << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[HttpServer] Exception in getUserByUsername: " << e.what() << std::endl;
+            throw;
+        }
+        
+        if (!userFound) {
             message = "用户名不存在";
             std::cout << "[HttpServer] Authentication failed: " << message << std::endl;
             
@@ -332,94 +327,7 @@ void HttpServer::handleGetUserProfile(const http_request& request) {
     }
 }
 
-void HttpServer::handleSaveCommand(const http_request& request) {
-    try {
-        User user;
-        if (!authenticateRequest(request, user)) {
-            sendError(request, "Invalid token", status_codes::Unauthorized);
-            return;
-        }
-        
-        json::value body;
-        if (!parseJsonBody(request, body)) {
-            sendError(request, "Invalid JSON body");
-            return;
-        }
-        
-        FFmpegCommand command;
-        command.userId = user.id;
-        
-        if (!extractStringParam(body, "commandName", command.commandName) ||
-            !extractStringParam(body, "inputFile", command.inputFile) ||
-            !extractStringParam(body, "outputFile", command.outputFile) ||
-            !extractStringParam(body, "commandLine", command.commandLine)) {
-            sendError(request, "Missing required fields");
-            return;
-        }
-        
-        extractStringParam(body, "parameters", command.parameters);
-        command.status = "pending";
-        command.progress = 0;
-        
-        auto& db = DatabaseManager::getInstance();
-        int commandId;
-        
-        if (db.saveFFmpegCommand(command, commandId)) {
-            command.id = commandId;
-            json::value responseData = commandToJson(command);
-            sendResponse(request, createSuccessResponse(responseData));
-            logRequest(request, "save_command", true);
-        } else {
-            sendError(request, "Failed to save command");
-            logRequest(request, "save_command", false);
-        }
-    } catch (const std::exception& e) {
-        sendError(request, std::string("Save command failed: ") + e.what());
-        logRequest(request, "save_command", false);
-    }
-}
 
-void HttpServer::handleUpdateCommandStatus(const http_request& request) {
-    try {
-        User user;
-        if (!authenticateRequest(request, user)) {
-            sendError(request, "Invalid token", status_codes::Unauthorized);
-            return;
-        }
-        
-        json::value body;
-        if (!parseJsonBody(request, body)) {
-            sendError(request, "Invalid JSON body");
-            return;
-        }
-        
-        int commandId;
-        std::string status, errorMessage = "";
-        int progress = 0;
-        
-        if (!extractIntParam(body, "commandId", commandId) ||
-            !extractStringParam(body, "status", status)) {
-            sendError(request, "Missing required fields: commandId, status");
-            return;
-        }
-        
-        extractIntParam(body, "progress", progress);
-        extractStringParam(body, "errorMessage", errorMessage);
-        
-        auto& db = DatabaseManager::getInstance();
-        
-        if (db.updateCommandStatus(commandId, status, progress, errorMessage)) {
-            sendResponse(request, createSuccessResponse());
-            logRequest(request, "update_command_status", true);
-        } else {
-            sendError(request, "Failed to update command status");
-            logRequest(request, "update_command_status", false);
-        }
-    } catch (const std::exception& e) {
-        sendError(request, std::string("Update command status failed: ") + e.what());
-        logRequest(request, "update_command_status", false);
-    }
-}
 
 bool HttpServer::authenticateRequest(const http_request& request, User& user) {
     auto headers = request.headers();
@@ -560,23 +468,7 @@ json::value HttpServer::userToJson(const User& user) {
     return jsonUser;
 }
 
-json::value HttpServer::commandToJson(const FFmpegCommand& command) {
-    json::value jsonCommand;
-    jsonCommand[U("id")] = json::value::number(command.id);
-    jsonCommand[U("userId")] = json::value::number(command.userId);
-    jsonCommand[U("commandName")] = json::value::string(utility::conversions::to_string_t(command.commandName));
-    jsonCommand[U("inputFile")] = json::value::string(utility::conversions::to_string_t(command.inputFile));
-    jsonCommand[U("outputFile")] = json::value::string(utility::conversions::to_string_t(command.outputFile));
-    jsonCommand[U("commandLine")] = json::value::string(utility::conversions::to_string_t(command.commandLine));
-    jsonCommand[U("parameters")] = json::value::string(utility::conversions::to_string_t(command.parameters));
-    jsonCommand[U("status")] = json::value::string(utility::conversions::to_string_t(command.status));
-    jsonCommand[U("progress")] = json::value::number(command.progress);
-    jsonCommand[U("errorMessage")] = json::value::string(utility::conversions::to_string_t(command.errorMessage));
-    jsonCommand[U("createdAt")] = json::value::string(utility::conversions::to_string_t(command.createdAt));
-    jsonCommand[U("updatedAt")] = json::value::string(utility::conversions::to_string_t(command.updatedAt));
-    jsonCommand[U("completedAt")] = json::value::string(utility::conversions::to_string_t(command.completedAt));
-    return jsonCommand;
-}
+
 
 bool HttpServer::parseJsonBody(const http_request& request, json::value& body) {
     try {
@@ -656,81 +548,7 @@ std::string HttpServer::getUserAgent(const http_request& request) {
 }
 
 // 其他处理函数的简化实现
-void HttpServer::handleGetCommand(const http_request& request) {
-    User user;
-    if (!authenticateRequest(request, user)) {
-        sendError(request, "Invalid token", status_codes::Unauthorized);
-        return;
-    }
-    
-    // 实现获取单个命令的逻辑
-    sendResponse(request, createSuccessResponse());
-}
-
-void HttpServer::handleGetUserCommands(const http_request& request) {
-    std::cerr << "[API] 收到获取用户命令请求" << std::endl;
-    
-    User user;
-    if (!authenticateRequest(request, user)) {
-        std::cerr << "[API] 用户命令请求认证失败" << std::endl;
-        
-        // 返回详细的错误信息，匹配客户端期望的格式
-        json::value errorResponse;
-        errorResponse[U("success")] = json::value::boolean(false);
-        errorResponse[U("message")] = json::value::string(U("Host requires authentication"));
-        sendResponse(request, errorResponse, status_codes::Unauthorized);
-        return;
-    }
-    
-    std::cerr << "[API] 用户命令请求认证成功，用户ID:" << user.id << " 用户名:" << user.username << std::endl;
-    
-    auto& db = DatabaseManager::getInstance();
-    auto commands = db.getUserCommands(user.id);
-    
-    json::value responseData = json::value::array();
-    for (size_t i = 0; i < commands.size(); ++i) {
-        responseData[i] = commandToJson(commands[i]);
-    }
-    
-    // 修复：创建包含"commands"字段的响应，以匹配客户端期望的格式
-    json::value successResponse;
-    successResponse[U("success")] = json::value::boolean(true);
-    successResponse[U("commands")] = responseData;
-    
-    sendResponse(request, successResponse);
-}
-
-void HttpServer::handleGetUserStats(const http_request& request) {
-    User user;
-    if (!authenticateRequest(request, user)) {
-        sendError(request, "Invalid token", status_codes::Unauthorized);
-        return;
-    }
-    
-    sendResponse(request, createSuccessResponse());
-}
-
 void HttpServer::handleUpdateUserProfile(const http_request& request) {
-    User user;
-    if (!authenticateRequest(request, user)) {
-        sendError(request, "Invalid token", status_codes::Unauthorized);
-        return;
-    }
-    
-    sendResponse(request, createSuccessResponse());
-}
-
-void HttpServer::handleFileUpload(const http_request& request) {
-    User user;
-    if (!authenticateRequest(request, user)) {
-        sendError(request, "Invalid token", status_codes::Unauthorized);
-        return;
-    }
-    
-    sendResponse(request, createSuccessResponse());
-}
-
-void HttpServer::handleFileDownload(const http_request& request) {
     User user;
     if (!authenticateRequest(request, user)) {
         sendError(request, "Invalid token", status_codes::Unauthorized);

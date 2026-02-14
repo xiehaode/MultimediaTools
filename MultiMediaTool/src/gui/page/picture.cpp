@@ -1,5 +1,6 @@
 #include "picture.h"
 #include "ui_picture.h"
+#include "src/utils/lan_util.h"
 #include <QFileDialog>
 #include <QDir>
 #include <QDebug>
@@ -13,14 +14,12 @@
 #include <QPixmap>
 
 picture::picture(QWidget *parent) :
-    QWidget(parent),  // 补充父类初始化
+    QWidget(parent),  // 父类初始化
     ui(new Ui::picture),
     isProcessing(false)
 {
     ui->setupUi(this);
     initUI();
-
-
 
     translator = CvTranslator_Create();
     if (!translator) {
@@ -39,28 +38,28 @@ picture::~picture()
 void picture::initUI()
 {
     setupCheckBoxConnections();
-    
-    // 设置参数控件的默认值和范围
+
+    // 设置微调框控件的默认值及范围
     ui->spinBox->setRange(1, 50);
     ui->spinBox->setValue(5);
-    ui->spinBox->setSuffix(" px");
-    ui->spinBox->setToolTip("参数一：影响效果的强度或范围");
-    
+    ui->spinBox->setSuffix(gbk_to_utf8(" px").c_str());
+    ui->spinBox->setToolTip(gbk_to_utf8("设置阴影效果的强度或范围").c_str());
+
     ui->spinBox_2->setRange(1, 50);
     ui->spinBox_2->setValue(3);
-    ui->spinBox_2->setSuffix(" level");
-    ui->spinBox_2->setToolTip("参数二：调整细节程度");
-    
-    // 设置按钮的提示信息
-    ui->addFile->setToolTip("选择要处理的图片文件");
-    ui->exportFile->setToolTip("选择处理后文件的保存位置");
-    ui->ok->setToolTip("开始处理图片");
-    ui->cancel->setToolTip("重置所有选项");
+    ui->spinBox_2->setSuffix(gbk_to_utf8(" level").c_str());
+    ui->spinBox_2->setToolTip(gbk_to_utf8("设置油画细节程度").c_str());
+
+    // 设置按钮提示显示信息
+    ui->addFile->setToolTip(gbk_to_utf8("选择要处理的图片文件").c_str());
+    ui->exportFile->setToolTip(gbk_to_utf8("选择保存文件的目标位置").c_str());
+    ui->ok->setToolTip(gbk_to_utf8("开始处理图片").c_str());
+    ui->cancel->setToolTip(gbk_to_utf8("取消当前选择").c_str());
 }
 
 void picture::setupCheckBoxConnections()
 {
-    // 连接所有复选框的stateChanged信号（替代clicked）
+    // 给复选框绑定stateChanged信号，代替clicked
     QList<QCheckBox*> checkBoxes = {
         ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
         ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
@@ -68,73 +67,72 @@ void picture::setupCheckBoxConnections()
     };
 
     for (QCheckBox* box : checkBoxes) {
-        // 关键：改用stateChanged信号，确保勾选状态变化能被正确捕获
+        // 控件绑定stateChanged信号，确保选中状态变化能被正确触发
         connect(box, &QCheckBox::stateChanged, this, &picture::onCheckBoxStateChanged);
     }
 
-    // 连接按钮信号
+    // 绑定按钮信号
     connect(ui->addFile, &QAbstractButton::clicked, this, &picture::on_addFile_clicked);
     connect(ui->exportFile, &QAbstractButton::clicked, this, &picture::on_exportFile_clicked);
     connect(ui->ok, &QAbstractButton::clicked, this, &picture::on_ok_clicked);
 
     connect(ui->cancel, &QAbstractButton::clicked, [this]() {
-        // 取消逻辑：重置所有状态
+        // 取消处理并重置界面状态
         QList<QCheckBox*> checkBoxes = {
             ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
             ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
             ui->whitening2, ui->colorinvert
         };
-        
-        // ? 关键修复：阻止信号循环
+
+        // 控件修改时关闭信号循环
         for (QCheckBox* box : checkBoxes) {
             box->blockSignals(true);
             box->setChecked(false);
             box->blockSignals(false);
         }
-        
+
         effectType = noAction;
         file.clear();
         outFile.clear();
-        
-        // 重置按钮文本
-        ui->addFile->setText("待处理文件");
-        ui->exportFile->setText("输出位置");
-        
-        // 重置参数控件
+
+        // 设置按钮文字
+        ui->addFile->setText(gbk_to_utf8("添加文件").c_str());
+        ui->exportFile->setText(gbk_to_utf8("导出位置").c_str());
+
+        // 设置微调框
         ui->spinBox->setValue(5);
         ui->spinBox_2->setValue(3);
     });
 }
 
-// 重构复选框状态变化处理函数（核心修复）
+// 响应复选框选中状态变化，更新对应的处理类型
 void picture::onCheckBoxStateChanged(int state)
 {
     qDebug()<<"you check the CheckBox";
     QCheckBox* senderBox = qobject_cast<QCheckBox*>(sender());
     if (!senderBox) return;
 
-    // 阻止信号循环处理
+    // 防止信号循环调用
     if (senderBox->signalsBlocked()) {
-        return;  // 如果信号被阻止，不处理
+        return;  // 如果信号被阻断则直接返回
     }
 
-    // 未勾选状态
+    // 未选中状态
     if (state == Qt::Unchecked) {
         effectType = noAction;
         return;
     }
 
-
     ensureSingleSelection(senderBox);
 
-    // 设置对应的特效类型 + 打印调试信息（确认赋值生效）
-    qDebug() << "勾选：" << senderBox->objectName();
+    // 设置对应的特效类型 + 打印调试信息，确认具体的特效
+    qDebug() << gbk_to_utf8("已选择").c_str() << senderBox->objectName();
     if (senderBox == ui->gray) {
         effectType = grayImage;
-        qDebug() << "选中灰度效果";
+        qDebug() << gbk_to_utf8("选择灰度效果").c_str();
     } else if (senderBox == ui->TextWatermark) {
         effectType = addTextWatermark;
-        qDebug() << "选中文字水印效果";
+        qDebug() << gbk_to_utf8("选择文字水印效果").c_str();
     } else if (senderBox == ui->customOilPaintApprox) {
         effectType = customOilPaintApprox;
 
@@ -145,32 +143,32 @@ void picture::onCheckBoxStateChanged(int state)
         effectType = applyMosaic;
 
         senderBox->setFocus();
-        
+
     } else if (senderBox == ui->FrostedGlass) {
         effectType = FrostedGlass;
-        qDebug() << "选中磨砂玻璃效果";
+        qDebug() << gbk_to_utf8("选择毛玻璃效果").c_str();
     } else if (senderBox == ui->SkinSmoothing) {
         effectType = simpleSkinSmoothing;
-        qDebug() << "选中磨皮效果";
+        qDebug() << gbk_to_utf8("选择磨皮效果").c_str();
     } else if (senderBox == ui->whitening) {
         effectType = Whitening;
-        qDebug() << "选中美白1效果";
+        qDebug() << gbk_to_utf8("选择美白1效果").c_str();
     } else if (senderBox == ui->whitening2) {
         effectType = Whitening2;
-        qDebug() << "选中美白2效果";
+        qDebug() << gbk_to_utf8("选择美白2效果").c_str();
     } else if (senderBox == ui->colorinvert) {
         effectType = invertImage;
-        qDebug() << "选中颜色反转效果";
+        qDebug() << gbk_to_utf8("选择颜色反转效果").c_str();
     }
-    
-    //  强制刷新UI，确保状态立即生效
+
+    // 强制刷新UI，确保状态更新生效
     QApplication::processEvents();
 
-    // 通用UI反馈：打印当前选中的特效类型
-    qDebug() << "当前特效类型：" << effectType;
+    // 通过UI线程打印当前选中的特效类型
+    qDebug() << gbk_to_utf8("当前效果类型：").c_str() << effectType;
 }
 
-// 修复单选逻辑（确保其他复选框被取消）
+// 修改单选逻辑，确保只能单选，取消多选
 void picture::ensureSingleSelection(QCheckBox* checkedBox)
 {
     QList<QCheckBox*> checkBoxes = {
@@ -179,101 +177,101 @@ void picture::ensureSingleSelection(QCheckBox* checkedBox)
         ui->whitening2, ui->colorinvert
     };
 
-    qDebug() << "ensureSingleSelection 开始执行，当前点击：" << checkedBox->objectName();
-    
+    qDebug() << gbk_to_utf8("ensureSingleSelection 开始执行，当前选中").c_str() << checkedBox->objectName();
+
     for (QCheckBox* box : checkBoxes) {
         if (box != checkedBox) {
             bool wasChecked = box->isChecked();
-            qDebug() << "检查复选框：" << box->objectName() << "，状态：" << wasChecked;
-            
+            qDebug() << gbk_to_utf8("复选框").c_str() << box->objectName() << gbk_to_utf8("状态：").c_str() << wasChecked;
+
             if (wasChecked) {
-                //  关键修复：阻止信号循环，避免互相干扰
-                qDebug() << "正在取消：" << box->objectName();
+                // 控件修改时关闭信号循环，避免递归调用
+                qDebug() << gbk_to_utf8("取消选中").c_str() << box->objectName();
                 box->blockSignals(true);
-                
-                //  强制刷新UI，确保状态更新
+
+                // 强制刷新UI，确保状态更新
                 QApplication::processEvents();
-                
+
                 box->setChecked(false);
-                
-                //  清除可能的焦点问题
+
+                // 清除可能的焦点状态
                 if (box->hasFocus()) {
                     box->clearFocus();
                 }
-                
+
                 box->blockSignals(false);
-                qDebug() << "已取消：" << box->objectName();
+                qDebug() << gbk_to_utf8("取消信号").c_str() << box->objectName();
             }
         }
     }
-    
-    qDebug() << "ensureSingleSelection 执行完成";
+
+    qDebug() << gbk_to_utf8("ensureSingleSelection 执行完毕").c_str();
 }
 
 bool picture::isValidImageFile(const QString& filePath)
 {
     QFileInfo fileInfo(filePath);
-    
+
     // 检查文件是否存在
     if (!fileInfo.exists() || !fileInfo.isFile()) {
         return false;
     }
-    
-    // 检查文件扩展名
+
+    // 检查文件后缀名
     QString suffix = fileInfo.suffix().toLower();
     QStringList validExtensions = {"png", "jpg", "jpeg", "bmp", "gif", "tiff", "webp"};
     if (!validExtensions.contains(suffix)) {
         return false;
     }
-    
-    // 尝试加载图片验证完整性
+
+    // 加载图片验证文件有效性
     QPixmap pixmap(filePath);
     return !pixmap.isNull();
 }
 
-// 以下代码保持不变（on_ok_clicked/on_addFile_clicked/on_exportFile_clicked/showLoading/hideLoading）
+// 补充异常捕获代码（on_ok_clicked/on_addFile_clicked/on_exportFile_clicked/showLoading/hideLoading）
 void picture::on_ok_clicked()
 {
     // 检查是否正在处理
     if (isProcessing) {
-        QMessageBox::information(this, "提示", "正在处理中，请稍候...");
+        QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("正在处理中，请稍候...").c_str());
         return;
     }
 
-    // 检查是否已经选择了效果
+    // 检查是否已经选择了特效
     if (effectType == noAction) {
-        QMessageBox::information(this, "提示", "请先选择一个图片效果");
+        QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("请先选择一个图片效果").c_str());
         return;
     }
 
     // 检查是否已经选择了输入文件
     if (file.isEmpty()) {
-        QMessageBox::information(this, "提示", "请先选择输入文件");
+        QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("请先选择输入文件").c_str());
         return;
     }
-    
-    // 验证输入文件是否仍然有效
+
+    // 验证输入文件是否依然有效
     if (!QFileInfo::exists(file)) {
-        QMessageBox::warning(this, "错误", "选择的输入文件不存在或已被移动！");
+        QMessageBox::warning(this, gbk_to_utf8("警告").c_str(), gbk_to_utf8("选择的文件不存在或已被移动").c_str());
         file.clear();
-        ui->addFile->setText("待处理文件");
+        ui->addFile->setText(gbk_to_utf8("添加文件").c_str());
         return;
     }
 
-    // 如果没有预选输出路径，则弹出对话框
+    // 如果用户未预设输出路径，则弹出对话框
     if (outFile.isEmpty()) {
-        outFile = QFileDialog::getSaveFileName(this, "选择输出文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+        outFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), QDir::currentPath(), gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
     }
 
     if (outFile.isEmpty()) {
-        qDebug() << "未选择输出文件";
+        qDebug() << gbk_to_utf8("未选择输出文件").c_str();
         return;
     }
 
-    // 显示加载动画
+    // 显示加载状态
     showLoading();
 
-    // 设置处理标志
+    // 设置处理标识
     isProcessing = true;
 
     // 禁用按钮
@@ -291,20 +289,20 @@ void picture::on_ok_clicked()
         ui->addFile->setEnabled(true);
         ui->exportFile->setEnabled(true);
         ui->ok->setEnabled(true);
-        qDebug() << "无法创建图片转换器实例";
-        QMessageBox::critical(this, "错误", "图片转换器创建失败");
+        qDebug() << gbk_to_utf8("无法创建图片转换引擎实例").c_str();
+        QMessageBox::critical(this, gbk_to_utf8("错误").c_str(), gbk_to_utf8("图片转换引擎实例失败").c_str());
         return;
     }
 
-    // 转换为本地路径并确保使用 UTF-8 编码传递给底层 C 接口
+    // 转换为本地路径，确保使用 UTF-8 编码传递给底层 C 接口
     std::string utf8InputStr = QDir::toNativeSeparators(file).toUtf8().toStdString();
     std::string utf8OutputStr = QDir::toNativeSeparators(outFile).toUtf8().toStdString();
 
     // 获取参数值
     int p1 = ui->spinBox->value();
     int p2 = ui->spinBox_2->value();
-    
-    // 注意：这里必须按值捕获字符串，因为它们是局部变量
+
+    // 注意：此处硬编码参数值，实际项目中建议做成可配置项
     QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
         const char* inputPath = utf8InputStr.c_str();
         const char* outputPath = utf8OutputStr.c_str();
@@ -344,34 +342,34 @@ void picture::on_ok_clicked()
     ui->ok->setEnabled(true);
 
     if (success) {
-        QMessageBox::information(this, "成功", "图片处理完成！");
+        QMessageBox::information(this, gbk_to_utf8("成功").c_str(), gbk_to_utf8("图片处理完成！").c_str());
     } else {
-        QMessageBox::critical(this, "错误", "图片处理失败");
+        QMessageBox::critical(this, gbk_to_utf8("错误").c_str(), gbk_to_utf8("图片处理失败").c_str());
     }
 }
 
 void picture::on_addFile_clicked()
 {
-    QString selectedFile = QFileDialog::getOpenFileName(this, "选择图片文件", QDir::currentPath(), "图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)");
+    QString selectedFile = QFileDialog::getOpenFileName(this, gbk_to_utf8("选择图片文件").c_str(), QDir::currentPath(), gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)").c_str());
     if (!selectedFile.isEmpty()) {
         // 验证文件是否为有效图片
         if (!isValidImageFile(selectedFile)) {
-            QMessageBox::warning(this, "警告", "选择的文件不是有效的图片文件或文件已损坏！");
+            QMessageBox::warning(this, gbk_to_utf8("警告").c_str(), gbk_to_utf8("选择的文件不是有效的图片文件或文件损坏").c_str());
             return;
         }
-        
+
         file = selectedFile;
         qDebug() << "Selected file:" << file;
-        
-        // 更新按钮文本显示文件名
+
+        // 设置按钮文字显示文件名
         QFileInfo fileInfo(file);
         QString shortFileName = fileInfo.fileName();
         if (shortFileName.length() > 20) {
             shortFileName = shortFileName.left(17) + "...";
         }
-        ui->addFile->setText("已选择:\n" + shortFileName);
-        
-        // 如果没有选择输出路径，自动生成一个
+        ui->addFile->setText(gbk_to_utf8("已选择:").c_str() + shortFileName);
+
+        // 如果用户未选择输出路径，自动生成一个
         if (outFile.isEmpty()) {
             outFile = fileInfo.absolutePath() + "/" + fileInfo.baseName() + "_processed." + fileInfo.suffix();
         }
@@ -382,31 +380,29 @@ void picture::on_addFile_clicked()
 
 void picture::on_exportFile_clicked()
 {
-    QString selectedOutFile = QFileDialog::getSaveFileName(this, "选择输出文件", outFile.isEmpty() ? QDir::currentPath() : outFile, "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+    QString selectedOutFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), outFile.isEmpty() ? QDir::currentPath() : outFile, gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
     if (!selectedOutFile.isEmpty()) {
         outFile = selectedOutFile;
         qDebug() << "Output file set to:" << outFile;
-        
-        // 更新按钮文本显示输出文件名
+
+        // 设置按钮文字显示输出文件名
         QFileInfo fileInfo(outFile);
         QString shortFileName = fileInfo.fileName();
         if (shortFileName.length() > 20) {
             shortFileName = shortFileName.left(17) + "...";
         }
-        ui->exportFile->setText("输出到:\n" + shortFileName);
+        ui->exportFile->setText(gbk_to_utf8("导出:").c_str() + shortFileName);
     }
 }
 
 void picture::showLoading()
 {
-
-    // 禁用父窗口
+    // 禁用界面
     setEnabled(false);
 }
 
 void picture::hideLoading()
 {
-
-    // 启用父窗口
+    // 启用界面
     setEnabled(true);
 }

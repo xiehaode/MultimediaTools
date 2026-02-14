@@ -38,8 +38,6 @@ private:
     void handleRegister(const std::string& body, std::string& response);
     void handleLogin(const std::string& body, std::string& response);
     void handleValidateToken(const std::string& headers, std::string& response);
-    void handleSaveCommand(const std::string& headers, const std::string& body, std::string& response);
-    void handleGetUserCommands(const std::string& headers, std::string& response);
     
     // 工具函数
     std::string createJsonResponse(bool success, const std::string& data = "", const std::string& error = "");

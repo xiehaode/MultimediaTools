@@ -100,9 +100,6 @@ int main(int argc, char* argv[]) {
         std::cout << "  POST /api/auth/login - User login" << std::endl;
         std::cout << "  GET  /api/auth/validate - Token validation" << std::endl;
         std::cout << "  GET  /api/user/profile - Get user profile" << std::endl;
-        std::cout << "  POST /api/commands - Save FFmpeg command" << std::endl;
-        std::cout << "  PUT  /api/commands - Update command status" << std::endl;
-        std::cout << "  GET  /api/commands/user - Get user commands" << std::endl;
         std::cout << std::endl;
         
         // 保持服务器运行

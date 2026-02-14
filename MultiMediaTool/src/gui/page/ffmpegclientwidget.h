@@ -50,7 +50,6 @@ public:
 private slots:
     // 登录相关
     void onLoginClicked();
-    void onLogoutClicked();
     void onLoginReply();
     void onValidateTokenReply();
     
@@ -59,19 +58,9 @@ private slots:
     void onShowRegisterPage();
     void onShowLoginPage();
     void onRegisterReply();
-    
-    // FFmpeg命令相关
-    void onExecuteCommandClicked();
-    void onCommandHistoryClicked();
-    void onCommandReply();
-    void onLoadCommandsClicked();
-    void onLoadCommandsReply();
-    
-    // 文件操作相关
-    void onUploadFileClicked();
-    void onDownloadFileClicked();
-    void onFileUploadReply();
-    void onFileDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+
+    // 登出相关
+    void onLogoutClicked();
     
     // 界面更新
     void updateServerStatus();
@@ -83,17 +72,11 @@ private:
     void initializeLoginPage();
     void initializeRegisterPage();
     void initializeMainPage();
-    void initializeCommandTab();
-    void initializeFileTab();
-    void initializeHistoryTab();
     
     // 网络请求
     void sendLoginRequest(const QString &username, const QString &password);
     void sendValidateTokenRequest();
-    void sendRegisterRequest(const QString &username, const QString &password, const QString &email);
-    void sendExecuteCommandRequest(const QString &commandName, const QString &commandLine);
-    void sendLoadCommandsRequest();
-    void sendFileUploadRequest(const QString &filePath);
+    void sendRegisterRequest(const QString &serverUrl, const QString &username, const QString &email, const QString &password);
     
     // UI状态管理
     void showLoginPage();
@@ -101,13 +84,11 @@ private:
     void showMainPage();
     void setLoginEnabled(bool enabled);
     void setRegisterEnabled(bool enabled);
-    void setCommandEnabled(bool enabled);
-    void updateCommandHistory(const QJsonArray &commands);
     
     // 错误处理
     void handleError(const QString &error, QNetworkReply *reply = nullptr);
-    void showErrorMessage(const QString &message);
-    void showSuccessMessage(const QString &message);
+    void showErrorMessage(const char *message);
+    void showSuccessMessage(const char *message);
     
     // 网络配置
     void configureNetworkRequest(QNetworkRequest &request);
@@ -159,47 +140,6 @@ private:
     
     // 主页面控件
     QWidget *m_mainWidget;
-    QTabWidget *m_tabWidget;
-    
-    // 命令执行标签页
-    QWidget *m_commandTab;
-    QComboBox *m_commandTypeCombo;
-    QLineEdit *m_commandNameEdit;
-    QLineEdit *m_inputFileEdit;
-    QLineEdit *m_outputFileEdit;
-    QTextEdit *m_commandLineEdit;
-    QLineEdit *m_parametersEdit;
-    QPushButton *m_executeButton;
-    QPushButton *m_browseInputButton;
-    QPushButton *m_browseOutputButton;
-    QProgressBar *m_progressBar;
-    QLabel *m_statusLabel;
-    
-    // 文件操作标签页
-    QWidget *m_fileTab;
-    QLineEdit *m_uploadFileEdit;
-    QPushButton *m_uploadButton;
-    QPushButton *m_browseUploadButton;
-    QTableWidget *m_fileTable;
-    QPushButton *m_downloadButton;
-    QPushButton *m_refreshFilesButton;
-    
-    // 历史记录标签页
-    QWidget *m_historyTab;
-    QTableWidget *m_historyTable;
-    QPushButton *m_refreshHistoryButton;
-    QPushButton *m_clearHistoryButton;
-    
-    // 常用FFmpeg命令预设
-    struct CommandPreset {
-        QString name;
-        QString commandLine;
-        QString description;
-    };
-    QList<CommandPreset> m_commandPresets;
-    
-    void loadCommandPresets();
-    void setupCommandPresets();
 };
 
 #endif // FFMPEGCLIENTWIDGET_H

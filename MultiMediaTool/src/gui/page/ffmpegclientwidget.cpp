@@ -1,4 +1,4 @@
-#include "ffmpegclientwidget.h"
+ï»¿#include "ffmpegclientwidget.h"
 #include "src/core/ApiManager.h"
 #include "src/utils/lan_util.h"
 #include "src/utils/encodinghelper.h"
@@ -32,47 +32,37 @@ FfmpegClientWidget::FfmpegClientWidget(QWidget *parent)
     , m_loginWidget(nullptr)
     , m_registerWidget(nullptr)
     , m_mainWidget(nullptr)
-    , m_tabWidget(nullptr)
-    , m_commandTab(nullptr)
-    , m_fileTab(nullptr)
-    , m_historyTab(nullptr)
 {
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¿ªÊ¼³õÊ¼»¯").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å¼€å§‹åˆå§‹åŒ–").c_str();
 
-    // ³õÊ¼»¯API¹ÜÀíÆ÷
     m_apiManager = std::make_unique<ApiManager>();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] API¹ÜÀíÆ÷³õÊ¼»¯Íê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] APIç®¡ç†å™¨åˆå§‹åŒ–å®Œæˆ").c_str();
 
-    // ÅäÖÃSSLÉèÖÃ£¬ÓÃÓÚÍøÂçÇëÇó
     QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
     sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
     QSslConfiguration::setDefaultConfiguration(sslConfig);
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] SSLÅäÖÃÍê³É£¬ÑéÖ¤Ä£Ê½ÉèÖÃÎª:").c_str() << sslConfig.peerVerifyMode();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] SSLé…ç½®å®Œæˆï¼ŒéªŒè¯æ¨¡å¼è®¾ç½®ä¸º:").c_str() << sslConfig.peerVerifyMode();
 
-    // ÅäÖÃÍøÂçµ÷ÊÔ
+
     configureNetworkDebugging();
 
-    // ÉèÖÃ¶¨Ê±Æ÷
-    m_statusTimer->setInterval(30000); // 30Ãë¼ì²éÒ»´Î×´Ì¬
+
+    m_statusTimer->setInterval(30000);
     connect(m_statusTimer, &QTimer::timeout, this, &FfmpegClientWidget::onTimerTick);
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×´Ì¬¶¨Ê±Æ÷ÅäÖÃÍê³É£¬¼ä¸ô:").c_str() << m_statusTimer->interval() << gbk_to_utf8("ms").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] çŠ¶æ€å®šæ—¶å™¨é…ç½®å®Œæˆï¼Œé—´éš”:").c_str() << m_statusTimer->interval() << gbk_to_utf8("ms").c_str();
 
-    // ³õÊ¼»¯UI
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¿ªÊ¼³õÊ¼»¯UI").c_str();
+
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] åˆå§‹åŒ–UI").c_str();
     initializeUI();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] UI³õÊ¼»¯Íê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] UIåˆå§‹åŒ–å®Œæˆ").c_str();
 
-    // ÉèÖÃÃüÁîÔ¤Éè
-    setupCommandPresets();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÔ¤ÉèÉèÖÃÍê³É").c_str();
 
-    // ÏÔÊ¾µÇÂ¼Ò³Ãæ
     showLoginPage();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼Ò³ÃæÏÔÊ¾Íê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•é¡µé¢æ˜¾ç¤ºå®Œæˆ").c_str();
 
-    // Æô¶¯×´Ì¬¶¨Ê±Æ÷
+
     m_statusTimer->start();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×´Ì¬¶¨Ê±Æ÷Æô¶¯Íê³É£¬¹¹Ôìº¯Êı³õÊ¼»¯Íê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] çŠ¶æ€å®šæ—¶å™¨å¯åŠ¨å®Œæˆ").c_str();
 }
 
 FfmpegClientWidget::~FfmpegClientWidget()
@@ -95,7 +85,7 @@ void FfmpegClientWidget::setLoginStatus(bool logged, const QString &username)
 
     if (logged) {
         showMainPage();
-        showSuccessMessage(QString(gbk_to_utf8("µÇÂ¼³É¹¦£¬»¶Ó­ %1").c_str()).arg(username));
+        showSuccessMessage(gbk_to_utf8("ç™»å½•æˆåŠŸï¼Œæ¬¢è¿ %1").c_str());
         m_statusTimer->start();
     } else {
         showLoginPage();
@@ -115,7 +105,7 @@ void FfmpegClientWidget::logout()
         m_currentReply = nullptr;
     }
 
-    showSuccessMessage(QString(gbk_to_utf8("ÒÑ°²È«ÍË³ö").c_str()));
+    showSuccessMessage(gbk_to_utf8("å·²å®‰å…¨é€€å‡º").c_str());
 }
 
 bool FfmpegClientWidget::connectToServer(const QString &serverUrl, const QString &username, const QString &password)
@@ -147,50 +137,50 @@ void FfmpegClientWidget::initializeLoginPage()
     m_loginWidget = new QWidget();
     QVBoxLayout *loginLayout = new QVBoxLayout(m_loginWidget);
 
-    // ±êÌâ
-    QLabel *titleLabel = new QLabel(QString(gbk_to_utf8("FFmpeg Media Server").c_str()), this);
+    // 
+    QLabel *titleLabel = new QLabel(gbk_to_utf8("Media Server").c_str(), this);
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet(gbk_to_utf8("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;").c_str());
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;");
     loginLayout->addWidget(titleLabel);
 
-    // µÇÂ¼±íµ¥
-    QGroupBox *loginGroup = new QGroupBox(QString(gbk_to_utf8("µÇÂ¼ĞÅÏ¢").c_str()), this);
+    // 
+    QGroupBox *loginGroup = new QGroupBox(gbk_to_utf8("ç™»å½•ä¿¡æ¯").c_str(), this);
     QVBoxLayout *formLayout = new QVBoxLayout(loginGroup);
 
-    // ·şÎñÆ÷µØÖ·
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("·şÎñÆ÷µØÖ·:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("æœåŠ¡å™¨åœ°å€:").c_str()));
     m_serverUrlEdit = new QLineEdit("http://localhost:8080", this);
-    m_serverUrlEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈë·şÎñÆ÷µØÖ·£¬ÀıÈç: http://localhost:8080").c_str()));
+    m_serverUrlEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥æœåŠ¡å™¨åœ°å€ï¼Œä¾‹å¦‚: http://localhost:8080").c_str());
     formLayout->addWidget(m_serverUrlEdit);
 
-    // ÓÃ»§Ãû
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÓÃ»§Ãû:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("ç”¨æˆ·å:").c_str()));
     m_usernameEdit = new QLineEdit(this);
-    m_usernameEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÓÃ»§Ãû").c_str()));
+    m_usernameEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥ç”¨æˆ·å").c_str());
     formLayout->addWidget(m_usernameEdit);
 
-    // ÃÜÂë
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÃÜÂë:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("å¯†ç :").c_str()));
     m_passwordEdit = new QLineEdit(this);
     m_passwordEdit->setEchoMode(QLineEdit::Password);
-    m_passwordEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÃÜÂë").c_str()));
+    m_passwordEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥å¯†ç ").c_str());
     formLayout->addWidget(m_passwordEdit);
 
-    // ¼Ç×¡·şÎñÆ÷
-    m_rememberServerCheckBox = new QCheckBox(QString(gbk_to_utf8("¼Ç×¡·şÎñÆ÷µØÖ·").c_str()), this);
+    // 
+    m_rememberServerCheckBox = new QCheckBox(gbk_to_utf8("è®°ä½æœåŠ¡å™¨åœ°å€").c_str(), this);
     formLayout->addWidget(m_rememberServerCheckBox);
 
-    // µÇÂ¼ºÍ×¢²á°´Å¥
+    // 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
 
-    m_loginButton = new QPushButton(QString(gbk_to_utf8("µÇÂ¼").c_str()), this);
-    m_loginButton->setStyleSheet(gbk_to_utf8("QPushButton { background-color: #3498db; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
-                                 "QPushButton:hover { background-color: #2980b9; }").c_str());
+    m_loginButton = new QPushButton(gbk_to_utf8("ç™»å½•").c_str(), this);
+    m_loginButton->setStyleSheet("QPushButton { background-color: #3498db; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                  "QPushButton:hover { background-color: #2980b9; }");
     connect(m_loginButton, &QPushButton::clicked, this, &FfmpegClientWidget::onLoginClicked);
 
-    m_registerButton = new QPushButton(QString(gbk_to_utf8("×¢²á").c_str()), this);
-    m_registerButton->setStyleSheet(gbk_to_utf8("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
-                                    "QPushButton:hover { background-color: #229954; }").c_str());
+    m_registerButton = new QPushButton(gbk_to_utf8("æ³¨å†Œ").c_str(), this);
+    m_registerButton->setStyleSheet("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                     "QPushButton:hover { background-color: #229954; }");
     connect(m_registerButton, &QPushButton::clicked, this, &FfmpegClientWidget::onShowRegisterPage);
 
     buttonLayout->addWidget(m_loginButton);
@@ -199,15 +189,15 @@ void FfmpegClientWidget::initializeLoginPage()
 
     loginLayout->addWidget(loginGroup);
 
-    // ×´Ì¬±êÇ©
-    m_loginStatusLabel = new QLabel(QString(gbk_to_utf8("×¼±¸µÇÂ¼").c_str()), this);
+    // 
+    m_loginStatusLabel = new QLabel(gbk_to_utf8("å‡†å¤‡ç™»å½•").c_str(), this);
     m_loginStatusLabel->setAlignment(Qt::AlignCenter);
-    m_loginStatusLabel->setStyleSheet(gbk_to_utf8("color: #7f8c8d;").c_str());
+    m_loginStatusLabel->setStyleSheet("color: #7f8c8d;");
     loginLayout->addWidget(m_loginStatusLabel);
 
     loginLayout->addStretch();
 
-    // Ö§³Ö¼üÅÌ¿ì½İµÇÂ¼
+    // 
     connect(m_usernameEdit, &QLineEdit::returnPressed, m_passwordEdit, QOverload<>::of(&QLineEdit::setFocus));
     connect(m_passwordEdit, &QLineEdit::returnPressed, this, &FfmpegClientWidget::onLoginClicked);
 
@@ -219,60 +209,60 @@ void FfmpegClientWidget::initializeRegisterPage()
     m_registerWidget = new QWidget();
     QVBoxLayout *registerLayout = new QVBoxLayout(m_registerWidget);
 
-    // ±êÌâ
-    QLabel *titleLabel = new QLabel(QString(gbk_to_utf8("FFmpeg Media Server - ×¢²á").c_str()), this);
+    // 
+    QLabel *titleLabel = new QLabel(gbk_to_utf8("Media Server - æ³¨å†Œ").c_str(), this);
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet(gbk_to_utf8("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;").c_str());
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;");
     registerLayout->addWidget(titleLabel);
 
-    // ×¢²á±íµ¥
-    QGroupBox *registerGroup = new QGroupBox(QString(gbk_to_utf8("´´½¨ÕË»§").c_str()), this);
+    // 
+    QGroupBox *registerGroup = new QGroupBox(gbk_to_utf8("æ³¨å†Œè´¦æˆ·").c_str(), this);
     QVBoxLayout *formLayout = new QVBoxLayout(registerGroup);
 
-    // ·şÎñÆ÷µØÖ·
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("·şÎñÆ÷µØÖ·:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("æœåŠ¡å™¨åœ°å€:").c_str()));
     m_regServerUrlEdit = new QLineEdit("http://localhost:8080", this);
-    m_regServerUrlEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈë·şÎñÆ÷µØÖ·£¬ÀıÈç: http://localhost:8080").c_str()));
+    m_regServerUrlEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥æœåŠ¡å™¨åœ°å€ï¼Œä¾‹å¦‚: http://localhost:8080").c_str());
     formLayout->addWidget(m_regServerUrlEdit);
 
-    // ÓÃ»§Ãû
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÓÃ»§Ãû:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("ç”¨æˆ·å:").c_str()));
     m_regUsernameEdit = new QLineEdit(this);
-    m_regUsernameEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÓÃ»§Ãû£¬ÖÁÉÙ3¸ö×Ö·û").c_str()));
+    m_regUsernameEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥ç”¨æˆ·åï¼Œè‡³å°‘3ä¸ªå­—ç¬¦").c_str());
     formLayout->addWidget(m_regUsernameEdit);
 
-    // ÓÊÏä
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÓÊÏä:").c_str())));
+    // 
+    formLayout->addWidget(new QLabel(gbk_to_utf8("é‚®ç®±:").c_str()));
     m_regEmailEdit = new QLineEdit(this);
-    m_regEmailEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÓÊÏäµØÖ·").c_str()));
-    m_regEmailEdit->setStyleSheet(gbk_to_utf8("QLineEdit { font-family: monospace; }").c_str());
+    m_regEmailEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥é‚®ç®±åœ°å€").c_str());
+    m_regEmailEdit->setStyleSheet("QLineEdit { font-family: monospace; }");
     formLayout->addWidget(m_regEmailEdit);
 
-    // ÃÜÂë
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÃÜÂë:").c_str())));
+    //
+    formLayout->addWidget(new QLabel(gbk_to_utf8("å¯†ç :").c_str()));
     m_regPasswordEdit = new QLineEdit(this);
     m_regPasswordEdit->setEchoMode(QLineEdit::Password);
-    m_regPasswordEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÃÜÂë£¬ÖÁÉÙ6¸ö×Ö·û").c_str()));
+    m_regPasswordEdit->setPlaceholderText(gbk_to_utf8("è¯·è¾“å…¥å¯†ç ï¼Œè‡³å°‘6ä¸ªå­—ç¬¦").c_str());
     formLayout->addWidget(m_regPasswordEdit);
 
-    // È·ÈÏÃÜÂë
-    formLayout->addWidget(new QLabel(QString(gbk_to_utf8("È·ÈÏÃÜÂë:").c_str())));
+    //
+    formLayout->addWidget(new QLabel(gbk_to_utf8("ç¡®è®¤å¯†ç :").c_str()));
     m_regConfirmPasswordEdit = new QLineEdit(this);
     m_regConfirmPasswordEdit->setEchoMode(QLineEdit::Password);
-    m_regConfirmPasswordEdit->setPlaceholderText(QString(gbk_to_utf8("ÔÙ´ÎÊäÈëÃÜÂë").c_str()));
+    m_regConfirmPasswordEdit->setPlaceholderText(gbk_to_utf8("å†æ¬¡è¾“å…¥å¯†ç ").c_str());
     formLayout->addWidget(m_regConfirmPasswordEdit);
 
-    // °´Å¥²¼¾Ö
+    // 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
 
-    m_submitRegisterButton = new QPushButton(QString(gbk_to_utf8("×¢²á").c_str()), this);
-    m_submitRegisterButton->setStyleSheet(gbk_to_utf8("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
-                                         "QPushButton:hover { background-color: #229954; }").c_str());
+    m_submitRegisterButton = new QPushButton(gbk_to_utf8("æ³¨å†Œ").c_str(), this);
+    m_submitRegisterButton->setStyleSheet("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                          "QPushButton:hover { background-color: #229954; }");
     connect(m_submitRegisterButton, &QPushButton::clicked, this, &FfmpegClientWidget::onRegisterClicked);
 
-    m_backToLoginButton = new QPushButton(QString(gbk_to_utf8("·µ»ØµÇÂ¼").c_str()), this);
-    m_backToLoginButton->setStyleSheet(gbk_to_utf8("QPushButton { background-color: #95a5a6; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
-                                     "QPushButton:hover { background-color: #7f8c8d; }").c_str());
+    m_backToLoginButton = new QPushButton(gbk_to_utf8("è¿”å›ç™»å½•").c_str(), this);
+    m_backToLoginButton->setStyleSheet("QPushButton { background-color: #95a5a6; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                      "QPushButton:hover { background-color: #7f8c8d; }");
     connect(m_backToLoginButton, &QPushButton::clicked, this, &FfmpegClientWidget::onShowLoginPage);
 
     buttonLayout->addWidget(m_submitRegisterButton);
@@ -281,15 +271,15 @@ void FfmpegClientWidget::initializeRegisterPage()
 
     registerLayout->addWidget(registerGroup);
 
-    // ×´Ì¬±êÇ©
-    m_registerStatusLabel = new QLabel(QString(gbk_to_utf8("×¼±¸×¢²á").c_str()), this);
+    // 
+    m_registerStatusLabel = new QLabel(gbk_to_utf8("å‡†å¤‡æ³¨å†Œ").c_str(), this);
     m_registerStatusLabel->setAlignment(Qt::AlignCenter);
-    m_registerStatusLabel->setStyleSheet(gbk_to_utf8("color: #7f8c8d;").c_str());
+    m_registerStatusLabel->setStyleSheet("color: #7f8c8d;");
     registerLayout->addWidget(m_registerStatusLabel);
 
     registerLayout->addStretch();
 
-    // Ö§³Ö¼üÅÌ¿ì½İ×¢²á
+    // 
     connect(m_regUsernameEdit, &QLineEdit::returnPressed, m_regEmailEdit, QOverload<>::of(&QLineEdit::setFocus));
     connect(m_regEmailEdit, &QLineEdit::returnPressed, m_regPasswordEdit, QOverload<>::of(&QLineEdit::setFocus));
     connect(m_regPasswordEdit, &QLineEdit::returnPressed, m_regConfirmPasswordEdit, QOverload<>::of(&QLineEdit::setFocus));
@@ -303,330 +293,56 @@ void FfmpegClientWidget::initializeMainPage()
     m_mainWidget = new QWidget();
     QVBoxLayout *mainLayout = new QVBoxLayout(m_mainWidget);
 
-    // ±êÇ©Ò³
-    m_tabWidget = new QTabWidget(this);
+    // 
+    QLabel *welcomeLabel = new QLabel(gbk_to_utf8("ç™»å½•æˆåŠŸï¼Œæ¬¢è¿ %1!").c_str(), this);
+    welcomeLabel->setAlignment(Qt::AlignCenter);
+    welcomeLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50; margin: 20px;");
+    mainLayout->addWidget(welcomeLabel);
 
-    initializeCommandTab();
-    initializeFileTab();
-    initializeHistoryTab();
+    QLabel *infoLabel = new QLabel(gbk_to_utf8("æ‚¨å·²ç»æˆåŠŸç™»å½•åˆ°ç³»ç»Ÿï¼Œç›®å‰ç³»ç»Ÿåªæä¾›ç™»å½•å’Œæ³¨å†ŒåŠŸèƒ½ã€‚").c_str(), this);
+    infoLabel->setAlignment(Qt::AlignCenter);
+    infoLabel->setStyleSheet("color: #7f8c8d; margin: 20px;");
+    mainLayout->addWidget(infoLabel);
 
-    m_tabWidget->addTab(m_commandTab, QString(gbk_to_utf8("FFmpegÃüÁî").c_str()));
-    m_tabWidget->addTab(m_fileTab, QString(gbk_to_utf8("ÎÄ¼ş¹ÜÀí").c_str()));
-    m_tabWidget->addTab(m_historyTab, QString(gbk_to_utf8("ÀúÊ·¼ÇÂ¼").c_str()));
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Å¥
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *logoutButton = new QPushButton(gbk_to_utf8("é€€å‡ºç™»å½•").c_str(), this);
+    logoutButton->setStyleSheet("QPushButton { background-color: #e74c3c; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
+                                    "QPushButton:hover { background-color: #c0392b; }");
+    connect(logoutButton, &QPushButton::clicked, this, &FfmpegClientWidget::logout);
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(logoutButton);
+    buttonLayout->addStretch();
+    mainLayout->addLayout(buttonLayout);
 
-    mainLayout->addWidget(m_tabWidget);
+    mainLayout->addStretch();
 
     m_stackedLayout->addWidget(m_mainWidget);
 }
 
-void FfmpegClientWidget::initializeCommandTab()
-{
-    m_commandTab = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout(m_commandTab);
-
-    // ÃüÁî»ù±¾ĞÅÏ¢
-    QGroupBox *basicGroup = new QGroupBox(QString(gbk_to_utf8("»ù±¾ĞÅÏ¢").c_str()), this);
-    QGridLayout *basicLayout = new QGridLayout(basicGroup);
-
-    basicLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÃüÁîÀàĞÍ:").c_str())), 0, 0);
-    m_commandTypeCombo = new QComboBox(this);
-    m_commandTypeCombo->addItems({
-        QString(gbk_to_utf8("ÊÓÆµ×ª»»").c_str()),
-        QString(gbk_to_utf8("ÒôÆµ×ª»»").c_str()),
-        QString(gbk_to_utf8("ÊÓÆµÑ¹Ëõ").c_str()),
-        QString(gbk_to_utf8("ÊÓÆµºÏ²¢").c_str()),
-        QString(gbk_to_utf8("½ØÍ¼").c_str()),
-        QString(gbk_to_utf8("×Ô¶¨Òå").c_str())
-    });
-    basicLayout->addWidget(m_commandTypeCombo, 0, 1);
-
-    basicLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÃüÁîÃû³Æ:").c_str())), 1, 0);
-    m_commandNameEdit = new QLineEdit(this);
-    m_commandNameEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëÃüÁîÃû³Æ").c_str()));
-    basicLayout->addWidget(m_commandNameEdit, 1, 1);
-
-    layout->addWidget(basicGroup);
-
-    // ÎÄ¼şÉèÖÃ
-    QGroupBox *fileGroup = new QGroupBox(QString(gbk_to_utf8("ÎÄ¼şÉèÖÃ").c_str()), this);
-    QGridLayout *fileLayout = new QGridLayout(fileGroup);
-
-    fileLayout->addWidget(new QLabel(QString(gbk_to_utf8("ÊäÈëÎÄ¼ş:").c_str())), 0, 0);
-    m_inputFileEdit = new QLineEdit(this);
-    m_inputFileEdit->setPlaceholderText(QString(gbk_to_utf8("Ñ¡ÔñÊäÈëÎÄ¼ş").c_str()));
-    fileLayout->addWidget(m_inputFileEdit, 0, 1);
-
-    m_browseInputButton = new QPushButton(QString(gbk_to_utf8("ä¯ÀÀ").c_str()), this);
-    connect(m_browseInputButton, &QPushButton::clicked, this, [this]() {
-        QString fileName = QFileDialog::getOpenFileName(this, QString(gbk_to_utf8("Ñ¡ÔñÊäÈëÎÄ¼ş").c_str()));
-        if (!fileName.isEmpty()) {
-            m_inputFileEdit->setText(fileName);
-        }
-    });
-    fileLayout->addWidget(m_browseInputButton, 0, 2);
-
-    fileLayout->addWidget(new QLabel(QString(gbk_to_utf8("Êä³öÎÄ¼ş:").c_str())), 1, 0);
-    m_outputFileEdit = new QLineEdit(this);
-    m_outputFileEdit->setPlaceholderText(QString(gbk_to_utf8("Ö¸¶¨Êä³öÎÄ¼şÂ·¾¶").c_str()));
-    fileLayout->addWidget(m_outputFileEdit, 1, 1);
-
-    m_browseOutputButton = new QPushButton(QString(gbk_to_utf8("ä¯ÀÀ").c_str()), this);
-    connect(m_browseOutputButton, &QPushButton::clicked, this, [this]() {
-        QString fileName = QFileDialog::getSaveFileName(this, QString(gbk_to_utf8("Ñ¡ÔñÊä³öÎÄ¼ş").c_str()));
-        if (!fileName.isEmpty()) {
-            m_outputFileEdit->setText(fileName);
-        }
-    });
-    fileLayout->addWidget(m_browseOutputButton, 1, 2);
-
-    layout->addWidget(fileGroup);
-
-    // ÃüÁî²ÎÊı
-    QGroupBox *paramGroup = new QGroupBox(QString(gbk_to_utf8("ÃüÁî²ÎÊı").c_str()), this);
-    QVBoxLayout *paramLayout = new QVBoxLayout(paramGroup);
-
-    m_commandLineEdit = new QTextEdit(this);
-    m_commandLineEdit->setMaximumHeight(100);
-    m_commandLineEdit->setPlaceholderText(QString(gbk_to_utf8("ÇëÊäÈëFFmpegÃüÁîĞĞ²ÎÊı").c_str()));
-    paramLayout->addWidget(m_commandLineEdit);
-
-    m_parametersEdit = new QLineEdit(this);
-    m_parametersEdit->setPlaceholderText(QString(gbk_to_utf8("¸½¼Ó²ÎÊı (JSON¸ñÊ½)").c_str()));
-    paramLayout->addWidget(m_parametersEdit);
-
-    layout->addWidget(paramGroup);
-
-    // Ö´ĞĞºÍ×´Ì¬
-    QHBoxLayout *executeLayout = new QHBoxLayout();
-
-    m_executeButton = new QPushButton(QString(gbk_to_utf8("Ö´ĞĞÃüÁî").c_str()), this);
-    m_executeButton->setStyleSheet(gbk_to_utf8("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; border-radius: 5px; }"
-                                   "QPushButton:hover { background-color: #229954; }").c_str());
-    connect(m_executeButton, &QPushButton::clicked, this, &FfmpegClientWidget::onExecuteCommandClicked);
-    executeLayout->addWidget(m_executeButton);
-
-    m_progressBar = new QProgressBar(this);
-    m_progressBar->setVisible(false);
-    executeLayout->addWidget(m_progressBar);
-
-    layout->addLayout(executeLayout);
-
-    // ×´Ì¬±êÇ©
-    m_statusLabel = new QLabel(QString(gbk_to_utf8("×¼±¸Ö´ĞĞÃüÁî").c_str()), this);
-    m_statusLabel->setStyleSheet(gbk_to_utf8("color: #7f8c8d;").c_str());
-    layout->addWidget(m_statusLabel);
-
-    layout->addStretch();
-
-    // ÃüÁîÀàĞÍ±ä»¯ÊÂ¼ş
-    connect(m_commandTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
-        if (index < m_commandPresets.size()) {
-            const auto &preset = m_commandPresets[index];
-            m_commandNameEdit->setText(preset.name);
-            m_commandLineEdit->setText(preset.commandLine);
-        }
-    });
-
-    // ³õÊ¼»¯Ê±½ûÓÃÖ´ĞĞ°´Å¥£¬Ö±µ½µÇÂ¼³É¹¦
-    m_executeButton->setEnabled(false);
-}
-
-void FfmpegClientWidget::initializeFileTab()
-{
-    m_fileTab = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout(m_fileTab);
-
-    // ÎÄ¼şÉÏ´«ÇøÓò
-    QGroupBox *uploadGroup = new QGroupBox(QString(gbk_to_utf8("ÎÄ¼şÉÏ´«").c_str()), this);
-    QHBoxLayout *uploadLayout = new QHBoxLayout(uploadGroup);
-
-    m_uploadFileEdit = new QLineEdit(this);
-    m_uploadFileEdit->setPlaceholderText(QString(gbk_to_utf8("Ñ¡ÔñÒªÉÏ´«µÄÎÄ¼ş").c_str()));
-    uploadLayout->addWidget(m_uploadFileEdit);
-
-    m_browseUploadButton = new QPushButton(QString(gbk_to_utf8("ä¯ÀÀ").c_str()), this);
-    connect(m_browseUploadButton, &QPushButton::clicked, this, [this]() {
-        QString fileName = QFileDialog::getOpenFileName(this, QString(gbk_to_utf8("Ñ¡ÔñÒªÉÏ´«µÄÎÄ¼ş").c_str()));
-        if (!fileName.isEmpty()) {
-            m_uploadFileEdit->setText(fileName);
-        }
-    });
-    uploadLayout->addWidget(m_browseUploadButton);
-
-    m_uploadButton = new QPushButton(QString(gbk_to_utf8("ÉÏ´«ÎÄ¼ş").c_str()), this);
-    connect(m_uploadButton, &QPushButton::clicked, this, &FfmpegClientWidget::onUploadFileClicked);
-    uploadLayout->addWidget(m_uploadButton);
-
-    layout->addWidget(uploadGroup);
-
-    // ÎÄ¼şÁĞ±í
-    QGroupBox *listGroup = new QGroupBox(QString(gbk_to_utf8("·şÎñÆ÷ÎÄ¼şÁĞ±í").c_str()), this);
-    QVBoxLayout *listLayout = new QVBoxLayout(listGroup);
-
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    m_refreshFilesButton = new QPushButton(QString(gbk_to_utf8("Ë¢ĞÂ").c_str()), this);
-    connect(m_refreshFilesButton, &QPushButton::clicked, this, [this]() {
-        // TODO: ÊµÏÖÎÄ¼şÁĞ±íË¢ĞÂ
-        showSuccessMessage(QString(gbk_to_utf8("ÎÄ¼şÁĞ±íÒÑË¢ĞÂ").c_str()));
-    });
-    buttonLayout->addWidget(m_refreshFilesButton);
-    buttonLayout->addStretch();
-    listLayout->addLayout(buttonLayout);
-
-    m_fileTable = new QTableWidget(this);
-    m_fileTable->setColumnCount(4);
-    QStringList fileHeaders = {
-        QString(gbk_to_utf8("ÎÄ¼şÃû").c_str()),
-        QString(gbk_to_utf8("´óĞ¡").c_str()),
-        QString(gbk_to_utf8("ĞŞ¸ÄÊ±¼ä").c_str()),
-        QString(gbk_to_utf8("²Ù×÷").c_str())
-    };
-    m_fileTable->setHorizontalHeaderLabels(fileHeaders);
-    m_fileTable->horizontalHeader()->setStretchLastSection(true);
-    listLayout->addWidget(m_fileTable);
-
-    m_downloadButton = new QPushButton(QString(gbk_to_utf8("ÏÂÔØËùÑ¡ÎÄ¼ş").c_str()), this);
-    connect(m_downloadButton, &QPushButton::clicked, this, &FfmpegClientWidget::onDownloadFileClicked);
-    listLayout->addWidget(m_downloadButton);
-
-    layout->addWidget(listGroup);
-
-    // ³õÊ¼»¯Ê±½ûÓÃÎÄ¼ş²Ù×÷¿Ø¼ş
-    m_uploadButton->setEnabled(false);
-    m_downloadButton->setEnabled(false);
-}
-
-void FfmpegClientWidget::initializeHistoryTab()
-{
-    m_historyTab = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout(m_historyTab);
-
-    // ¹¤¾ßÀ¸
-    QHBoxLayout *toolLayout = new QHBoxLayout();
-
-    m_refreshHistoryButton = new QPushButton(QString(gbk_to_utf8("Ë¢ĞÂÀúÊ·").c_str()), this);
-    connect(m_refreshHistoryButton, &QPushButton::clicked, this, &FfmpegClientWidget::onCommandHistoryClicked);
-    toolLayout->addWidget(m_refreshHistoryButton);
-
-    m_clearHistoryButton = new QPushButton(QString(gbk_to_utf8("Çå³ıÀúÊ·").c_str()), this);
-    connect(m_clearHistoryButton, &QPushButton::clicked, this, [this]() {
-        if (QMessageBox::question(this, QString(gbk_to_utf8("È·ÈÏ").c_str()), QString(gbk_to_utf8("È·ÈÏÒªÇå³ıËùÓĞÀúÊ·¼ÇÂ¼Âğ£¿").c_str())) == QMessageBox::Yes) {
-            // TODO: ÊµÏÖÀúÊ·¼ÇÂ¼Çå³ı
-            showSuccessMessage(QString(gbk_to_utf8("ÀúÊ·¼ÇÂ¼ÒÑÇå³ı").c_str()));
-        }
-    });
-    toolLayout->addWidget(m_clearHistoryButton);
-
-    toolLayout->addStretch();
-    layout->addLayout(toolLayout);
-
-    // ÀúÊ·¼ÇÂ¼±í¸ñ
-    m_historyTable = new QTableWidget(this);
-    m_historyTable->setColumnCount(8);
-    QStringList headers = {
-        QString(gbk_to_utf8("ID").c_str()),
-        QString(gbk_to_utf8("ÃüÁîÃû³Æ").c_str()),
-        QString(gbk_to_utf8("ÊäÈëÎÄ¼ş").c_str()),
-        QString(gbk_to_utf8("Êä³öÎÄ¼ş").c_str()),
-        QString(gbk_to_utf8("×´Ì¬").c_str()),
-        QString(gbk_to_utf8("½á¹û").c_str()),
-        QString(gbk_to_utf8("Ö´ĞĞÊ±¼ä").c_str()),
-        QString(gbk_to_utf8("´íÎóĞÅÏ¢").c_str())
-    };
-    m_historyTable->setHorizontalHeaderLabels(headers);
-    m_historyTable->horizontalHeader()->setStretchLastSection(true);
-    m_historyTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    layout->addWidget(m_historyTable);
-
-    // ³õÊ¼»¯Ê±½ûÓÃÀúÊ·¼ÇÂ¼°´Å¥
-    m_refreshHistoryButton->setEnabled(false);
-}
-
-void FfmpegClientWidget::setupCommandPresets()
-{
-    m_commandPresets = {
-        {QString(gbk_to_utf8("ÊÓÆµ×ª»»").c_str()), "-i {input} -c:v libx264 -c:a aac {output}", QString(gbk_to_utf8("½«ÊÓÆµ×ª»»ÎªH.264+AAC¸ñÊ½").c_str())},
-        {QString(gbk_to_utf8("ÒôÆµ×ª»»").c_str()), "-i {input} -vn -c:a mp3 {output}", QString(gbk_to_utf8("ÌáÈ¡²¢×ª»»ÎªMP3ÒôÆµ").c_str())},
-        {QString(gbk_to_utf8("ÊÓÆµÑ¹Ëõ").c_str()), "-i {input} -vf scale=1280:-1 -crf 23 {output}", QString(gbk_to_utf8("Ñ¹ËõÊÓÆµµ½720p").c_str())},
-        {QString(gbk_to_utf8("ÊÓÆµºÏ²¢").c_str()), "-f concat -safe 0 -i filelist.txt -c copy {output}", QString(gbk_to_utf8("ºÏ²¢¶à¸öÊÓÆµÎÄ¼ş").c_str())},
-        {QString(gbk_to_utf8("½ØÍ¼").c_str()), "-i {input} -ss 00:00:01 -vframes 1 {output}", QString(gbk_to_utf8("´ÓÊÓÆµÖĞÌáÈ¡Ò»Ö¡").c_str())}
-    };
-}
-
-void FfmpegClientWidget::showLoginPage()
-{
-    m_stackedLayout->setCurrentWidget(m_loginWidget);
-    setLoginEnabled(true);
-}
-
-void FfmpegClientWidget::showRegisterPage()
-{
-    m_stackedLayout->setCurrentWidget(m_registerWidget);
-    setRegisterEnabled(true);
-}
-
-void FfmpegClientWidget::showMainPage()
-{
-    m_stackedLayout->setCurrentWidget(m_mainWidget);
-    setLoginEnabled(false);
-    setRegisterEnabled(false);
-    setCommandEnabled(true);
-
-    // ¼ÓÔØÀúÊ·¼ÇÂ¼
-    onCommandHistoryClicked();
-}
-
-void FfmpegClientWidget::setLoginEnabled(bool enabled)
-{
-    if (m_loginButton) m_loginButton->setEnabled(enabled);
-    if (m_registerButton) m_registerButton->setEnabled(enabled);
-    if (m_usernameEdit) m_usernameEdit->setEnabled(enabled);
-    if (m_passwordEdit) m_passwordEdit->setEnabled(enabled);
-    if (m_serverUrlEdit) m_serverUrlEdit->setEnabled(enabled);
-}
-
-void FfmpegClientWidget::setRegisterEnabled(bool enabled)
-{
-    if (m_submitRegisterButton) m_submitRegisterButton->setEnabled(enabled);
-    if (m_backToLoginButton) m_backToLoginButton->setEnabled(enabled);
-    if (m_regUsernameEdit) m_regUsernameEdit->setEnabled(enabled);
-    if (m_regEmailEdit) m_regEmailEdit->setEnabled(enabled);
-    if (m_regPasswordEdit) m_regPasswordEdit->setEnabled(enabled);
-    if (m_regConfirmPasswordEdit) m_regConfirmPasswordEdit->setEnabled(enabled);
-    if (m_regServerUrlEdit) m_regServerUrlEdit->setEnabled(enabled);
-}
-
-void FfmpegClientWidget::setCommandEnabled(bool enabled)
-{
-    if (m_executeButton) m_executeButton->setEnabled(enabled);
-    if (m_uploadButton) m_uploadButton->setEnabled(enabled);
-    if (m_downloadButton) m_downloadButton->setEnabled(enabled);
-    if (m_refreshHistoryButton) m_refreshHistoryButton->setEnabled(enabled);
-}
-
 void FfmpegClientWidget::onLoginClicked()
 {
-    const QString serverUrl = m_serverUrlEdit->text().trimmed();
-    const QString username = m_usernameEdit->text().trimmed();
-    const QString password = m_passwordEdit->text();
+    QString serverUrl = m_serverUrlEdit->text().trimmed();
+    QString username = m_usernameEdit->text().trimmed();
+    QString password = m_passwordEdit->text();
 
     if (serverUrl.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈë·şÎñÆ÷µØÖ·").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥æœåŠ¡å™¨åœ°å€").c_str());
         return;
     }
 
     if (username.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÓÃ»§Ãû").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥ç”¨æˆ·å").c_str());
         return;
     }
 
     if (password.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÃÜÂë").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥å¯†ç ").c_str());
         return;
     }
 
     m_loginButton->setEnabled(false);
-    m_loginStatusLabel->setText(QString(gbk_to_utf8("ÕıÔÚµÇÂ¼...").c_str()));
+    m_loginStatusLabel->setText(gbk_to_utf8("æ­£åœ¨ç™»å½•...").c_str());
 
     connectToServer(serverUrl, username, password);
 }
@@ -638,29 +354,29 @@ void FfmpegClientWidget::onLogoutClicked()
 
 void FfmpegClientWidget::onShowRegisterPage()
  {
-     // Ô¤Ìî·şÎñÆ÷µØÖ·
+     // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
      m_regServerUrlEdit->setText(m_serverUrlEdit->text().trimmed());
 
-     // Çå¿Õ×¢²á±íµ¥
+     // ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½
      m_regUsernameEdit->clear();
      m_regEmailEdit->clear();
      m_regPasswordEdit->clear();
      m_regConfirmPasswordEdit->clear();
 
-     m_registerStatusLabel->setText(QString(gbk_to_utf8("×¼±¸×¢²á").c_str()));
+     m_registerStatusLabel->setText(gbk_to_utf8("å‡†å¤‡æ³¨å†Œ").c_str());
 
-     // ÏÔÊ¾×¢²áÒ³Ãæ
+     // ï¿½ï¿½Ê¾×¢ï¿½ï¿½Ò³ï¿½ï¿½
      m_stackedLayout->setCurrentWidget(m_registerWidget);
  }
 
  void FfmpegClientWidget::onShowLoginPage()
  {
-     // Ô¤Ìî·şÎñÆ÷µØÖ·
+     // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
      m_serverUrlEdit->setText(m_regServerUrlEdit->text().trimmed());
 
-     m_loginStatusLabel->setText(QString(gbk_to_utf8("×¼±¸µÇÂ¼").c_str()));
+     m_loginStatusLabel->setText(gbk_to_utf8("å‡†å¤‡ç™»å½•").c_str());
 
-     // ÏÔÊ¾µÇÂ¼Ò³Ãæ
+     // ï¿½ï¿½Ê¾ï¿½ï¿½Â¼Ò³ï¿½ï¿½
      m_stackedLayout->setCurrentWidget(m_loginWidget);
  }
 
@@ -673,139 +389,129 @@ void FfmpegClientWidget::onRegisterClicked()
     const QString confirmPassword = m_regConfirmPasswordEdit->text();
 
     if (serverUrl.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈë·şÎñÆ÷µØÖ·").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥æœåŠ¡å™¨åœ°å€").c_str());
         return;
     }
 
     if (username.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÓÃ»§Ãû").c_str()));
-        return;
-    }
-
-    if (username.length() < 3) {
-        showErrorMessage(QString(gbk_to_utf8("ÓÃ»§ÃûÖÁÉÙĞèÒª3¸ö×Ö·û").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥ç”¨æˆ·å").c_str());
         return;
     }
 
     if (email.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÓÊÏäµØÖ·").c_str()));
-        return;
-    }
-
-    // ¼òµ¥µÄÓÊÏä¸ñÊ½ÑéÖ¤
-    if (!email.contains("@") || !email.contains(".")) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÓĞĞ§µÄÓÊÏäµØÖ·").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥é‚®ç®±").c_str());
         return;
     }
 
     if (password.isEmpty()) {
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÃÜÂë").c_str()));
-        return;
-    }
-
-    if (password.length() < 6) {
-        showErrorMessage(QString(gbk_to_utf8("ÃÜÂëÖÁÉÙĞèÒª6¸ö×Ö·û").c_str()));
+        showErrorMessage(gbk_to_utf8("è¯·è¾“å…¥å¯†ç ").c_str());
         return;
     }
 
     if (password != confirmPassword) {
-        showErrorMessage(QString(gbk_to_utf8("Á½´ÎÊäÈëµÄÃÜÂë²»Ò»ÖÂ").c_str()));
+        showErrorMessage(gbk_to_utf8("ä¸¤æ¬¡å¯†ç è¾“å…¥ä¸ä¸€è‡´").c_str());
         return;
     }
 
-    setRegisterEnabled(false);
-    m_registerStatusLabel->setText(QString(gbk_to_utf8("ÕıÔÚ×¢²á...").c_str()));
+    m_registerButton->setEnabled(false);
+    m_registerStatusLabel->setText(gbk_to_utf8("æ­£åœ¨æ³¨å†Œ...").c_str());
 
-    sendRegisterRequest(username, password, email);
+    sendRegisterRequest(serverUrl, username, email, password);
 }
 
 void FfmpegClientWidget::onRegisterReply()
- {
-     if (!m_currentReply) {
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÏìÓ¦Îª¿Õ").c_str();
-         setRegisterEnabled(true);
-         return;
-     }
+{
+    if (!m_currentReply) {
+        return;
+    }
 
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´¦Àí×¢²áÏìÓ¦").c_str();
-     logNetworkResponse(m_currentReply);
+    QByteArray responseData = m_currentReply->readAll();
+    int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
-     QByteArray responseData = m_currentReply->readAll();
-     int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-     int errorCode = m_currentReply->error();
-     QString errorString = m_currentReply->errorString();
+    m_currentReply->deleteLater();
+    m_currentReply = nullptr;
 
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÏìÓ¦Êı¾İ´óĞ¡:").c_str() << responseData.size() << gbk_to_utf8("×Ö½Ú").c_str();
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTP×´Ì¬Âë:").c_str() << statusCode;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎó´úÂë:").c_str() << errorCode;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÏìÓ¦ÄÚÈİ:").c_str() << responseData.left(500);
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
 
-     m_currentReply->deleteLater();
-     m_currentReply = nullptr;
+    if (parseError.error != QJsonParseError::NoError) {
+        showErrorMessage(gbk_to_utf8("æœåŠ¡å™¨å“åº”æ ¼å¼é”™è¯¯").c_str());
+        setRegisterEnabled(true);
+        return;
+    }
 
-     QJsonParseError parseError;
-     QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
-
-     if (parseError.error != QJsonParseError::NoError) {
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] JSON½âÎö´íÎó:").c_str() << parseError.errorString();
-         showErrorMessage(QString(gbk_to_utf8("·şÎñÆ÷ÏìÓ¦¸ñÊ½´íÎó").c_str()));
-         setRegisterEnabled(true);
-         return;
-     }
-
-     QJsonObject responseObj = doc.object();
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÏìÓ¦¶ÔÏó:").c_str() << responseObj;
+    QJsonObject responseObj = doc.object();
 
     if (statusCode >= 200 && statusCode < 300) {
         if (responseObj.contains("success") && responseObj["success"].toBool()) {
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²á³É¹¦").c_str();
-            showSuccessMessage(QString(gbk_to_utf8("×¢²á³É¹¦£¬ÇëµÇÂ¼").c_str()));
-
-            // Ô¤ÌîµÇÂ¼ĞÅÏ¢
+            showSuccessMessage(gbk_to_utf8("æ³¨å†ŒæˆåŠŸï¼Œè¯·ç™»å½•").c_str());
             m_serverUrlEdit->setText(m_regServerUrlEdit->text().trimmed());
             m_usernameEdit->setText(m_regUsernameEdit->text().trimmed());
             m_passwordEdit->clear();
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÒÑÔ¤ÌîµÇÂ¼ĞÅÏ¢").c_str();
-
-            // ÇĞ»»µ½µÇÂ¼Ò³Ãæ
             onShowLoginPage();
         } else {
-            QString errorMsg = QString(gbk_to_utf8("×¢²áÊ§°Ü").c_str());
+            QString errorMsg = gbk_to_utf8("æ³¨å†Œå¤±è´¥").c_str();
             if (responseObj.contains("message")) {
                 errorMsg = responseObj["message"].toString();
             } else if (responseObj.contains("error")) {
                 errorMsg = responseObj["error"].toString();
             }
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÊ§°Ü:").c_str() << errorMsg;
-            showErrorMessage(errorMsg);
+            showErrorMessage(errorMsg.toStdString().c_str());
         }
     } else {
-        QString errorMsg = QString(gbk_to_utf8("×¢²áÊ§°Ü").c_str());
+        QString errorMsg = gbk_to_utf8("æ³¨å†Œå¤±è´¥").c_str();
         if (responseObj.contains("message")) {
             errorMsg = responseObj["message"].toString();
         } else if (responseObj.contains("error")) {
             errorMsg = responseObj["error"].toString();
-        } else {
-            errorMsg = QString(gbk_to_utf8("HTTP´íÎó: %1").c_str()).arg(statusCode);
         }
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áHTTP´íÎó:").c_str() << errorMsg;
-        showErrorMessage(errorMsg);
+        showErrorMessage(errorMsg.toStdString().c_str());
     }
 
     setRegisterEnabled(true);
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÏìÓ¦´¦ÀíÍê³É").c_str();
+}
+
+void FfmpegClientWidget::sendRegisterRequest(const QString &serverUrl, const QString &username,
+                                             const QString &email, const QString &password)
+{
+    QJsonObject requestObj;
+    requestObj["username"] = username;
+    requestObj["email"] = email;
+    requestObj["password"] = password;
+
+    QJsonDocument doc(requestObj);
+    QByteArray requestData = doc.toJson();
+
+    QString url = serverUrl.trimmed();
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "http://" + url;
+    }
+    if (url.endsWith("/")) {
+        url.chop(1);
+    }
+
+    QUrl qurl(url + "/api/auth/register");
+    QNetworkRequest request(qurl);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    if (m_currentReply) {
+        m_currentReply->deleteLater();
+    }
+
+    m_currentReply = m_networkManager->post(request, requestData);
+    connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onRegisterReply);
 }
 
 void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString &password)
 {
-    // ÇåÀí¾ÉToken£¬È·±£Ê¹ÓÃĞÂToken
+    // ï¿½ï¿½ï¿½ï¿½ï¿½TokenÈ·ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Token
     m_authToken.clear();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÇåÀí¾ÉToken£¬¿ªÊ¼ĞÂµÇÂ¼").c_str();
-    
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¿ªÊ¼µÇÂ¼ÇëÇó").c_str();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ·şÎñÆ÷URL:").c_str() << m_serverUrl;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÓÃ»§Ãû:").c_str() << username;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃÜÂë³¤¶È:").c_str() << password.length();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] æ¸…é™¤Tokenï¼Œå¼€å§‹æ–°çš„ç™»å½•").c_str();
+
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å¼€å§‹ç™»å½•è¯·æ±‚").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] æœåŠ¡å™¨URL:").c_str() << m_serverUrl;
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç”¨æˆ·å:").c_str() << username;
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å¯†ç é•¿åº¦:").c_str() << password.length();
 
     QJsonObject requestObj;
     requestObj["username"] = username;
@@ -814,20 +520,20 @@ void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString
     QJsonDocument doc(requestObj);
     QByteArray requestData = doc.toJson();
 
-    // ĞŞ¸´£ºÈ·±£URL¸ñÊ½ÕıÈ·
+
     QString serverUrl = m_serverUrl.trimmed();
     if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
         serverUrl = "http://" + serverUrl;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×Ô¶¯Ìí¼Ó http:// Ç°×º:").c_str() << serverUrl;
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] è‡ªåŠ¨æ·»åŠ  http:// å‰ç¼€:").c_str() << serverUrl;
     }
 
-    // È·±£URLÄ©Î²Ã»ÓĞĞ±¸Ü£¬È»ºóÌí¼ÓAPIÂ·¾¶
+
     if (serverUrl.endsWith("/")) {
         serverUrl.chop(1);
     }
 
     QUrl url(serverUrl + "/api/auth/login");
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¹¹½¨µÄÍêÕûURL:").c_str() << url.toString();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å®Œæ•´è¯·æ±‚URL:").c_str() << url.toString();
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -836,60 +542,60 @@ void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString
     logNetworkRequest(request, requestData);
 
     if (m_currentReply) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] È¡ÏûÖ®Ç°µÄÍøÂçÇëÇó").c_str();
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] å–æ¶ˆä¹‹å‰çš„è¯·æ±‚").c_str();
         m_currentReply->deleteLater();
     }
 
     m_currentReply = m_networkManager->post(request, requestData);
     connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onLoginReply);
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÇëÇóÒÑ·¢ËÍ").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•è¯·æ±‚å·²å‘é€").c_str();
 }
 
 void FfmpegClientWidget::onLoginReply()
 {
     if (!m_currentReply) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÏìÓ¦Îª¿Õ").c_str();
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•å“åº”ä¸ºç©º").c_str();
         return;
     }
 
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´¦ÀíµÇÂ¼ÏìÓ¦").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å¼€å§‹å¤„ç†ç™»å½•å“åº”").c_str();
     logNetworkResponse(m_currentReply);
 
     m_loginButton->setEnabled(true);
 
     if (m_currentReply->error() == QNetworkReply::NoError) {
         QByteArray responseData = m_currentReply->readAll();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÏìÓ¦Êı¾İ´óĞ¡:").c_str() << responseData.size() << gbk_to_utf8("×Ö½Ú").c_str();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÏìÓ¦ÄÚÈİ:").c_str() << responseData.left(500);
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•å“åº”æ•°æ®å¤§å°:").c_str() << responseData.size() << gbk_to_utf8("å­—èŠ‚").c_str();
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] å“åº”å†…å®¹:").c_str() << responseData.left(500);
 
         QJsonParseError parseError;
         QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
 
         if (parseError.error != QJsonParseError::NoError) {
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] JSON½âÎö´íÎó:").c_str() << parseError.errorString();
-            m_loginStatusLabel->setText(QString(gbk_to_utf8("ÏìÓ¦¸ñÊ½´íÎó").c_str()));
-            showErrorMessage(QString(gbk_to_utf8("·şÎñÆ÷ÏìÓ¦¸ñÊ½´íÎó").c_str()));
+            qDebug() << gbk_to_utf8("[FfmpegClientWidget] JSONè§£æé”™è¯¯:").c_str() << parseError.errorString();
+            m_loginStatusLabel->setText(gbk_to_utf8("å“åº”æ ¼å¼é”™è¯¯").c_str());
+            showErrorMessage(gbk_to_utf8("æœåŠ¡å™¨å“åº”æ ¼å¼é”™è¯¯").c_str());
         } else {
             QJsonObject responseObj = doc.object();
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÏìÓ¦¶ÔÏó:").c_str() << responseObj;
+            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•å“åº”å†…å®¹:").c_str() << responseObj;
 
             if (responseObj["success"].toBool()) {
-                // ĞŞ¸´£ºÖ±½Ó´Ó¶¥¼¶×Ö¶Î»ñÈ¡token£¨Æ¥Åä·şÎñÆ÷·µ»Ø¸ñÊ½£©
-                m_authToken = responseObj["token"].toString();
+
+                QString token = responseObj["token"].toString();
                 QString username = responseObj["username"].toString();
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼³É¹¦£¬Token³¤¶È:").c_str() << m_authToken.length();
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] »ñÈ¡µÄÓÃ»§Ãû:").c_str() << username;
+                qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•æˆåŠŸï¼ŒTokené•¿åº¦:").c_str() << token.length();
+                qDebug() << gbk_to_utf8("[FfmpegClientWidget] è·å–åˆ°ç”¨æˆ·å:").c_str() << username;
                 setLoginStatus(true, username);
 
-                // ±£´æ·şÎñÆ÷µØÖ·ºÍÓÃ»§Ãû
+
                 if (m_rememberServerCheckBox->isChecked()) {
                     QSettings settings;
                     settings.setValue("serverUrl", m_serverUrl);
                     settings.setValue("username", m_usernameEdit->text());
-                    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÒÑ±£´æµÇÂ¼ĞÅÏ¢").c_str();
+                    qDebug() << gbk_to_utf8("[FfmpegClientWidget] å·²ä¿å­˜ç™»å½•ä¿¡æ¯").c_str();
                 }
             } else {
-                // ĞŞ¸´£º´Ódata×Ö¶ÎÖĞ»ñÈ¡message£¨Èç¹û´æÔÚ£©
+
                 QString errorMsg;
                 if (responseObj.contains("data")) {
                     QJsonObject dataObj = responseObj["data"].toObject();
@@ -898,9 +604,9 @@ void FfmpegClientWidget::onLoginReply()
                 if (errorMsg.isEmpty()) {
                     errorMsg = responseObj["message"].toString();
                 }
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼Ê§°Ü:").c_str() << errorMsg;
-                m_loginStatusLabel->setText(QString(gbk_to_utf8("µÇÂ¼Ê§°Ü: %1").c_str()).arg(errorMsg));
-                showErrorMessage(errorMsg);
+                qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•å¤±è´¥:").c_str() << errorMsg;
+                m_loginStatusLabel->setText(QString("ç™»å½•å¤±è´¥: %1").arg(errorMsg));
+                showErrorMessage(errorMsg.toUtf8().constData());
             }
         }
     } else {
@@ -908,464 +614,90 @@ void FfmpegClientWidget::onLoginReply()
         int errorCode = m_currentReply->error();
         int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÍøÂç´íÎó:").c_str();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎó´úÂë:").c_str() << errorCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTP×´Ì¬Âë:").c_str() << statusCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎóÃèÊö:").c_str() << errorString;
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•è¯·æ±‚å¤±è´¥:").c_str();
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] é”™è¯¯ä»£ç :").c_str() << errorCode;
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTPçŠ¶æ€ç :").c_str() << statusCode;
+        qDebug() << gbk_to_utf8("[FfmpegClientWidget] é”™è¯¯ä¿¡æ¯:").c_str() << errorString;
 
-        m_loginStatusLabel->setText(QString(gbk_to_utf8("ÍøÂç´íÎó: %1").c_str()).arg(errorString));
-        showErrorMessage(QString(gbk_to_utf8("ÍøÂç´íÎó: %1").c_str()).arg(errorString));
+        m_loginStatusLabel->setText(QString("ç½‘ç»œé”™è¯¯: %1").arg(errorString));
+        showErrorMessage(QString("ç½‘ç»œé”™è¯¯: %1").arg(errorString).toUtf8().constData());
     }
 
     m_currentReply->deleteLater();
     m_currentReply = nullptr;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] µÇÂ¼ÏìÓ¦´¦ÀíÍê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç™»å½•å“åº”å¤„ç†å®Œæˆ").c_str();
 }
 
-void FfmpegClientWidget::onExecuteCommandClicked()
- {
-     const QString commandName = m_commandNameEdit->text().trimmed();
-     const QString commandLine = m_commandLineEdit->toPlainText().trimmed();
-     const QString inputFile = m_inputFileEdit->text().trimmed();
-     const QString outputFile = m_outputFileEdit->text().trimmed();
-     const QString parameters = m_parametersEdit->text().trimmed();
-
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¿ªÊ¼Ö´ĞĞÃüÁî").c_str();
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÃû³Æ:").c_str() << commandName;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîĞĞ:").c_str() << commandLine;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÊäÈëÎÄ¼ş:").c_str() << inputFile;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] Êä³öÎÄ¼ş:").c_str() << outputFile;
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ²ÎÊı:").c_str() << parameters;
-
-    if (commandName.isEmpty()) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÃû³ÆÎª¿Õ").c_str();
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÃüÁîÃû³Æ").c_str()));
-        return;
-    }
-
-    if (commandLine.isEmpty()) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîĞĞ²ÎÊıÎª¿Õ").c_str();
-        showErrorMessage(QString(gbk_to_utf8("ÇëÊäÈëÃüÁîĞĞ²ÎÊı").c_str()));
-        return;
-    }
-
-    m_executeButton->setEnabled(false);
-    m_progressBar->setVisible(true);
-    m_progressBar->setRange(0, 0); // ²»È·¶¨½ø¶È
-    m_statusLabel->setText(QString(gbk_to_utf8("ÕıÔÚÖ´ĞĞÃüÁî...").c_str()));
-
-    sendExecuteCommandRequest(commandName, commandLine);
+void FfmpegClientWidget::showLoginPage() {
+    m_stackedLayout->setCurrentWidget(m_loginWidget);
 }
 
-void FfmpegClientWidget::sendExecuteCommandRequest(const QString &commandName, const QString &commandLine)
- {
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¼±¸Ö´ĞĞÃüÁî").c_str();
-
-     QJsonObject requestObj;
-     requestObj["commandName"] = commandName;
-     requestObj["commandLine"] = commandLine;
-     requestObj["inputFile"] = m_inputFileEdit->text();
-     requestObj["outputFile"] = m_outputFileEdit->text();
-     requestObj["parameters"] = m_parametersEdit->text();
-
-     QJsonDocument doc(requestObj);
-     QByteArray requestData = doc.toJson();
-
-     QUrl url(m_serverUrl + "/api/commands");
-     QNetworkRequest request(url);
-     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-     request.setRawHeader("Authorization", QString(gbk_to_utf8("Bearer %1").c_str()).arg(m_authToken).toUtf8());
-
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] Token³¤¶È:").c_str() << m_authToken.length();
-     logNetworkRequest(request, requestData);
-
-     if (m_currentReply) {
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] È¡ÏûÖ®Ç°µÄÍøÂçÇëÇó").c_str();
-         m_currentReply->deleteLater();
-     }
-
-     m_currentReply = m_networkManager->post(request, requestData);
-     connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onCommandReply);
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÖ´ĞĞÇëÇóÒÑ·¢ËÍ").c_str();
- }
-
-void FfmpegClientWidget::onCommandReply()
-{
-    if (!m_currentReply) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÏìÓ¦Îª¿Õ").c_str();
-        return;
-    }
-
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´¦ÀíÃüÁîÖ´ĞĞÏìÓ¦").c_str();
-    logNetworkResponse(m_currentReply);
-
-    m_executeButton->setEnabled(true);
-    m_progressBar->setVisible(false);
-
-    if (m_currentReply->error() == QNetworkReply::NoError) {
-        QByteArray responseData = m_currentReply->readAll();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÏìÓ¦Êı¾İ´óĞ¡:").c_str() << responseData.size() << gbk_to_utf8("×Ö½Ú").c_str();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÏìÓ¦ÄÚÈİ:").c_str() << responseData.left(500);
-
-        QJsonParseError parseError;
-        QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
-
-        if (parseError.error != QJsonParseError::NoError) {
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] JSON½âÎö´íÎó:").c_str() << parseError.errorString();
-            m_statusLabel->setText(QString(gbk_to_utf8("ÏìÓ¦¸ñÊ½´íÎó").c_str()));
-            showErrorMessage(QString(gbk_to_utf8("·şÎñÆ÷ÏìÓ¦¸ñÊ½´íÎó").c_str()));
-        } else {
-            QJsonObject responseObj = doc.object();
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÏìÓ¦¶ÔÏó:").c_str() << responseObj;
-
-            if (responseObj["success"].toBool()) {
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÖ´ĞĞ³É¹¦").c_str();
-                m_statusLabel->setText(QString(gbk_to_utf8("ÃüÁîÖ´ĞĞ³É¹¦").c_str()));
-                showSuccessMessage(QString(gbk_to_utf8("ÃüÁîÒÑ³É¹¦Ìá½»Ö´ĞĞ").c_str()));
-
-                // Ë¢ĞÂÀúÊ·¼ÇÂ¼
-                onCommandHistoryClicked();
-            } else {
-                QString errorMsg = responseObj["message"].toString();
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÖ´ĞĞÊ§°Ü:").c_str() << errorMsg;
-                m_statusLabel->setText(QString(gbk_to_utf8("ÃüÁîÖ´ĞĞÊ§°Ü: %1").c_str()).arg(errorMsg));
-                showErrorMessage(errorMsg);
-            }
-        }
-    } else {
-        QString errorString = m_currentReply->errorString();
-        int errorCode = m_currentReply->error();
-        int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÖ´ĞĞÍøÂç´íÎó:").c_str();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎó´úÂë:").c_str() << errorCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTP×´Ì¬Âë:").c_str() << statusCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎóÃèÊö:").c_str() << errorString;
-
-        m_statusLabel->setText(QString(gbk_to_utf8("ÍøÂç´íÎó: %1").c_str()).arg(errorString));
-        showErrorMessage(QString(gbk_to_utf8("ÍøÂç´íÎó: %1").c_str()).arg(errorString));
-    }
-
-    m_currentReply->deleteLater();
-    m_currentReply = nullptr;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃüÁîÏìÓ¦´¦ÀíÍê³É").c_str();
+void FfmpegClientWidget::showRegisterPage() {
+    m_stackedLayout->setCurrentWidget(m_registerWidget);
 }
 
-void FfmpegClientWidget::onCommandHistoryClicked()
-{
-    sendLoadCommandsRequest();
+void FfmpegClientWidget::showMainPage() {
+    m_stackedLayout->setCurrentWidget(m_mainWidget);
 }
 
-void FfmpegClientWidget::onLoadCommandsClicked()
-{
-    sendLoadCommandsRequest();
+void FfmpegClientWidget::setLoginEnabled(bool enabled) {
+    m_loginButton->setEnabled(enabled);
+    m_usernameEdit->setEnabled(enabled);
+    m_passwordEdit->setEnabled(enabled);
+    m_serverUrlEdit->setEnabled(enabled);
 }
 
-void FfmpegClientWidget::sendLoadCommandsRequest()
-{
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¼ÓÔØÀúÊ·¼ÇÂ¼£¬Token:").c_str() << m_authToken; // µ÷ÊÔÊä³öToken
-
-    QUrl url(m_serverUrl + "/api/commands/user");
-    QNetworkRequest request(url);
-
-    // ¹Ø¼üĞŞ¸Ä£ºÈ·±£Token¸ñÊ½ÕıÈ·£¬¼´Bearer + ¿Õ¸ñ + TokenÖµ
-    QString authHeader = QString(gbk_to_utf8("Bearer %1").c_str()).arg(m_authToken);
-    request.setRawHeader("Authorization", authHeader.toUtf8());
-
-    // ¿ÉÑ¡£ºÉèÖÃ³¬Ê±ºÍContent-TypeÎªÕıÈ·µÄ±ê×¼Öµ
-    //request.setTransferTimeout(5000);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    // ´òÓ¡ÇëÇóÍ·ÒÔ±ãµ÷ÊÔ£º
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] AuthorizationÍ·:").c_str() << request.rawHeader("Authorization");
-
-    if (m_currentReply) {
-        m_currentReply->abort();
-        m_currentReply->deleteLater();
-    }
-
-    m_currentReply = m_networkManager->get(request);
-    connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onLoadCommandsReply);
+void FfmpegClientWidget::setRegisterEnabled(bool enabled) {
+    m_registerButton->setEnabled(enabled);
+    m_regUsernameEdit->setEnabled(enabled);
+    m_regPasswordEdit->setEnabled(enabled);
+    m_regConfirmPasswordEdit->setEnabled(enabled);
+    m_regEmailEdit->setEnabled(enabled);
+    m_regServerUrlEdit->setEnabled(enabled);
 }
 
-void FfmpegClientWidget::onLoadCommandsReply()
-{
-    if (!m_currentReply) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¼ÓÔØÀúÊ·ÏìÓ¦Îª¿Õ").c_str();
-        return;
-    }
-
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´¦Àí¼ÓÔØÀúÊ·ÏìÓ¦").c_str();
-    logNetworkResponse(m_currentReply);
-
-    if (m_currentReply->error() == QNetworkReply::NoError) {
-        QByteArray responseData = m_currentReply->readAll();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÀúÊ·¼ÇÂ¼ÏìÓ¦Êı¾İ´óĞ¡:").c_str() << responseData.size() << gbk_to_utf8("×Ö½Ú").c_str();
-
-        QJsonParseError parseError;
-        QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
-
-        if (parseError.error != QJsonParseError::NoError) {
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] JSON½âÎö´íÎó:").c_str() << parseError.errorString();
-            showErrorMessage(QString(gbk_to_utf8("·şÎñÆ÷ÏìÓ¦¸ñÊ½´íÎó").c_str()));
-        } else {
-            QJsonObject responseObj = doc.object();
-            qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¼ÓÔØÀúÊ·¼ÇÂ¼ÏìÓ¦:").c_str() << responseObj;
-
-            if (responseObj["success"].toBool()) {
-                QJsonArray commands = responseObj["commands"].toArray();
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] »ñÈ¡µ½").c_str() << commands.size() << gbk_to_utf8("ÌõÀúÊ·¼ÇÂ¼").c_str();
-                updateCommandHistory(commands);
-            } else {
-                QString errorMsg = responseObj["message"].toString();
-                qDebug() << gbk_to_utf8("[FfmpegClientWidget] »ñÈ¡ÀúÊ·¼ÇÂ¼Ê§°Ü:").c_str() << errorMsg;
-                showErrorMessage(errorMsg);
-            }
-        }
-    } else {
-        QString errorString = m_currentReply->errorString();
-        int errorCode = m_currentReply->error();
-        int statusCode = m_currentReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] »ñÈ¡ÀúÊ·¼ÇÂ¼ÍøÂç´íÎó:").c_str();
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎó´úÂë:").c_str() << errorCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTP×´Ì¬Âë:").c_str() << statusCode;
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´íÎóÃèÊö:").c_str() << errorString;
-
-        showErrorMessage(QString(gbk_to_utf8("»ñÈ¡ÀúÊ·¼ÇÂ¼Ê§°Ü: %1").c_str()).arg(errorString));
-    }
-
-    m_currentReply->deleteLater();
-    m_currentReply = nullptr;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¼ÓÔØÀúÊ·ÏìÓ¦´¦ÀíÍê³É").c_str();
+void FfmpegClientWidget::updateServerStatus() {
 }
 
-void FfmpegClientWidget::updateCommandHistory(const QJsonArray &commands)
-{
-    m_historyTable->setRowCount(commands.size());
-
-    for (int i = 0; i < commands.size(); ++i) {
-        QJsonObject cmd = commands[i].toObject();
-
-        m_historyTable->setItem(i, 0, new QTableWidgetItem(QString::number(cmd["id"].toInt())));
-        m_historyTable->setItem(i, 1, new QTableWidgetItem(cmd["commandName"].toString()));
-        m_historyTable->setItem(i, 2, new QTableWidgetItem(cmd["inputFile"].toString()));
-        m_historyTable->setItem(i, 3, new QTableWidgetItem(cmd["outputFile"].toString()));
-        m_historyTable->setItem(i, 4, new QTableWidgetItem(cmd["status"].toString()));
-        m_historyTable->setItem(i, 5, new QTableWidgetItem(QString(gbk_to_utf8("%1%").c_str()).arg(cmd["progress"].toInt())));
-        m_historyTable->setItem(i, 6, new QTableWidgetItem(cmd["createdAt"].toString()));
-        m_historyTable->setItem(i, 7, new QTableWidgetItem(cmd["errorMessage"].toString()));
-    }
-
-    m_historyTable->resizeColumnsToContents();
-}
-
-void FfmpegClientWidget::onUploadFileClicked()
- {
-     const QString filePath = m_uploadFileEdit->text().trimmed();
-     if (filePath.isEmpty()) {
-         showErrorMessage(QString(gbk_to_utf8("ÇëÑ¡ÔñÒªÉÏ´«µÄÎÄ¼ş").c_str()));
-         return;
-     }
-
-     sendFileUploadRequest(filePath);
- }
-
- void FfmpegClientWidget::sendFileUploadRequest(const QString &filePath)
- {
-     QFile *file = new QFile(filePath);
-     if (!file->open(QIODevice::ReadOnly)) {
-         showErrorMessage(QString(gbk_to_utf8("ÎŞ·¨´ò¿ªÎÄ¼ş: %1").c_str()).arg(filePath));
-        delete file;
-        return;
-    }
-
-    QUrl url(m_serverUrl + "/api/files/upload");
-    QNetworkRequest request(url);
-
-    QString boundary = "----WebKitFormBoundary" + QString::number(QDateTime::currentMSecsSinceEpoch());
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=" + boundary);
-    request.setRawHeader("Authorization", QString(gbk_to_utf8("Bearer %1").c_str()).arg(m_authToken).toUtf8());
-
-    QByteArray postData;
-    postData.append("--" + boundary + "\r\n");
-    postData.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + QFileInfo(filePath).fileName() + "\"\r\n");
-    postData.append("Content-Type: application/octet-stream\r\n\r\n");
-    postData.append(file->readAll());
-    postData.append("\r\n--" + boundary + "--\r\n");
-
-    file->close();
-    delete file;
-
-    if (m_currentReply) {
-        m_currentReply->deleteLater();
-    }
-
-    m_currentReply = m_networkManager->post(request, postData);
-    connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onFileUploadReply);
-}
-
-void FfmpegClientWidget::onFileUploadReply()
-{
-    if (!m_currentReply) return;
-
-    if (m_currentReply->error() == QNetworkReply::NoError) {
-        QByteArray responseData = m_currentReply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(responseData);
-        QJsonObject responseObj = doc.object();
-
-        if (responseObj["success"].toBool()) {
-            showSuccessMessage(QString(gbk_to_utf8("ÎÄ¼şÉÏ´«³É¹¦").c_str()));
-             m_uploadFileEdit->clear();
-         } else {
-             showErrorMessage(responseObj["message"].toString());
-         }
-     } else {
-         QString errorString = m_currentReply->errorString();
-         showErrorMessage(QString(gbk_to_utf8("ÎÄ¼şÉÏ´«Ê§°Ü: %1").c_str()).arg(errorString));
-     }
-
-     m_currentReply->deleteLater();
-     m_currentReply = nullptr;
- }
-
- void FfmpegClientWidget::onFileDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
- {
-     if (bytesTotal > 0) {
-         int progress = static_cast<int>((bytesReceived * 100) / bytesTotal);
-         m_progressBar->setValue(progress);
-         m_statusLabel->setText(QString(gbk_to_utf8("ÏÂÔØ½ø¶È: %1%").c_str()).arg(progress));
-     }
- }
-
- void FfmpegClientWidget::onDownloadFileClicked()
- {
-     int currentRow = m_fileTable->currentRow();
-     if (currentRow < 0) {
-         showErrorMessage(QString(gbk_to_utf8("ÇëÑ¡ÔñÒªÏÂÔØµÄÎÄ¼ş").c_str()));
-         return;
-     }
-
-     QString fileName = m_fileTable->item(currentRow, 0)->text();
-     QString savePath = QFileDialog::getSaveFileName(this, QString(gbk_to_utf8("±£´æÎÄ¼ş").c_str()), fileName);
-
-     if (!savePath.isEmpty()) {
-         QUrl url(m_serverUrl + "/api/files/download?filename=" + fileName);
-         QNetworkRequest request(url);
-         request.setRawHeader("Authorization", QString(gbk_to_utf8("Bearer %1").c_str()).arg(m_authToken).toUtf8());
-
-         if (m_currentReply) {
-             m_currentReply->deleteLater();
-         }
-
-         m_currentReply = m_networkManager->get(request);
-         // TODO: ÊµÏÖÎÄ¼şÏÂÔØÂß¼­
-     }
- }
-
-void FfmpegClientWidget::onTimerTick()
-{
+void FfmpegClientWidget::onTimerTick() {
     updateServerStatus();
-}
-
-void FfmpegClientWidget::updateServerStatus()
-{
-    if (m_isLoggedIn && !m_serverUrl.isEmpty()) {
-        sendValidateTokenRequest();
-    }
-}
-
-void FfmpegClientWidget::sendRegisterRequest(const QString &username, const QString &password, const QString &email)
-{
-    m_serverUrl = m_regServerUrlEdit->text().trimmed();
-
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ¿ªÊ¼×¢²áÇëÇó").c_str();
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ·şÎñÆ÷URL:").c_str() << m_serverUrl;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÓÃ»§Ãû:").c_str() << username;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÓÊÏä:").c_str() << email;
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÃÜÂë³¤¶È:").c_str() << password.length();
-
-    QJsonObject requestObj;
-    requestObj["username"] = username;
-    requestObj["password"] = password;
-    requestObj["email"] = email;
-
-    QJsonDocument doc(requestObj);
-    QByteArray requestData = doc.toJson();
-
-    QUrl url(m_serverUrl + "/api/auth/register");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    configureNetworkRequest(request);
-
-    logNetworkRequest(request, requestData);
-
-    if (m_currentReply) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] È¡ÏûÖ®Ç°µÄÍøÂçÇëÇó").c_str();
-         m_currentReply->deleteLater();
-     }
-
-     m_currentReply = m_networkManager->post(request, requestData);
-     connect(m_currentReply, &QNetworkReply::finished, this, &FfmpegClientWidget::onRegisterReply);
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ×¢²áÇëÇóÒÑ·¢ËÍ").c_str();
- }
-
- void FfmpegClientWidget::sendValidateTokenRequest()
-{
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ·¢ËÍTokenÑéÖ¤ÇëÇó").c_str();
-
-    // ĞŞ¸´£º¼ì²ém_authTokenÊÇ·ñÎª¿Õ
-    if (m_authToken.isEmpty()) {
-        qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÎª¿Õ£¬²»·¢ËÍÑéÖ¤ÇëÇó").c_str();
-        return;
-    }
-
-    QUrl url(m_serverUrl + "/api/auth/validate");
-    QNetworkRequest request(url);
-    request.setRawHeader("Authorization", QString(gbk_to_utf8("Bearer %1").c_str()).arg(m_authToken).toUtf8());
-
-    logNetworkRequest(request);
-
-    QNetworkReply *reply = m_networkManager->get(request);
-    connect(reply, &QNetworkReply::finished, this, &FfmpegClientWidget::onValidateTokenReply);
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÑéÖ¤ÇëÇóÒÑ·¢ËÍ").c_str();
 }
 
 void FfmpegClientWidget::onValidateTokenReply()
  {
      QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
      if (!reply) {
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÑéÖ¤ÏìÓ¦Îª¿Õ").c_str();
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenéªŒè¯å“åº”ä¸ºç©º").c_str();
          return;
      }
 
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] ´¦ÀíTokenÑéÖ¤ÏìÓ¦").c_str();
+     qDebug() << gbk_to_utf8("[FfmpegClientWidget] å¼€å§‹TokenéªŒè¯å“åº”").c_str();
      logNetworkResponse(reply);
 
      if (reply->error() != QNetworkReply::NoError) {
          int errorCode = reply->error();
          int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÑéÖ¤Ê§°Ü:").c_str();
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget]  ´íÎó´úÂë:").c_str() << errorCode;
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget]  HTTP×´Ì¬Âë:").c_str() << statusCode;
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget]  ´íÎóÃèÊö:").c_str() << reply->errorString();
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenéªŒè¯å¤±è´¥:").c_str();
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] é”™è¯¯ä»£ç :").c_str() << errorCode;
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] HTTPçŠ¶æ€ç :").c_str() << statusCode;
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] é”™è¯¯ä¿¡æ¯:").c_str() << reply->errorString();
 
-         // ÑéÖ¤Ê§°ÜÊ±£¬¿ÉÄÜĞèÒªÖØĞÂµÇÂ¼
+
          if (reply->error() == QNetworkReply::AuthenticationRequiredError) {
-             qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÒÑ¹ıÆÚ£¬ĞèÒªÖØĞÂµÇÂ¼").c_str();
+             qDebug() << gbk_to_utf8("[FfmpegClientWidget] Tokenå·²è¿‡æœŸï¼Œéœ€è¦é‡æ–°ç™»å½•").c_str();
              logout();
          }
      } else {
-         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÑéÖ¤³É¹¦").c_str();
+         qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenéªŒè¯æˆåŠŸ").c_str();
          QByteArray responseData = reply->readAll();
          if (!responseData.isEmpty()) {
-             qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÑéÖ¤ÏìÓ¦:").c_str() << responseData.left(200);
+             qDebug() << gbk_to_utf8("[FfmpegClientWidget] éªŒè¯å“åº”:").c_str() << responseData.left(200);
          }
      }
 
      reply->deleteLater();
-     qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenÑéÖ¤ÏìÓ¦´¦ÀíÍê³É").c_str();
+     qDebug() << gbk_to_utf8("[FfmpegClientWidget] TokenéªŒè¯å“åº”å¤„ç†å®Œæˆ").c_str();
 }
 
 
@@ -1386,22 +718,22 @@ void FfmpegClientWidget::handleError(const QString &error, QNetworkReply *reply)
         }
     }
 
-    showErrorMessage(errorMessage);
+    showErrorMessage(errorMessage.toStdString().c_str());
 }
 
-void FfmpegClientWidget::showErrorMessage(const QString &message)
+void FfmpegClientWidget::showErrorMessage(const char *message)
 {
-    QMessageBox::critical(this, QString(gbk_to_utf8("´íÎó").c_str()), message);
+    QMessageBox::critical(this, gbk_to_utf8("é”™è¯¯").c_str(), message);
 }
 
-void FfmpegClientWidget::showSuccessMessage(const QString &message)
+void FfmpegClientWidget::showSuccessMessage(const char *message)
 {
-    QMessageBox::information(this, QString(gbk_to_utf8("³É¹¦").c_str()), message);
+    QMessageBox::information(this, gbk_to_utf8("æˆåŠŸ").c_str(), message);
 }
 
 void FfmpegClientWidget::configureNetworkRequest(QNetworkRequest &request)
 {
-    // ÅäÖÃSSLÉèÖÃ£¬ÓÃÓÚ²âÊÔ»·¾³
+    // SSL
     QSslConfiguration sslConfig = request.sslConfiguration();
     sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
     request.setSslConfiguration(sslConfig);
@@ -1409,44 +741,44 @@ void FfmpegClientWidget::configureNetworkRequest(QNetworkRequest &request)
 
 void FfmpegClientWidget::configureNetworkDebugging()
 {
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÅäÖÃÍøÂçµ÷ÊÔ").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] é…ç½®ç½‘ç»œè°ƒè¯•").c_str();
 
-    // ²¶»ñSSL´íÎó
+
     connect(m_networkManager, &QNetworkAccessManager::sslErrors,
             [](QNetworkReply *reply, const QList<QSslError> &errors) {
-                qDebug() << gbk_to_utf8("[Network] SSL´íÎó:").c_str();
+                qDebug() << gbk_to_utf8("[Network] SSLé”™è¯¯:").c_str();
                 for (const QSslError &error : errors) {
                     qDebug() << gbk_to_utf8("[Network]  -").c_str() << error.errorString();
                 }
             });
 
-    // ¼ì²é´úÀíÉèÖÃ
+
     QNetworkProxy proxy = QNetworkProxy::applicationProxy();
     if (proxy.type() != QNetworkProxy::NoProxy) {
-        qDebug() << gbk_to_utf8("[Network] Ê¹ÓÃ´úÀí:").c_str() << proxy.hostName() << gbk_to_utf8(":").c_str() << proxy.port();
+        qDebug() << gbk_to_utf8("[Network] ä½¿ç”¨ä»£ç†:").c_str() << proxy.hostName() << gbk_to_utf8(":").c_str() << proxy.port();
     } else {
-        qDebug() << gbk_to_utf8("[Network] Î´Ê¹ÓÃ´úÀí").c_str();
+        qDebug() << gbk_to_utf8("[Network] æœªä½¿ç”¨ä»£ç†").c_str();
     }
 
-    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ÍøÂçµ÷ÊÔÅäÖÃÍê³É").c_str();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] ç½‘ç»œè°ƒè¯•é…ç½®å®Œæˆ").c_str();
 }
 
 void FfmpegClientWidget::logNetworkRequest(const QNetworkRequest &request, const QByteArray &data)
 {
-    qDebug() << gbk_to_utf8("[Network] =================== ÍøÂçÇëÇó ===================").c_str();
+    qDebug() << gbk_to_utf8("[Network] =================== è¯·æ±‚å¼€å§‹ ===================").c_str();
     qDebug() << gbk_to_utf8("[Network] URL:").c_str() << request.url().toString();
-    qDebug() << gbk_to_utf8("[Network] ·½·¨:").c_str() << request.attribute(QNetworkRequest::CustomVerbAttribute).toString();
+    qDebug() << gbk_to_utf8("[Network] æ–¹æ³•:").c_str() << request.attribute(QNetworkRequest::CustomVerbAttribute).toString();
 
-    // ´òÓ¡ÇëÇóÍ·
+
     for (const auto &header : request.rawHeaderList()) {
         qDebug() << gbk_to_utf8("[Network] Header:").c_str() << header << gbk_to_utf8("=").c_str() << request.rawHeader(header);
     }
 
-    // ´òÓ¡ÇëÇóÌå£¨ÏŞÖÆ³¤¶È£©
+
     if (!data.isEmpty()) {
         QString dataStr = QString::fromUtf8(data.left(1000));
         if (data.size() > 1000) {
-            dataStr += gbk_to_utf8("...(truncated)").c_str();
+            dataStr += "...(truncated)";
         }
         qDebug() << gbk_to_utf8("[Network] Body:").c_str() << dataStr;
         qDebug() << gbk_to_utf8("[Network] Body size:").c_str() << data.size() << gbk_to_utf8("bytes").c_str();
@@ -1458,17 +790,17 @@ void FfmpegClientWidget::logNetworkRequest(const QNetworkRequest &request, const
 void FfmpegClientWidget::logNetworkResponse(QNetworkReply *reply)
 {
     if (!reply) {
-        qDebug() << gbk_to_utf8("[Network] ÏìÓ¦Îª¿Õ").c_str();
+        qDebug() << gbk_to_utf8("[Network] å“åº”ä¸ºç©º").c_str();
         return;
     }
 
-    qDebug() << gbk_to_utf8("[Network] =================== ÍøÂçÏìÓ¦ ===================").c_str();
+    qDebug() << gbk_to_utf8("[Network] =================== å“åº”ç»“æŸ ===================").c_str();
     qDebug() << gbk_to_utf8("[Network] URL:").c_str() << reply->url().toString();
-    qDebug() << gbk_to_utf8("[Network] HTTP×´Ì¬Âë:").c_str() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    qDebug() << gbk_to_utf8("[Network] ´íÎó´úÂë:").c_str() << reply->error();
-    qDebug() << gbk_to_utf8("[Network] ´íÎóÃèÊö:").c_str() << reply->errorString();
+    qDebug() << gbk_to_utf8("[Network] HTTPçŠ¶æ€ç :").c_str() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    qDebug() << gbk_to_utf8("[Network] é”™è¯¯ä»£ç :").c_str() << reply->error();
+    qDebug() << gbk_to_utf8("[Network] é”™è¯¯ä¿¡æ¯:").c_str() << reply->errorString();
 
-    // ´òÓ¡ÏìÓ¦Í·
+
     for (const auto &header : reply->rawHeaderList()) {
         qDebug() << gbk_to_utf8("[Network] Response Header:").c_str() << header << gbk_to_utf8("=").c_str() << reply->rawHeader(header);
     }
@@ -1476,7 +808,3 @@ void FfmpegClientWidget::logNetworkResponse(QNetworkReply *reply)
     qDebug() << gbk_to_utf8("[Network] ===============================================").c_str();
 }
 
-void FfmpegClientWidget::loadCommandPresets()
-{
-    // ´ÓÎÄ¼ş¼ÓÔØÃüÁîÔ¤Éè
-}

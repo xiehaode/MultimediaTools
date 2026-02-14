@@ -17,9 +17,6 @@ DROP PROCEDURE IF EXISTS RegisterUser;
 DROP PROCEDURE IF EXISTS AuthenticateUser;
 DROP PROCEDURE IF EXISTS CreateUserSession;
 DROP PROCEDURE IF EXISTS ValidateSession;
-DROP PROCEDURE IF EXISTS SaveFFmpegCommand;
-DROP PROCEDURE IF EXISTS UpdateCommandStatus;
-DROP PROCEDURE IF EXISTS GetUserCommands;
 DROP PROCEDURE IF EXISTS LogLoginAttempt;
 
 -- 4. 创建表结构（优化复合索引，减少冗余）
@@ -39,26 +36,6 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_username (username),
     INDEX idx_email (email)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS ffmpeg_commands (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    command_name VARCHAR(100) NOT NULL,
-    input_file VARCHAR(500) NOT NULL,
-    output_file VARCHAR(500) NOT NULL,
-    command_line TEXT NOT NULL,
-    parameters JSON,
-    status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
-    progress INT DEFAULT 0,
-    error_message TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    -- 复合索引覆盖 "用户+状态" 核心查询
-    INDEX idx_cmd_user_status (user_id, status),
-    INDEX idx_cmd_created_at (created_at)
-);
 
 CREATE TABLE IF NOT EXISTS user_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -267,73 +244,7 @@ BEGIN
     END IF;
 END //
 
--- 5.5 保存FFmpeg命令
-CREATE PROCEDURE SaveFFmpegCommand(
-    IN p_user_id INT,
-    IN p_command_name VARCHAR(100),
-    IN p_input_file VARCHAR(500),
-    IN p_output_file VARCHAR(500),
-    IN p_command_line TEXT,
-    IN p_parameters JSON,
-    OUT p_command_id INT,
-    OUT p_status VARCHAR(50)
-)
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET p_status = 'error';
-    END;
-    
-    INSERT INTO ffmpeg_commands (
-        user_id, command_name, input_file, output_file, command_line, parameters
-    ) VALUES (
-        p_user_id, p_command_name, p_input_file, p_output_file, p_command_line, p_parameters
-    );
-    SET p_command_id = LAST_INSERT_ID();
-    SET p_status = 'success';
-END //
-
--- 5.6 更新命令状态
-CREATE PROCEDURE UpdateCommandStatus(
-    IN p_command_id INT,
-    IN p_status VARCHAR(20),
-    IN p_progress INT,
-    IN p_error_message TEXT,
-    OUT p_result_status VARCHAR(50)
-)
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET p_result_status = 'error';
-    END;
-    
-    UPDATE ffmpeg_commands 
-    SET status = p_status,
-        progress = p_progress,
-        error_message = p_error_message,
-        updated_at = CURRENT_TIMESTAMP,
-        completed_at = CASE WHEN p_status IN ('completed', 'failed') THEN CURRENT_TIMESTAMP ELSE completed_at END
-    WHERE id = p_command_id;
-    SET p_result_status = 'success';
-END //
-
--- 5.7 获取用户命令历史
-CREATE PROCEDURE GetUserCommands(
-    IN p_user_id INT,
-    IN p_limit INT,
-    IN p_offset INT
-)
-BEGIN
-    SELECT 
-        id, command_name, input_file, output_file, status,
-        progress, error_message, created_at, updated_at, completed_at
-    FROM ffmpeg_commands
-    WHERE user_id = p_user_id
-    ORDER BY created_at DESC
-    LIMIT p_limit OFFSET p_offset;
-END //
-
--- 5.8 记录登录日志
+-- 5.5 记录登录日志
 CREATE PROCEDURE LogLoginAttempt(
     IN p_user_id INT,
     IN p_username VARCHAR(50),
@@ -365,22 +276,7 @@ DELIMITER ;
 INSERT IGNORE INTO users (username, email, password_hash, salt, role) 
 VALUES ('admin', 'admin@multimediatool.com', 'temp_hash', 'temp_salt', 'admin');
 
--- 7. 创建视图
-CREATE OR REPLACE VIEW user_command_stats AS
-SELECT 
-    u.id as user_id,
-    u.username,
-    COUNT(fc.id) as total_commands,
-    SUM(CASE WHEN fc.status = 'completed' THEN 1 ELSE 0 END) as completed_commands,
-    SUM(CASE WHEN fc.status = 'failed' THEN 1 ELSE 0 END) as failed_commands,
-    SUM(CASE WHEN fc.status = 'processing' THEN 1 ELSE 0 END) as processing_commands,
-    AVG(CASE WHEN fc.status = 'completed' AND fc.completed_at IS NOT NULL 
-            THEN TIMESTAMPDIFF(SECOND, fc.created_at, fc.completed_at) ELSE NULL END) as avg_completion_time
-FROM users u
-LEFT JOIN ffmpeg_commands fc ON u.id = fc.user_id
-GROUP BY u.id, u.username;
-
--- 8. 清理测试数据
+-- 7. 清理测试数据
 DELETE FROM users WHERE username IN ('root', 'testuser', 'testuser2', 'testuser3', 'testfinal') 
    OR email IN ('2802625868@qq.com', 'test@example.com', 'test2@example.com', 'test3@example.com', 'test@final.com');
 

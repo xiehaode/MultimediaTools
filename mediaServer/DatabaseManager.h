@@ -17,22 +17,6 @@ struct User {
     std::string lastLogin;
 };
 
-struct FFmpegCommand {
-    int id;
-    int userId;
-    std::string commandName;
-    std::string inputFile;
-    std::string outputFile;
-    std::string commandLine;
-    std::string parameters; // JSON string
-    std::string status;
-    int progress;
-    std::string errorMessage;
-    std::string createdAt;
-    std::string updatedAt;
-    std::string completedAt;
-};
-
 class DatabaseManager {
 public:
     static DatabaseManager& getInstance();
@@ -73,14 +57,6 @@ public:
     
     void cleanupExpiredSessions();
     
-    // FFmpeg命令管理
-    bool saveFFmpegCommand(const FFmpegCommand& command, int& commandId);
-    bool updateCommandStatus(int commandId, const std::string& status, 
-                            int progress, const std::string& errorMessage);
-    
-    bool getCommandById(int commandId, FFmpegCommand& command);
-    std::vector<FFmpegCommand> getUserCommands(int userId, int limit = 50, int offset = 0);
-    
     // 日志管理
     bool logLoginAttempt(const std::string& username, const std::string& ipAddress,
                         const std::string& userAgent, bool success,
@@ -112,7 +88,6 @@ private:
                              std::vector<std::vector<std::string>>& results);
     
     User parseUserFromRow(const std::vector<std::string>& row);
-    FFmpegCommand parseCommandFromRow(const std::vector<std::string>& row);
     
     // 错误处理
     std::string getMySQLError();

@@ -63,17 +63,6 @@ private:
     void handleGetUserProfile(const http_request& request);
     void handleUpdateUserProfile(const http_request& request);
     
-    // FFmpeg命令相关API
-    void handleSaveCommand(const http_request& request);
-    void handleUpdateCommandStatus(const http_request& request);
-    void handleGetCommand(const http_request& request);
-    void handleGetUserCommands(const http_request& request);
-    void handleGetUserStats(const http_request& request);
-    
-    // 文件上传API
-    void handleFileUpload(const http_request& request);
-    void handleFileDownload(const http_request& request);
-    
     // 工具函数
     bool authenticateRequest(const http_request& request, User& user);
     std::string generateToken(const User& user);
@@ -84,7 +73,6 @@ private:
     json::value createErrorResponse(const std::string& message, int code = 400);
     json::value createSuccessResponse(const json::value& data = json::value::null());
     json::value userToJson(const User& user);
-    json::value commandToJson(const FFmpegCommand& command);
     
     // 请求解析辅助函数
     bool parseJsonBody(const http_request& request, json::value& body);

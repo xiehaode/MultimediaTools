@@ -20,9 +20,11 @@ MainWindow::MainWindow(QWidget *parent)
         qStackedWidget->setObjectName("BaseContentWidget");
         auto *videoP1 = new videoPage;
         videoP1->setIPCMgr(m_ipcMgr);
+        videoP1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         auto *wordP2 = new word;
 
         auto *pictureP3 = new picture;
+        pictureP3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         auto *effactP4 = new effact;
         auto *ffmpegP5 = new ffmpegCmd;
         auto *ffmpegClientP6 = new FfmpegClientWidget;
