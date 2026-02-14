@@ -798,6 +798,10 @@ void FfmpegClientWidget::onRegisterReply()
 
 void FfmpegClientWidget::sendLoginRequest(const QString &username, const QString &password)
 {
+    // 清理旧Token，确保使用新Token
+    m_authToken.clear();
+    qDebug() << gbk_to_utf8("[FfmpegClientWidget] 清理旧Token，开始新登录").c_str();
+    
     qDebug() << gbk_to_utf8("[FfmpegClientWidget] 开始登录请求").c_str();
     qDebug() << gbk_to_utf8("[FfmpegClientWidget] 服务器URL:").c_str() << m_serverUrl;
     qDebug() << gbk_to_utf8("[FfmpegClientWidget] 用户名:").c_str() << username;
@@ -870,11 +874,12 @@ void FfmpegClientWidget::onLoginReply()
             qDebug() << gbk_to_utf8("[FfmpegClientWidget] 登录响应对象:").c_str() << responseObj;
 
             if (responseObj["success"].toBool()) {
-                // 修复：从data字段中获取token
-                QJsonObject dataObj = responseObj["data"].toObject();
-                m_authToken = dataObj["token"].toString();
+                // 修复：直接从顶级字段获取token（匹配服务器返回格式）
+                m_authToken = responseObj["token"].toString();
+                QString username = responseObj["username"].toString();
                 qDebug() << gbk_to_utf8("[FfmpegClientWidget] 登录成功，Token长度:").c_str() << m_authToken.length();
-                setLoginStatus(true, m_usernameEdit->text());
+                qDebug() << gbk_to_utf8("[FfmpegClientWidget] 获取的用户名:").c_str() << username;
+                setLoginStatus(true, username);
 
                 // 保存服务器地址和用户名
                 if (m_rememberServerCheckBox->isChecked()) {

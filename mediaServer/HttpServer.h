@@ -77,6 +77,7 @@ private:
     // 工具函数
     bool authenticateRequest(const http_request& request, User& user);
     std::string generateToken(const User& user);
+    std::string generateTokenWithDetails(const User& user, const std::string& clientIP, const std::string& userAgent);
     bool validateToken(const std::string& token, User& user);
     
     // JSON处理辅助函数

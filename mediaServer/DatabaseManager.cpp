@@ -453,7 +453,10 @@ bool DatabaseManager::createSession(int userId, const std::string& sessionToken,
     auto now = std::time(nullptr);
     auto expiresAt = now + 24 * 60 * 60;
     
-    std::string expiresStr = std::to_string(expiresAt);
+    // 转换为MySQL TIMESTAMP格式
+    std::tm* tm = std::gmtime(&expiresAt);
+    char expiresStr[20];
+    std::strftime(expiresStr, sizeof(expiresStr), "%Y-%m-%d %H:%M:%S", tm);
     
     std::string query = "CALL CreateUserSession(?, ?, ?, ?, @session_id, @status)";
     
@@ -477,15 +480,15 @@ bool DatabaseManager::createSession(int userId, const std::string& sessionToken,
     bind[1].buffer = (void*)sessionToken.c_str();
     bind[1].buffer_length = sessionToken.length();
     
-    bind[2].buffer_type = MYSQL_TYPE_STRING;
-    bind[2].buffer = (void*)expiresStr.c_str();
-    bind[2].buffer_length = expiresStr.length();
+    bind[2].buffer_type = MYSQL_TYPE_STRING;  // 修复：第3个参数是expires_at
+    bind[2].buffer = expiresStr;
+    bind[2].buffer_length = strlen(expiresStr);
     
-    bind[3].buffer_type = MYSQL_TYPE_STRING;
+    bind[3].buffer_type = MYSQL_TYPE_STRING;  // 修复：第4个参数是ip_address
     bind[3].buffer = (void*)ipAddress.c_str();
     bind[3].buffer_length = ipAddress.length();
     
-    bind[4].buffer_type = MYSQL_TYPE_STRING;
+    bind[4].buffer_type = MYSQL_TYPE_STRING;  // 修复：第5个参数是user_agent
     bind[4].buffer = (void*)userAgent.c_str();
     bind[4].buffer_length = userAgent.length();
     
