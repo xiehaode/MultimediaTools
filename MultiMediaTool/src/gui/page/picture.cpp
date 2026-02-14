@@ -114,7 +114,7 @@ void picture::onCheckBoxStateChanged(int state)
 
     // 防止信号循环调用
     if (senderBox->signalsBlocked()) {
-        return;  // 如果信号被阻断则直接返回
+        return;
     }
 
     // 未选中状态
@@ -161,14 +161,13 @@ void picture::onCheckBoxStateChanged(int state)
         qDebug() << gbk_to_utf8("选择颜色反转效果").c_str();
     }
 
-    // 强制刷新UI，确保状态更新生效
+
     QApplication::processEvents();
 
-    // 通过UI线程打印当前选中的特效类型
+
     qDebug() << gbk_to_utf8("当前效果类型：").c_str() << effectType;
 }
 
-// 修改单选逻辑，确保只能单选，取消多选
 void picture::ensureSingleSelection(QCheckBox* checkedBox)
 {
     QList<QCheckBox*> checkBoxes = {

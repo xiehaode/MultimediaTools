@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 创建QStackedWidget控件 用于存放多个页面
         qStackedWidget = new QStackedWidget;
         qStackedWidget->setObjectName("BaseContentWidget");
+        qStackedWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         auto *videoP1 = new videoPage;
         videoP1->setIPCMgr(m_ipcMgr);
         videoP1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -26,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
         auto *pictureP3 = new picture;
         pictureP3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         auto *effactP4 = new effact;
+        effactP4->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         auto *ffmpegP5 = new ffmpegCmd;
         auto *ffmpegClientP6 = new FfmpegClientWidget;
 

@@ -79,6 +79,7 @@ DEPENDPATH += $$PWD/../OpenCVTools $$PWD/../formatChange $$PWD/../curlAli
 RESOURCES += \
     icon.qrc
 
+
 unix|win32: LIBS += -L$$PWD/../bin/ -lOPENCVTOOLS -lFORMATCHANGE -lCURLALI
 
 DESTDIR = ../bin

@@ -6,71 +6,60 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>665</width>
-    <height>690</height>
+    <width>832</width>
+    <height>574</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>20</y>
-     <width>481</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QLabel" name="recordLabel">
-      <property name="text">
-       <string>选择录制功能</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="recordComboBox"/>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QPushButton" name="begin">
-   <property name="geometry">
-    <rect>
-     <x>560</x>
-     <y>20</y>
-     <width>91</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>开始</string>
-   </property>
-  </widget>
-  <widget class="QTableWidget" name="tableWidget">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>90</y>
-     <width>611</width>
-     <height>541</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="import_2">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>640</y>
-     <width>101</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>导入</string>
-   </property>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QLabel" name="recordLabel">
+           <property name="text">
+            <string>选择录制功能</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="recordComboBox"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="begin">
+         <property name="text">
+          <string>开始</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTableWidget" name="tableWidget"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="import_2">
+       <property name="text">
+        <string>导入</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
