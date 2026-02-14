@@ -6,6 +6,8 @@
 #include "src/gui/page/ffmpegcmd.h"
 #include "src/gui/page/ffmpegclientwidget.h"
 #include "src/utils/myipcmgr.h"
+#include "src/utils/screenCapture.h"
+
 
 extern const QString IPC_PIPE_NAME;
 
@@ -43,6 +45,12 @@ MainWindow::MainWindow(QWidget *parent)
 
         // 绑定侧边栏按钮和主界面的控件
         connect(sidebarWidget, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
+
+        int ret = QuickCaptureScreen("a.bmp");
+        if(ret == false){
+            qDebug()<<"----------------------------------------error capture";
+        }
+
 }
 
 bool MainWindow::createleftNavigationBar()

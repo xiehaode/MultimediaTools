@@ -53,6 +53,7 @@ HEADERS += \
     src/base/pageBase.h \
     src/base/timedcmdexecutor.h \
     src/utils/myipcmgr.h \
+    src/utils/screenCapture.h \
     src/utils/win32Util.h \
     src/utils/lan_util.h
 
