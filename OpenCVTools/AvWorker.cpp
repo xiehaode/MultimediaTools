@@ -62,7 +62,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	pkt.size = 0;
 
 	int ret, video_stream_idx = -1;
-	// 新增：帧计数，用于生成备用时间戳
+	//帧计数，用于生成备用时间戳
 	int64_t frame_index = 0;
 	AVRational in_time_base;  // 输入流时间基
 	AVRational out_time_base; // 输出流时间基
@@ -410,7 +410,7 @@ bool AvWorker::resize_video(const std::string& input_path, const std::string& ou
 	return process_success;
 }
 
-// 保存RGB数据为BMP图片（修复头格式问题，兼容ImageMagick）
+// 保存RGB数据为BMP图片
 bool AvWorker::SaveFrameToBmp(const uint8_t* rgb_data, int width, int height, const std::string& output_path) {
 	// 严格按照BMP标准定义结构体（禁用编译器对齐）
 #pragma pack(push, 1) // 强制1字节对齐，符合BMP标准
@@ -494,7 +494,7 @@ bool AvWorker::SaveFrameToBmp(const uint8_t* rgb_data, int width, int height, co
 	for (int y = 0; y < height; y++) {
 		// 写入当前行有效像素数据
 		fwrite(src_ptr, 3, width, fp);
-		// 补充对齐字节（如果需要）
+		// 补充对齐字节
 		int padding = row_size - width * 3;
 		if (padding > 0) {
 			static const uint8_t pad[4] = { 0 };
@@ -528,7 +528,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		av_dict_set(&options, "max_delay", "1000000", 0);  // 1秒最大延迟
 	}
 
-	// 2. 打开输入文件/流
+	// 打开输入文件/流
 	int ret = avformat_open_input(&fmt_ctx, input_url.c_str(), nullptr, &options);
 	av_dict_free(&options); // 释放参数字典
 	if (ret < 0) {
@@ -538,14 +538,14 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		return false;
 	}
 
-	// 3. 获取流信息
+	//获取流信息
 	if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
 		std::cerr << "Get stream info failed" << std::endl;
 		avformat_close_input(&fmt_ctx);
 		return false;
 	}
 
-	// 4. 找到视频流
+	// 找到视频流
 	int video_stream_idx = -1;
 	AVCodecParameters* codec_par = nullptr;
 	for (int i = 0; i < fmt_ctx->nb_streams; i++) {
@@ -561,7 +561,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		return false;
 	}
 
-	// 5. 查找解码器并初始化
+	// 查找解码器并初始化
 	const AVCodec* codec = avcodec_find_decoder(codec_par->codec_id);
 	if (!codec) {
 		std::cerr << "找不到解码器" << std::endl;
@@ -584,7 +584,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		return false;
 	}
 
-	// 6. 初始化缩放上下文（转换为RGB24格式）
+	// 初始化缩放上下文（转换为RGB24格式）
 	SwsContext* sws_ctx = sws_getContext(
 		codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt,
 		codec_ctx->width, codec_ctx->height, AV_PIX_FMT_BGR24, // BGR24和RGB24仅通道顺序不同，BMP用BGR更方便
@@ -596,7 +596,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		return false;
 	}
 
-	// 7. 分配帧缓存
+	// 分配帧缓存
 	AVFrame* frame = av_frame_alloc();       // 原始视频帧
 	AVFrame* frame_rgb = av_frame_alloc();   // 转换后的RGB帧
 	if (!frame || !frame_rgb) {
@@ -661,7 +661,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 		std::cerr << "got_first_frame is NULL" << std::endl;
 	}
 
-	// 9. 释放所有资源
+	//释放所有资源
 	av_free(rgb_buffer);
 	av_frame_free(&frame);
 	av_frame_free(&frame_rgb);
@@ -694,7 +694,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		av_dict_set(&options, "max_delay", "1000000", 0);
 	}
 
-	// 2. 打开第一个输入文件/流（错误处理：失败则直接释放资源返回）
+	// 打开第一个输入文件/流（错误处理：失败则直接释放资源返回）
 	ret = avformat_open_input(&fmt_ctx1, input_url1.c_str(), nullptr, &options);
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
@@ -705,7 +705,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return false;
 	}
 
-	// 3. 打开第二个输入文件/流（错误处理：失败则释放第一个输入资源）
+	// 打开第二个输入文件/流（错误处理：失败则释放第一个输入资源）
 	ret = avformat_open_input(&fmt_ctx2, input_url2.c_str(), nullptr, &options);
 	if (ret < 0){
 		char err_buf[1024] = { 0 };
@@ -719,7 +719,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 	av_dict_free(&options);
 	options = nullptr;
 
-	// 4. 获取第一个输入流信息
+	// 获取第一个输入流信息
 	ret = avformat_find_stream_info(fmt_ctx1, nullptr);
 	if (ret < 0) {
 		std::cerr << "[error]find_stream_info 1 fair index:" << input_url1 << std::endl;
@@ -743,7 +743,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 	std::cout << "[info] Input 1 streams count: " << fmt_ctx1->nb_streams << std::endl;
 	std::cout << "[info] Input 2 streams count: " << fmt_ctx2->nb_streams << std::endl;
 
-	// 5. 创建输出上下文
+	// 创建输出上下文
 	ret = avformat_alloc_output_context2(&out_fmt_ctx, nullptr, nullptr, output_url.c_str());
 	if (!out_fmt_ctx) {
 		std::cerr << "[error]craete output stream fair index:" << output_url << std::endl;
@@ -753,7 +753,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return false;
 	}
 
-	// 6. 复制流信息到输出上下文
+	// 复制流信息到输出上下文
 	bool stream_copy_ok = true;
 	for (int i = 0; i < fmt_ctx1->nb_streams && stream_copy_ok; i++) {
 		AVStream* in_stream = fmt_ctx1->streams[i];
@@ -792,7 +792,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return false;
 	}
 
-	// 7. 打开输出文件IO
+	// 打开输出文件IO
 	if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
 		ret = avio_open(&out_fmt_ctx->pb, output_url.c_str(), AVIO_FLAG_WRITE);
 		if (ret < 0) {
@@ -834,7 +834,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 	// 定义AVRounding枚举变量，解决类型不兼容问题
 	AVRounding rounding = static_cast<AVRounding>(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX);
 
-	// 关键：按“每个输出流”累计结束时间戳 + 最后一帧的DTS/PTS（用于单调性校验）
+	// 按“每个输出流”累计结束时间戳 + 最后一帧的DTS/PTS（用于单调性校验）
 	const int out_nb_streams = static_cast<int>(out_fmt_ctx->nb_streams);
 	std::vector<int64_t> out_stream_end_ts(out_nb_streams, 0);        // 拼接偏移量
 	std::vector<int64_t> out_stream_last_dts(out_nb_streams, -1);     // 最后一帧的DTS
@@ -848,7 +848,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return av_rescale_q_rnd(ts, in_tb, out_tb, rounding);
 	};
 
-	// 关键：时间戳单调性修正函数
+	// 时间戳单调性修正函数
 	auto fix_timestamp_monotonic = [&](int stream_idx, int64_t& pts, int64_t& dts) {
 		if (stream_idx < 0 || stream_idx >= out_nb_streams) return;
 
@@ -946,7 +946,7 @@ bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_
 		return false;
 	}
 
-	// 10. 处理第二个视频的音视频帧
+	// 处理第二个视频的音视频帧
 	pkt = {};
 	av_packet_unref(&pkt);
 
@@ -1141,7 +1141,7 @@ int AvWorker::split_video(const std::string& input_path,
 	AVFormatContext *output_fmt_ctx = nullptr;
 	int ret = -1;
 
-	// 2. 打开输入文件
+	// 打开输入文件
 	if (avformat_open_input(&input_fmt_ctx, input_path.c_str(), nullptr, nullptr) < 0) {
 		std::cerr << "错误：无法打开输入文件 " << input_path << std::endl;
 
@@ -1157,14 +1157,14 @@ int AvWorker::split_video(const std::string& input_path,
 		return -1;
 	}
 
-	// 3. 获取输入文件流信息
+	// 获取输入文件流信息
 	if (avformat_find_stream_info(input_fmt_ctx, nullptr) < 0) {
 		std::cerr << "错误：无法获取流信息" << std::endl;
 		avformat_close_input(&input_fmt_ctx);
 		return -1;
 	}
 
-	// 4. 创建输出格式上下文
+	// 创建输出格式上下文
 	if (avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, output_path.c_str()) < 0) {
 		std::cerr << "错误：无法创建输出格式上下文" << std::endl;
 		avformat_close_input(&input_fmt_ctx);
@@ -1220,7 +1220,7 @@ int AvWorker::split_video(const std::string& input_path,
 		}
 	}
 
-	// 7. 写入文件头
+	// 写入文件头
 	if (avformat_write_header(output_fmt_ctx, nullptr) < 0) {
 		std::cerr << "错误：无法写入文件头" << std::endl;
 		if (!(output_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
@@ -1231,7 +1231,7 @@ int AvWorker::split_video(const std::string& input_path,
 		return -1;
 	}
 
-	// 8. 计算时间戳
+	// 计算时间戳
 	AVRational ration = { 1,AV_TIME_BASE };
 	int64_t start_ts = av_rescale_q(static_cast<int64_t>(start_seconds * AV_TIME_BASE),
 		ration,
@@ -1243,12 +1243,12 @@ int AvWorker::split_video(const std::string& input_path,
 			input_fmt_ctx->streams[video_stream_index]->time_base);
 	}
 
-	// 9. 定位到起始时间位置
+	// 定位到起始时间位置
 	if (av_seek_frame(input_fmt_ctx, video_stream_index, start_ts, AVSEEK_FLAG_ANY) < 0) {
 		std::cerr << "av_seek_frame fair ,begin closest frame" << std::endl;
 	}
 
-	// 10. 读取并写入帧
+	// 读取并写入帧
 	AVPacket pkt = { 0 };
 	pkt.data = nullptr;
 	pkt.size = 0;
@@ -1348,7 +1348,7 @@ double AvWorker::getDuration(const std::string & input_path)
 		}
 	};
 
-	// 1. 打开视频文件（带错误处理，失败则清理资源并返回）
+	//  打开视频文件（带错误处理，失败则清理资源并返回）
 	int ret = avformat_open_input(&formatContext, input_path.c_str(), NULL, NULL);
 	if (ret != 0) {
 		char err_buf[1024] = { 0 };
@@ -1361,7 +1361,7 @@ double AvWorker::getDuration(const std::string & input_path)
 		return -1.0;        // 提前返回
 	}
 
-	// 2. 查找流信息（带错误日志，失败则清理资源并返回）
+	// 查找流信息（带错误日志，失败则清理资源并返回）
 	ret = avformat_find_stream_info(formatContext, NULL);
 	if (ret < 0) {
 		char err_buf[1024] = { 0 };
@@ -1374,7 +1374,7 @@ double AvWorker::getDuration(const std::string & input_path)
 		return -1.0;        // 提前返回
 	}
 
-	// 3. 计算时长（保留毫秒级精度，避免取整丢失）
+	// 计算时长
 	if (formatContext->duration != AV_NOPTS_VALUE) { // 确保时长有效
 		duration = static_cast<double>(formatContext->duration) / AV_TIME_BASE;
 		std::cout << "duration | path:" << input_path
@@ -1389,10 +1389,10 @@ double AvWorker::getDuration(const std::string & input_path)
 		duration = -1.0;
 	}
 
-	// 4. 正常流程的资源清理
+	// 正常流程的资源清理
 	cleanupResources();
 
-	// 5. 返回时长（成功返回实际值，失败返回-1.0）
+	// 返回时长
 	return duration;
 }
 

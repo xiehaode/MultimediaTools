@@ -33,6 +33,8 @@ private slots:
     void showLoading();
     void hideLoading();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::picture *ui;
     QString file;

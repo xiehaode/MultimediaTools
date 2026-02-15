@@ -21,6 +21,7 @@ SOURCES += \
     src/gui/page/ffmpegclientwidget.cpp \
     src/gui/page/ffmpegcmd.cpp \
     src/core/ApiManager.cpp \
+    src/gui/page/version.cpp \
     src/main.cpp \
     src/gui/page/videopage.cpp \
     src/gui/menu.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     src/gui/page/ffmpegclientwidget.h \
     src/gui/page/ffmpegcmd.h \
     src/core/ApiManager.h \
+    src/gui/page/version.h \
     src/gui/page/videopage.h \
     src/gui/menu.h \
     src/gui/page/word.h \
@@ -55,9 +57,11 @@ HEADERS += \
     src/utils/myipcmgr.h \
     src/utils/screenCapture.h \
     src/utils/win32Util.h \
-    src/utils/lan_util.h
+    src/utils/lan_util.h 、
+    src/version.h
 
 FORMS += \
+    src/gui/page/version.ui \
     src/gui/ui/ffmpegcmd.ui \
     src/gui/ui/videopage.ui\
     src/gui/ui/word.ui \

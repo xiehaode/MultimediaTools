@@ -9,7 +9,7 @@ public:
 	videoTrans();
 	~videoTrans();
 	
-	// 初始化函数 - 打开解码器并设置参数
+	// 打开解码器并设置参数
 	int initialize(const std::string& inputPath, const std::string& outputPath);
 	
 	// 获取视频属性信息
@@ -28,7 +28,7 @@ public:
 	void cleanup();
 	
 	// 兼容性接口
-	int trans(func fun); // 兼容性接口，使用默认路径
+	int trans(func fun); 
 	int trans(const std::string& inputPath, const std::string& outputPath, func fun); // 完整接口
 
 private:

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>845</width>
-    <height>559</height>
+    <width>727</width>
+    <height>567</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -158,6 +158,13 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>截屏</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -221,6 +228,23 @@
      </item>
      <item>
       <widget class="QSpinBox" name="spinBox_2"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>参数三</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="verticalSpacer_3">

@@ -1,6 +1,7 @@
 #include "picture.h"
 #include "ui_picture.h"
 #include "src/utils/lan_util.h"
+#include "src/utils/screenCapture.h"
 #include <QFileDialog>
 #include <QDir>
 #include <QDebug>
@@ -72,9 +73,9 @@ void picture::setupCheckBoxConnections()
     }
 
     // 绑定按钮信号
-    connect(ui->addFile, &QAbstractButton::clicked, this, &picture::on_addFile_clicked);
-    connect(ui->exportFile, &QAbstractButton::clicked, this, &picture::on_exportFile_clicked);
-    connect(ui->ok, &QAbstractButton::clicked, this, &picture::on_ok_clicked);
+    //connect(ui->addFile, &QAbstractButton::clicked, this, &picture::on_addFile_clicked);   //111
+    //connect(ui->exportFile, &QAbstractButton::clicked, this, &picture::on_exportFile_clicked);
+    //connect(ui->ok, &QAbstractButton::clicked, this, &picture::on_ok_clicked);
 
     connect(ui->cancel, &QAbstractButton::clicked, [this]() {
         // 取消处理并重置界面状态
@@ -300,7 +301,7 @@ void picture::on_ok_clicked()
     // 获取参数值
     int p1 = ui->spinBox->value();
     int p2 = ui->spinBox_2->value();
-
+    //std::string str = ui->lineEdit
     // 注意：此处硬编码参数值，实际项目中建议做成可配置项
     QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
         const char* inputPath = utf8InputStr.c_str();
@@ -312,6 +313,7 @@ void picture::on_ok_clicked()
             case addTextWatermark:
                 return CvTranslator_AddTextWatermark_File(translator, inputPath, outputPath, "Watermark");
             case customOilPaintApprox:
+                //return CvTranslator_OilPainting_File(translator,inputPath,outputPath,);
             case applyOilPainting:
                 return CvTranslator_OilPainting_File(translator, inputPath, outputPath, p1, p2);
             case applyMosaic:
@@ -404,4 +406,38 @@ void picture::hideLoading()
 {
     // 启用界面
     setEnabled(true);
+}
+
+void picture::on_pushButton_clicked()
+{
+    QString defaultDir = QDir::currentPath() + "/document";
+    QString defaultFilePath = defaultDir + "/screenshot.bmp";
+
+
+    QString savePath = QFileDialog::getSaveFileName(
+        this,
+        gbk_to_utf8("保存截屏图片").c_str(),
+        defaultFilePath,  // 默认保存路径+文件名
+        gbk_to_utf8("位图文件 (*.bmp);;所有文件 (*.*)").c_str()
+    );
+
+
+    qDebug()<<"保存位置"<<savePath;
+    try {
+        bool success = QuickCaptureScreen(savePath.toStdString());
+        if (success) {
+            QMessageBox::information(this, gbk_to_utf8("成功").c_str(),
+                gbk_to_utf8("截屏已保存至：").c_str() + savePath);
+        } else {
+            QMessageBox::critical(this, gbk_to_utf8("错误").c_str(),
+                gbk_to_utf8("截屏保存失败，底层捕获函数返回错误").c_str());
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, gbk_to_utf8("错误").c_str(),
+            QString(gbk_to_utf8("截屏保存失败：").c_str()) + e.what());
+        qDebug() << "截屏失败原因：" << e.what();
+    } catch (...) {
+        QMessageBox::critical(this, gbk_to_utf8("错误").c_str(),
+            gbk_to_utf8("截屏保存失败，未知错误").c_str());
+    }
 }

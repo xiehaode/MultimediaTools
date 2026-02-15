@@ -244,7 +244,9 @@ public:
             if (_pDXGIOutputDup) {
                 hr = _pDXGIOutputDup->ReleaseFrame();
             }
+
         }
+        return true;
     }
 };
 

@@ -19,6 +19,8 @@
 #include <QRegularExpression>
 #include <QFileDialog>
 
+// 声明GBK转UTF8函数（确保你的项目中有这个函数的实现）
+std::string gbk_to_utf8(const std::string& gbk_str);
 
 videoPage::videoPage(QWidget *parent) :
     QWidget(parent),
@@ -48,9 +50,9 @@ videoPage::~videoPage()
 
 bool videoPage::init()
 {
-    QString vedio = GBK2QString("录制视频");
-    QString camere = GBK2QString("摄像头");
-    QString network = GBK2QString("录屏");
+    QString vedio = QString::fromUtf8(gbk_to_utf8("录制视频").c_str());
+    QString camere = QString::fromUtf8(gbk_to_utf8("摄像头").c_str());
+    QString network = QString::fromUtf8(gbk_to_utf8("录制").c_str());
     ui->recordComboBox->addItem(QIcon(":/rc/video.svg"), vedio);
     ui->recordComboBox->addItem(QIcon(":/rc/camere.svg"), camere);
     ui->recordComboBox->addItem(QIcon(":/rc/network.svg"), network);
@@ -80,26 +82,26 @@ bool videoPage::initableWidget()
 
     // 创建视频目录（如果不存在）
     if (!videoDir.mkpath(videoDirPath)) {
-        QMessageBox::warning(this, GBK2QString("警告"),
-                             GBK2QString("创建video目录失败：") + videoDirPath);
+        QMessageBox::warning(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
+                             QString::fromUtf8(gbk_to_utf8("创建video目录失败：").c_str()) + videoDirPath);
         return false;
     }
 
-    // 目录创建提示（仅首次显示）
+    // 目录创建成功提示（只显示一次）
     static bool isDirCreatedTip = false;
     if (!isDirCreatedTip && !QDir(videoDirPath).exists()) {
-        QMessageBox::information(this, GBK2QString("提示"),
-                                 GBK2QString("已创建video目录：") + videoDirPath);
+        QMessageBox::information(this, QString::fromUtf8(gbk_to_utf8("提示").c_str()),
+                                 QString::fromUtf8(gbk_to_utf8("已创建video目录：").c_str()) + videoDirPath);
         isDirCreatedTip = true;
     }
 
     // 设置表格表头
     QStringList tableHeaders;
-    tableHeaders << GBK2QString("视频名称")
-                 << GBK2QString("时长")
-                 << GBK2QString("大小(MB)")
-                 << GBK2QString("创建时间")
-                 << GBK2QString("操作");
+    tableHeaders << QString::fromUtf8(gbk_to_utf8("视频名称").c_str())
+                 << QString::fromUtf8(gbk_to_utf8("时长").c_str())
+                 << QString::fromUtf8(gbk_to_utf8("大小(MB)").c_str())
+                 << QString::fromUtf8(gbk_to_utf8("创建时间").c_str())
+                 << QString::fromUtf8(gbk_to_utf8("操作").c_str());
 
     ui->tableWidget->setColumnCount(tableHeaders.size());
     ui->tableWidget->setHorizontalHeaderLabels(tableHeaders);
@@ -122,14 +124,14 @@ bool videoPage::initableWidget()
                                                         QDir::Files | QDir::NoDotAndDotDot,
                                                         QDir::Name);
 
-    // 填充表格数据
+    // 填充表格
     if (!videoFileList.isEmpty()) {
         ui->tableWidget->setRowCount(videoFileList.size());
         for (int i = 0; i < videoFileList.size(); ++i) {
             QFileInfo fileInfo = videoFileList.at(i);
             QString videoPath = fileInfo.absoluteFilePath();
 
-            // 生成视频首帧缩略图（临时BMP文件）
+            // 获取视频首帧作为预览图（临时BMP文件）
             QString bmpPath = QDir::tempPath() + "/" + fileInfo.baseName() + "_frame.bmp";
             QByteArray gbkVideoPath = QString2GBK(videoPath);
             QByteArray gbkBmpPath = QString2GBK(bmpPath);
@@ -141,13 +143,13 @@ bool videoPage::initableWidget()
                 false
             );
 
-            // 创建视频名称单元格（包含缩略图+名称）
+            // 视频名称单元格（预览图+名称）
             QWidget* nameWidget = new QWidget();
             QHBoxLayout* nameLayout = new QHBoxLayout(nameWidget);
             nameLayout->setContentsMargins(5, 2, 5, 2); // 设置内边距
             nameLayout->setSpacing(8);                  // 设置控件间距
 
-            // 缩略图标签
+            // 预览图标签
             QLabel* imgLabel = new QLabel();
             imgLabel->setFixedSize(60, 40);
             imgLabel->setScaledContents(true);
@@ -155,7 +157,7 @@ bool videoPage::initableWidget()
                 imgLabel->setPixmap(QPixmap(bmpPath).scaled(imgLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
                 QFile::remove(bmpPath); // 删除临时文件
             } else {
-                // 加载默认视频图标
+                // 设置默认视频图标
                 imgLabel->setPixmap(QPixmap(":/rc/video.svg").scaled(imgLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
             }
 
@@ -167,7 +169,7 @@ bool videoPage::initableWidget()
             // 添加控件到布局
             nameLayout->addWidget(imgLabel);
             nameLayout->addWidget(textLabel);
-            nameLayout->addStretch(); // 拉伸空白区域
+            nameLayout->addStretch(); // 填充空白区域
 
             ui->tableWidget->setCellWidget(i, 0, nameWidget);
 
@@ -180,18 +182,18 @@ bool videoPage::initableWidget()
             QByteArray gbkPath = QString2GBK(videoPath);
             double duration = AvWorker_getDuration(worker, gbkPath.constData());
 
-            // 格式化时长（例如：3.716秒 → "0:04"，21.27秒 → "0:21"）
+            // 格式化时长（例如：3.716秒 -> "0:04", 21.27秒 -> "0:21"）
             int minutes = static_cast<int>(duration) / 60;
             int seconds = static_cast<int>(duration) % 60;
             QString durationStr = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
 
-            // 填充时长列
+            // 设置时长
             QTableWidgetItem *durationItem = new QTableWidgetItem(durationStr);
             durationItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidget->setItem(i, 1, durationItem);
             qDebug()<<"duration:"<<duration;
 
-            // 计算并填充文件大小（MB）
+            // 计算并设置文件大小（MB）
             double fileSizeMB = fileInfo.size() / (1024.0 * 1024.0);
             QTableWidgetItem *sizeItem = new QTableWidgetItem(QString::asprintf("%.2f", fileSizeMB));
             sizeItem->setTextAlignment(Qt::AlignCenter);
@@ -207,16 +209,16 @@ bool videoPage::initableWidget()
                 fileTime = QDateTime::currentDateTime(); // 当前时间
             }
 
-            // 格式化时间并填充
+            // 格式化时间并设置
             QString timeStr = fileTime.toString("yyyy-MM-dd HH:mm:ss");
             QTableWidgetItem *timeItem = new QTableWidgetItem(timeStr);
             timeItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidget->setItem(i, 3, timeItem);
 
-            // 创建操作按钮（打开+删除）
+            // 设置操作按钮（打开+删除）
             QWidget *btnWidget = new QWidget();
-            QPushButton *openBtn = new QPushButton(GBK2QString("打开"));
-            QPushButton *delBtn = new QPushButton(GBK2QString("删除"));
+            QPushButton *openBtn = new QPushButton(QString::fromUtf8(gbk_to_utf8("打开").c_str()));
+            QPushButton *delBtn = new QPushButton(QString::fromUtf8(gbk_to_utf8("删除").c_str()));
 
             // 设置按钮样式
             openBtn->setStyleSheet("QPushButton{padding:2px 8px; border-radius:4px; background:#409EFF; color:white;}");
@@ -234,7 +236,7 @@ bool videoPage::initableWidget()
             // 绑定打开按钮点击事件
             connect(openBtn, &QPushButton::clicked, this, [this, videoPath]() {
                 if (!m_ipcMgr) {
-                    // 无IPC管理器时，直接打开文件所在目录
+                    // 无IPC管理时，直接打开文件所在目录
                     QProcess::startDetached("explorer.exe", QStringList() << "/select," << QDir::toNativeSeparators(videoPath));
                     return;
                 }
@@ -242,7 +244,8 @@ bool videoPage::initableWidget()
                 // 获取播放器路径
                 QString mplayerPath = QDir::currentPath();
                 if (!QFile::exists(mplayerPath)) {
-                    QMessageBox::warning(this, GBK2QString("错误"), GBK2QString("未找到mplayer播放器：") + mplayerPath);
+                    QMessageBox::warning(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
+                                         QString::fromUtf8(gbk_to_utf8("未找到mplayer播放器：").c_str()) + mplayerPath);
                     return;
                 }
 
@@ -256,22 +259,23 @@ bool videoPage::initableWidget()
 
             // 绑定删除按钮点击事件
             connect(delBtn, &QPushButton::clicked, this, [this, videoPath, fileInfo]() {
-                int ret = QMessageBox::question(this, GBK2QString("确认删除"),
-                                               GBK2QString("确定要删除该文件吗？\n") + fileInfo.fileName());
+                int ret = QMessageBox::question(this, QString::fromUtf8(gbk_to_utf8("确认删除").c_str()),
+                                               QString::fromUtf8(gbk_to_utf8("确定要删除该文件吗？\n").c_str()) + fileInfo.fileName());
                 if (ret == QMessageBox::Yes) {
                     if (QFile::remove(videoPath)) {
                         // 删除成功后重新初始化表格
                         initableWidget();
                     } else {
-                        QMessageBox::critical(this, GBK2QString("错误"), GBK2QString("文件删除失败，可能被占用。"));
+                        QMessageBox::critical(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
+                                             QString::fromUtf8(gbk_to_utf8("文件删除失败，可能被占用。").c_str()));
                     }
                 }
             });
         }
     } else {
-        // 无视频文件时显示空提示
+        // 无视频文件时显示提示信息
         ui->tableWidget->setRowCount(1);
-        QTableWidgetItem *emptyItem = new QTableWidgetItem(GBK2QString("暂无视频文件"));
+        QTableWidgetItem *emptyItem = new QTableWidgetItem(QString::fromUtf8(gbk_to_utf8("暂无视频文件").c_str()));
         emptyItem->setForeground(Qt::gray);
         emptyItem->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget->setItem(0, 0, emptyItem);
@@ -290,14 +294,14 @@ void videoPage::on_begin_clicked()
     process->start(mplayerPath);
 
     if (process->waitForStarted()) {
-        // 启动成功后禁用开始按钮
+        // 启动成功禁用开始按钮
         ui->begin->setDisabled(true);
     } else {
         // 启动失败提示
-        QMessageBox::critical(NULL, "错误", "启动播放器失败: " + process->errorString(), QMessageBox::Yes);
+        QMessageBox::critical(NULL, "错误", "播放器启动失败: " + process->errorString(), QMessageBox::Yes);
     }
 
-    // 进程结束后恢复按钮状态
+    // 绑定进程结束信号恢复按钮状态
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [=]() {
         ui->begin->setDisabled(false);
@@ -311,36 +315,36 @@ void videoPage::on_import_2_clicked()
     QDir videoDir(videoDirPath);
 
     if (!videoDir.mkpath(videoDirPath)) {
-        QMessageBox::warning(this, GBK2QString("选择要导入的视频"),
-                             GBK2QString("创建video目录失败"));
+        QMessageBox::warning(this, QString::fromUtf8(gbk_to_utf8("选择要导入的视频").c_str()),
+                             QString::fromUtf8(gbk_to_utf8("创建video目录失败").c_str()));
         return;
     }
 
-    // 打开文件选择对话框
-    QString videoFilter = GBK2QString("视频文件 (*.mp4 *.avi *.mkv *.flv *.mov *.wmv);;所有文件 (*.*)");
+    // 文件选择对话框
+    QString videoFilter = QString::fromUtf8(gbk_to_utf8("视频文件 (*.mp4 *.avi *.mkv *.flv *.mov *.wmv);;所有文件 (*.*)").c_str());
     QString selectedFilePath = QFileDialog::getOpenFileName(
                 this,
-                GBK2QString("选择要导入的文件"),
+                QString::fromUtf8(gbk_to_utf8("选择要导入的文件").c_str()),
                 QDir::homePath(), // 默认打开用户主目录
                 videoFilter
                 );
 
-    // 用户取消选择则返回
+    // 用户取消选择返回
     if (selectedFilePath.isEmpty()) {
         return;
     }
 
-    // 构造目标文件路径（避免重名）
+    // 构建目标文件路径（避免重名）
     QFileInfo srcFileInfo(selectedFilePath);
     QString dstFileName = srcFileInfo.fileName();
     QString dstFilePath = videoDirPath + "/" + dstFileName;
 
-    // 处理文件名重复（自动加序号）
+    // 文件重名时自动重命名
     int fileIndex = 1;
     QString baseName = srcFileInfo.baseName();
     QString suffix = srcFileInfo.suffix();
     while (QFile::exists(dstFilePath)) {
-        // 示例：test.mp4 → test(1).mp4
+        // 示例：test.mp4 -> test(1).mp4
         dstFileName = QString("%1(%2).%3").arg(baseName).arg(fileIndex++).arg(suffix);
         dstFilePath = videoDirPath + "/" + dstFileName;
     }
@@ -349,14 +353,14 @@ void videoPage::on_import_2_clicked()
     QFile srcFile(selectedFilePath);
     bool copyOk = srcFile.copy(dstFilePath);
     if (!copyOk) {
-        QMessageBox::critical(this, GBK2QString("错误"),
-                              GBK2QString("文件导入失败：") + srcFile.errorString());
+        QMessageBox::critical(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
+                              QString::fromUtf8(gbk_to_utf8("文件复制失败：").c_str()) + srcFile.errorString());
         return;
     }
 
-    // 导入成功提示
-    QMessageBox::information(this, GBK2QString("成功"),
-                             GBK2QString("文件已导入：") + dstFilePath);
+    // 复制成功提示
+    QMessageBox::information(this, QString::fromUtf8(gbk_to_utf8("成功").c_str()),
+                             QString::fromUtf8(gbk_to_utf8("文件已导入：").c_str()) + dstFilePath);
 
     // 重新初始化表格显示新文件
     initableWidget();
