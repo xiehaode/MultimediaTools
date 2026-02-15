@@ -26,7 +26,7 @@ basewindow::basewindow(QWidget *parent)
     initTitleBar();
 
 
-    // ========== 关键修改2：设置布局，隔离标题栏和内容区 ==========
+    //设置布局，隔离标题栏和内容区 ==========
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     mainLayout->setContentsMargins(0, 0, 0, 0); // 清除布局默认边距
     mainLayout->setSpacing(0); // 标题栏和内容区之间无间距

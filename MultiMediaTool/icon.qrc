@@ -14,5 +14,6 @@
         <file>rc/addFile.svg</file>
         <file>rc/export.svg</file>
         <file>rc/login.svg</file>
+        <file>rc/about.svg</file>
     </qresource>
 </RCC>

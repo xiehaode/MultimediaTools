@@ -1,6 +1,8 @@
 #ifndef MYTITLEBAR_H
 #define MYTITLEBAR_H
 
+
+#include "src/gui/page/mVersion.h"
 #include <QMainWindow>
 #include <qlabel.h>
 #include <qpoint.h>
@@ -78,6 +80,8 @@ private:
     QPushButton* m_pButtonRestore;      // 最大化还原按钮;
     QPushButton* m_pButtonMax;          // 最大化按钮;
     QPushButton* m_pButtonClose;        // 关闭按钮;
+    QPushButton* m_about;                 // 关于按钮，版本/软件信息
+    mVersion *ver;
 
     // 标题栏背景色;
     int m_colorR;

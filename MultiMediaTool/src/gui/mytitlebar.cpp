@@ -41,41 +41,49 @@ void myTitleBar::initControl()
     m_pButtonRestore = new QPushButton;
     m_pButtonMax = new QPushButton;
     m_pButtonClose = new QPushButton;
+    m_about = new QPushButton;
 
     m_pButtonMin->setFixedSize(QSize(BUTTON_WIDTH, BUTTON_HEIGHT));
     m_pButtonRestore->setFixedSize(QSize(BUTTON_WIDTH, BUTTON_HEIGHT));
     m_pButtonMax->setFixedSize(QSize(BUTTON_WIDTH, BUTTON_HEIGHT));
     m_pButtonClose->setFixedSize(QSize(BUTTON_WIDTH, BUTTON_HEIGHT));
+    m_about->setFixedSize(QSize(BUTTON_WIDTH, BUTTON_HEIGHT));
 
     m_pTitleContent->setObjectName("TitleContent");
     m_pButtonMin->setObjectName("ButtonMin");
     m_pButtonRestore->setObjectName("ButtonRestore");
     m_pButtonMax->setObjectName("ButtonMax");
     m_pButtonClose->setObjectName("ButtonClose");
+    m_about->setObjectName("ButtonAbout");
 
     QString minstr = tr(gbk_to_utf8("最小化").c_str());
     QString Restorestr = tr(gbk_to_utf8("最大化恢复").c_str());
     QString Maxstr = tr(gbk_to_utf8("最大化").c_str());
     QString Closestr = tr(gbk_to_utf8("关闭").c_str());
+    QString Aboutstr = tr(gbk_to_utf8("关于").c_str());
 
     m_pButtonMin->setToolTip(minstr.toUtf8());
     m_pButtonRestore->setToolTip(Restorestr.toUtf8());
     m_pButtonMax->setToolTip(Maxstr.toUtf8());
     m_pButtonClose->setToolTip(Closestr.toUtf8());
+    m_about->setToolTip(Aboutstr.toUtf8());
 
     m_pButtonMin->setIcon(QIcon(":/rc/min.svg"));
     m_pButtonRestore->setIcon(QIcon(":/rc/recover.svg"));
     m_pButtonMax->setIcon(QIcon(":/rc/max.svg"));
     m_pButtonClose->setIcon(QIcon(":/rc/quit.svg"));
+    m_about->setIcon(QIcon(":/rc/about.svg"));
+
 
     QHBoxLayout* mylayout = new QHBoxLayout(this);
+    mylayout->addWidget(m_about);
     mylayout->addWidget(m_pIcon);
     mylayout->addWidget(m_pTitleContent);
-
     mylayout->addWidget(m_pButtonMin);
     mylayout->addWidget(m_pButtonRestore);
     mylayout->addWidget(m_pButtonMax);
     mylayout->addWidget(m_pButtonClose);
+
 
     mylayout->setContentsMargins(5, 0, 0, 0);
     mylayout->setSpacing(0);
@@ -92,6 +100,11 @@ void myTitleBar::initConnections()
     connect(m_pButtonRestore, SIGNAL(clicked()), this, SLOT(onButtonRestoreClicked()));
     connect(m_pButtonMax, SIGNAL(clicked()), this, SLOT(onButtonMaxClicked()));
     connect(m_pButtonClose, SIGNAL(clicked()), this, SLOT(onButtonCloseClicked()));
+    connect(m_about, &QPushButton::clicked,[this](){
+        ver = new mVersion;
+        ver->show();
+        setAttribute(Qt::WA_DeleteOnClose, true);
+    });
 }
 
 // 设置标题栏背景色,在paintEvent事件中进行绘制标题栏背景色;

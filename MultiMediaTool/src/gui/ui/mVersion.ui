@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>version</class>
+ <widget class="QWidget" name="version">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>677</width>
+    <height>433</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>关于 - MultiMediaTool</string>
+  </property>
+  <widget class="QLabel" name="appNameLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>294</width>
+     <height>40</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>24</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>MultiMediaTool</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="versionLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>77</y>
+     <width>154</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string>color: #666;</string>
+   </property>
+   <property name="text">
+    <string>版本 1.0.0.67</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="copyrightLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>388</y>
+     <width>344</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string>color: #999;</string>
+   </property>
+   <property name="text">
+    <string>© 2026 MultiMediaTool. All rights reserved.</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>107</y>
+     <width>571</width>
+     <height>261</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="labelBranch">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Git 分支:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="branchLabel">
+      <property name="styleSheet">
+       <string>color: #333;</string>
+      </property>
+      <property name="text">
+       <string>main</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelBuildTime">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>构建时间:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="buildTimeLabel">
+      <property name="styleSheet">
+       <string>color: #333;</string>
+      </property>
+      <property name="text">
+       <string>2026-02-15 16:33:42</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="commitLabel">
+      <property name="styleSheet">
+       <string>color: #333;</string>
+      </property>
+      <property name="text">
+       <string>66d972d</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

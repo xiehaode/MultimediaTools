@@ -43,12 +43,12 @@ void picture::initUI()
     // 设置微调框控件的默认值及范围
     ui->spinBox->setRange(1, 50);
     ui->spinBox->setValue(5);
-    ui->spinBox->setSuffix(gbk_to_utf8(" px").c_str());
+    ui->spinBox->setSuffix(gbk_to_utf8(" ").c_str());
     ui->spinBox->setToolTip(gbk_to_utf8("设置阴影效果的强度或范围").c_str());
 
     ui->spinBox_2->setRange(1, 50);
     ui->spinBox_2->setValue(3);
-    ui->spinBox_2->setSuffix(gbk_to_utf8(" level").c_str());
+    ui->spinBox_2->setSuffix(gbk_to_utf8(" ").c_str());
     ui->spinBox_2->setToolTip(gbk_to_utf8("设置油画细节程度").c_str());
 
     // 设置按钮提示显示信息
@@ -232,6 +232,10 @@ bool picture::isValidImageFile(const QString& filePath)
 // 补充异常捕获代码（on_ok_clicked/on_addFile_clicked/on_exportFile_clicked/showLoading/hideLoading）
 void picture::on_ok_clicked()
 {
+    if(effectType == addTextWatermark && ui->lineEdit->text().isEmpty()){
+        QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("未设置水印文字").c_str());
+        return;
+    }
     // 检查是否正在处理
     if (isProcessing) {
         QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("正在处理中，请稍候...").c_str());
@@ -301,19 +305,18 @@ void picture::on_ok_clicked()
     // 获取参数值
     int p1 = ui->spinBox->value();
     int p2 = ui->spinBox_2->value();
-    //std::string str = ui->lineEdit
-    // 注意：此处硬编码参数值，实际项目中建议做成可配置项
-    QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2]() -> bool {
+    std::string str = ui->lineEdit->text().toStdString();
+
+    QFuture<bool> future = QtConcurrent::run([this, utf8InputStr, utf8OutputStr, p1, p2, str]() -> bool {
         const char* inputPath = utf8InputStr.c_str();
         const char* outputPath = utf8OutputStr.c_str();
-
         switch (effectType) {
             case grayImage:
                 return CvTranslator_GrayImage_File(translator, inputPath, outputPath);
             case addTextWatermark:
-                return CvTranslator_AddTextWatermark_File(translator, inputPath, outputPath, "Watermark");
+                return CvTranslator_AddTextWatermark_File(translator, inputPath, outputPath, str.c_str());
             case customOilPaintApprox:
-                //return CvTranslator_OilPainting_File(translator,inputPath,outputPath,);
+                return CvTranslator_OilPainting_File(translator,inputPath,outputPath,p1,p2);
             case applyOilPainting:
                 return CvTranslator_OilPainting_File(translator, inputPath, outputPath, p1, p2);
             case applyMosaic:

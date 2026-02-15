@@ -46,10 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
         // 绑定侧边栏按钮和主界面的控件
         connect(sidebarWidget, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
 
-        int ret = QuickCaptureScreen("a.bmp");
-        if(ret == false){
-            qDebug()<<"----------------------------------------error capture";
-        }
 
 }
 
