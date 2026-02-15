@@ -282,11 +282,7 @@ A: 检查FFmpeg版本和路径配置，确保支持所需的编解码器
 **Q: Python模块导入错误**
 A: 确保Python环境和依赖包正确安装，检查`PYTHONPATH`设置
 
-### 技术支持
 
-- 📧 **邮件支持**: support@multimediatool.com
-- 💬 **讨论区**: [GitHub Discussions](https://github.com/yourrepo/MultiMediaTool/discussions)
-- 🐛 **Bug报告**: [GitHub Issues](https://github.com/yourrepo/MultiMediaTool/issues)
 
 ### 文档资源
 
@@ -309,13 +305,7 @@ A: 确保Python环境和依赖包正确安装，检查`PYTHONPATH`设置
 - [ ] 更多文档格式支持
 - [ ] 批量处理优化
 
-## 📊 项目统计
 
-- **代码行数**: ~50,000+ 行
-- **支持格式**: 50+ 种媒体格式
-- **API接口**: 30+ 个RESTful接口
-- **滤镜效果**: 20+ 种图像滤镜
-- **开发时间**: 3+ 年持续开发
 
 ---
 
