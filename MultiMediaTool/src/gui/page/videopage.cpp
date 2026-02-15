@@ -4,11 +4,11 @@
 #include "src/utils/myipcmgr.h"
 #include "src/base/mplayermanager.h"
 
-
 #include <QString>
-
+#include <QWidget>
+#include <QVBoxLayout>
 #include <QStyle>
-#include <qdebug.h>
+#include <QDebug>
 #include <QDir>
 #include <QFileInfo>
 #include <QTableWidgetItem>
@@ -20,6 +20,9 @@
 #include <QProcess>
 #include <QRegularExpression>
 #include <QFileDialog>
+#include <QCoreApplication>
+#include <QDesktopServices>
+#include <QUrl>
 
 // 声明GBK转UTF8函数（确保你的项目中有这个函数的实现）
 std::string gbk_to_utf8(const std::string& gbk_str);
@@ -243,14 +246,36 @@ bool videoPage::initableWidget()
                     return;
                 }
 
-                // 获取播放器路径
-                QString mplayerPath = QDir::currentPath();
-                if (!QFile::exists(mplayerPath)) {
-                    QMessageBox::warning(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
-                                         QString::fromUtf8(gbk_to_utf8("未找到mplayer播放器：").c_str()) + mplayerPath);
+                // 查找播放器路径
+                QString mplayerPath;
+                QStringList possiblePaths;
+                
+                // 获取应用程序目录
+                QString appDir = QCoreApplication::applicationDirPath();
+                
+                // 添加可能的路径
+                possiblePaths << appDir + "/mPlayer.exe";                    // 应用程序目录
+                possiblePaths << appDir + "/../bin/mPlayer.exe";             // 开发环境的bin目录
+                possiblePaths << QDir::currentPath() + "/mPlayer.exe";       // 当前工作目录
+                possiblePaths << QDir::currentPath() + "/bin/mPlayer.exe";    // 当前目录的bin子目录
+                
+                // 查找第一个存在的路径
+                for (const QString& path : possiblePaths) {
+                    if (QFileInfo::exists(path)) {
+                        mplayerPath = path;
+                        break;
+                    }
+                }
+                
+                // 如果没找到播放器，直接用系统默认播放器打开
+                if (mplayerPath.isEmpty()) {
+                    qDebug() << "[VideoPage] 未找到mPlayer，使用系统默认播放器打开视频:" << videoPath;
+                    QDesktopServices::openUrl(QUrl::fromLocalFile(videoPath));
                     return;
                 }
 
+                qDebug() << "[VideoPage] 使用mPlayer打开视频:" << videoPath;
+                
                 // 启动播放器进程
                 m_ipcMgr->startChildProcess(mplayerPath, false);
 
@@ -290,23 +315,93 @@ bool videoPage::initableWidget()
 
 void videoPage::on_begin_clicked()
 {
-    // 获取播放器路径并启动进程
-    QString mplayerPath = QCoreApplication::applicationDirPath() + "/mPlayer.exe";
+    // 尝试多个可能的播放器路径
+    QString mplayerPath;
+    QStringList possiblePaths;
+    
+    // 获取应用程序目录
+    QString appDir = QCoreApplication::applicationDirPath();
+    
+    qDebug() << "[VideoPage] 开始查找mPlayer路径";
+    qDebug() << "[VideoPage] 应用程序目录:" << appDir;
+    qDebug() << "[VideoPage] 当前工作目录:" << QDir::currentPath();
+    
+    // 添加可能的路径
+    possiblePaths << appDir + "/mPlayer.exe";                    // 应用程序目录
+    possiblePaths << appDir + "/../bin/mPlayer.exe";             // 开发环境的bin目录
+    possiblePaths << QDir::currentPath() + "/mPlayer.exe";       // 当前工作目录
+    possiblePaths << QDir::currentPath() + "/bin/mPlayer.exe";    // 当前目录的bin子目录
+    possiblePaths << "mPlayer.exe";                              // 系统PATH中查找
+    
+    // 查找第一个存在的路径
+    for (const QString& path : possiblePaths) {
+        qDebug() << "[VideoPage] 检查路径:" << path;
+        if (QFileInfo::exists(path)) {
+            mplayerPath = path;
+            qDebug() << "[VideoPage] 找到mPlayer路径:" << mplayerPath;
+            break;
+        }
+    }
+    
+    // 如果没找到，显示错误
+    if (mplayerPath.isEmpty()) {
+        QString errorMsg = QString::fromUtf8(gbk_to_utf8("未找到mPlayer播放器。请确保mPlayer.exe在以下位置之一：\n").c_str());
+        errorMsg += possiblePaths.join("\n");
+        QMessageBox::critical(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()), errorMsg);
+        qDebug() << "[VideoPage] 错误: 未找到mPlayer.exe";
+        return;
+    }
+    
+    qDebug() << "[VideoPage] 启动播放器:" << mplayerPath;
     process = new QProcess(this);
+    
+    // 设置工作目录为播放器所在目录
+    QFileInfo mplayerInfo(mplayerPath);
+    process->setWorkingDirectory(mplayerInfo.absolutePath());
+    
+    // 启动进程
     process->start(mplayerPath);
-
-    if (process->waitForStarted()) {
+    
+    // 使用超时机制，等待最多5秒
+    if (process->waitForStarted(5000)) { 
         // 启动成功禁用开始按钮
         ui->begin->setDisabled(true);
+        qDebug() << "[VideoPage] 播放器启动成功";
     } else {
         // 启动失败提示
-        QMessageBox::critical(NULL, "错误", "播放器启动失败: " + process->errorString(), QMessageBox::Yes);
+        QString errorMsg = QString::fromUtf8(gbk_to_utf8("播放器启动失败").c_str()) + ": " + process->errorString();
+        QMessageBox::critical(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()), errorMsg);
+        qDebug() << "[VideoPage] 播放器启动失败:" << process->errorString();
+        qDebug() << "[VideoPage] 播放器路径:" << mplayerPath;
+        delete process;
+        process = nullptr;
+        return;
     }
 
     // 绑定进程结束信号恢复按钮状态
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [=]() {
+            [=](int exitCode, QProcess::ExitStatus exitStatus) {
+        qDebug() << "[VideoPage] 播放器进程结束，退出码:" << exitCode << "状态:" << exitStatus;
         ui->begin->setDisabled(false);
+        delete process;
+        process = nullptr;
+    });
+    
+    // 连接错误信号，提供更好的错误处理
+    connect(process, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
+        qDebug() << "[VideoPage] 播放器进程错误:" << error << process->errorString();
+        ui->begin->setDisabled(false);
+    });
+    
+    // 连接输出信号，用于调试
+    connect(process, &QProcess::readyReadStandardOutput, [=]() {
+        QByteArray output = process->readAllStandardOutput();
+        qDebug() << "[VideoPage] 播放器输出:" << output;
+    });
+    
+    connect(process, &QProcess::readyReadStandardError, [=]() {
+        QByteArray error = process->readAllStandardError();
+        qDebug() << "[VideoPage] 播放器错误输出:" << error;
     });
 }
 
