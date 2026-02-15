@@ -33,6 +33,7 @@ public:
     QComboBox *recordComboBox;
     QPushButton *begin;
     QTableWidget *tableWidget;
+    QPushButton *pushButton;
     QPushButton *import_2;
 
     void setupUi(QWidget *videoPage)
@@ -79,6 +80,11 @@ public:
 
         verticalLayout_2->addWidget(tableWidget);
 
+        pushButton = new QPushButton(videoPage);
+        pushButton->setObjectName(QString::fromUtf8("pushButton"));
+
+        verticalLayout_2->addWidget(pushButton);
+
         import_2 = new QPushButton(videoPage);
         import_2->setObjectName(QString::fromUtf8("import_2"));
 
@@ -98,6 +104,7 @@ public:
         videoPage->setWindowTitle(QApplication::translate("videoPage", "Form", nullptr));
         recordLabel->setText(QApplication::translate("videoPage", "\351\200\211\346\213\251\345\275\225\345\210\266\345\212\237\350\203\275", nullptr));
         begin->setText(QApplication::translate("videoPage", "\345\274\200\345\247\213", nullptr));
+        pushButton->setText(QApplication::translate("videoPage", "\350\247\206\351\242\221\346\223\215\344\275\234", nullptr));
         import_2->setText(QApplication::translate("videoPage", "\345\257\274\345\205\245", nullptr));
     } // retranslateUi
 

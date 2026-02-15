@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QString>
+#include "src/gui/page/concat.h"
 #include "OpenCVFFMpegTools.h"
 #include "src/base/pagebase.h"
 
@@ -30,7 +31,10 @@ private slots:
 
     void on_import_2_clicked();
 
+    void on_pushButton_clicked();
+
 private:
+    concat *mconcat;
     QProcess *process;
     void *worker = NULL;
     Ui::videoPage *ui;

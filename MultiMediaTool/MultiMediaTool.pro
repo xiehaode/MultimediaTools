@@ -18,7 +18,7 @@ SOURCES += \
     src/gui/application.cpp \
     src/gui/basewindow.cpp \
     src/gui/mytitlebar.cpp \
-    src/gui/page/conacat.cpp \
+    src/gui/page/concat.cpp \
     src/gui/page/ffmpegclientwidget.cpp \
     src/gui/page/ffmpegcmd.cpp \
     src/core/ApiManager.cpp \
@@ -42,7 +42,7 @@ HEADERS += \
     src/gui/application.h \
     src/gui/basewindow.h \
     src/gui/mytitlebar.h \
-    src/gui/page/conacat.h \
+    src/gui/page/concat.h \
     src/gui/page/ffmpegclientwidget.h \
     src/gui/page/ffmpegcmd.h \
     src/core/ApiManager.h \
@@ -63,7 +63,7 @@ HEADERS += \
     src/version.h
 
 FORMS += \
-    src/gui/page/conacat.ui \
+    src/gui/page/concat.ui \
     src/gui/ui/mVersion.ui \
     src/gui/ui/ffmpegcmd.ui \
     src/gui/ui/videopage.ui\

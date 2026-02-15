@@ -3,6 +3,8 @@
 #include "ui_videopage.h"
 #include "src/utils/myipcmgr.h"
 #include "src/base/mplayermanager.h"
+
+
 #include <QString>
 
 #include <QStyle>
@@ -365,3 +367,11 @@ void videoPage::on_import_2_clicked()
     // 重新初始化表格显示新文件
     initableWidget();
 }
+
+void videoPage::on_pushButton_clicked()
+{
+    mconcat = new concat;
+    mconcat->show();
+    mconcat->setAttribute(Qt::WA_DeleteOnClose,true);
+}
+

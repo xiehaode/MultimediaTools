@@ -51,6 +51,13 @@
       <widget class="QTableWidget" name="tableWidget"/>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>视频操作</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="import_2">
        <property name="text">
         <string>导入</string>

@@ -235,6 +235,7 @@ Makefile: ..\MultiMediaTool\MultiMediaTool.pro ..\..\..\5.12\5.12.11\msvc2017_64
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\qt_config.prf \
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\win32-msvc\qmake.conf \
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\spec_post.prf \
+		.qmake.stash \
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\exclusive_builds.prf \
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\common\msvc-version.conf \
 		..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\toolchain.prf \
@@ -424,6 +425,7 @@ Makefile: ..\MultiMediaTool\MultiMediaTool.pro ..\..\..\5.12\5.12.11\msvc2017_64
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\qt_config.prf:
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\win32-msvc\qmake.conf:
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\spec_post.prf:
+.qmake.stash:
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\exclusive_builds.prf:
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\common\msvc-version.conf:
 ..\..\..\5.12\5.12.11\msvc2017_64\mkspecs\features\toolchain.prf:
