@@ -60,7 +60,6 @@ OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker);
 OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);
 OPENCVFFMPEGTOOLS_API bool AvWorker_SpliceAV(void* worker, const char* input_url1, const char* input_url2, const char* output_url, bool is_rtsp);
 OPENCVFFMPEGTOOLS_API bool AvWorker_resize_video(void* worker, const char* input_url, const char* output_url, int dst_width, int dst_height);
-OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);
 OPENCVFFMPEGTOOLS_API bool AvWorker_split_video(
 	void* worker,
 	const char* input_url,

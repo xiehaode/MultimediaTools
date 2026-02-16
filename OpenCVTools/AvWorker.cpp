@@ -676,7 +676,7 @@ bool AvWorker::GetVideoFirstFrame(const std::string& input_url, const std::strin
 
 bool AvWorker::SpliceAV(const std::string& input_url1, const std::string& input_url2, const std::string& output_url, bool is_rtsp)
 {
-	// 1. 初始化FFmpeg网络模块（本地文件也建议保留，兼容RTSP场景）
+	//  初始化FFmpeg网络模块（本地文件也建议保留，兼容RTSP场景）
 	avformat_network_init();
 
 	// 资源初始化（所有资源默认置空，便于统一释放）

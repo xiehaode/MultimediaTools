@@ -179,12 +179,7 @@ POST /api/auth/login        # 用户认证
 
 ## 🛠️ 开发指南
 
-### 代码规范
 
-项目遵循以下编码规范：
-- C++: Google C++ Style Guide
-- Python: PEP 8
-- 注释: 英文注释，公共API提供中文文档
 
 ### 调试配置
 
@@ -199,15 +194,6 @@ EnableCrashDumps();
 spdlog::info("Application started");
 ```
 
-### 测试
-
-```bash
-# 运行单元测试
-./MultiMediatoolTest/bin/tests.exe
-
-# 代码覆盖率 (可选)
-gcov -r *.cpp
-```
 
 ## 📦 部署和分发
 
@@ -236,9 +222,9 @@ iscc pack.iss
 MultiMediaTool/
 ├── MultiMediaTool.exe          # 主程序
 ├── mediaServer.exe            # 服务器 (可选)
-├── QtCore4.dll                # Qt依赖
-├── QtGui4.dll                 # Qt依赖
-├── opencv_world4xx.dll        # OpenCV依赖
+├── QtCore.dll                # Qt依赖
+├── QtGui.dll                 # Qt依赖
+├── opencv_worldxx.dll        # OpenCV依赖
 ├── ffmpeg.exe                 # FFmpeg可执行文件
 ├── config/                    # 配置文件
 ├── plugins/                   # 插件目录
@@ -255,56 +241,11 @@ MultiMediaTool/
 4. **推送** 到分支: `git push origin feature/amazing-feature`
 5. **创建** Pull Request
 
-### 提交规范
 
-- `feat:` 新功能
-- `fix:` 修复bug
-- `docs:` 文档更新
-- `style:` 代码格式调整
-- `refactor:` 代码重构
-- `test:` 测试相关
-- `chore:` 构建过程或辅助工具的变动
 
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🆘 支持和帮助
-
-### 常见问题
-
-**Q: 编译时出现OpenCV相关错误**
-A: 请检查OpenCV环境变量设置，确保`OpenCV_DIR`正确配置
-
-**Q: 视频转换失败**
-A: 检查FFmpeg版本和路径配置，确保支持所需的编解码器
-
-**Q: Python模块导入错误**
-A: 确保Python环境和依赖包正确安装，检查`PYTHONPATH`设置
-
-
-
-### 文档资源
-
-- [API文档](docs/api/) - 详细的API接口文档
-- [开发指南](docs/development/) - 开发环境和流程指南
-- [用户手册](docs/userguide/) - 用户操作手册
-
-## 🗺️ 发展路线图
-
-### v2.0 计划功能
-- [ ] 云端存储集成
-- [ ] AI图像增强
-- [ ] 实时视频流处理
-- [ ] 移动端支持
-- [ ] 插件市场
-
-### v1.5 进行中
-- [ ] 性能优化
-- [ ] 用户界面改进
-- [ ] 更多文档格式支持
-- [ ] 批量处理优化
-
 
 
 ---
