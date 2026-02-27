@@ -24,6 +24,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QApplication>
+#include <QTimer>
 
 // 声明GBK转UTF8函数（确保你的项目中有这个函数的实现）
 std::string gbk_to_utf8(const std::string& gbk_str);
@@ -48,6 +49,10 @@ videoPage::videoPage(QWidget *parent) :
 
     // 连接刷新按钮的信号槽
     connect(ui->flashbutton, &QPushButton::clicked, this, &videoPage::on_flashbutton_clicked);
+    
+    // 连接录制选择框的信号槽
+    connect(ui->recordComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &videoPage::on_recordComboBox_currentIndexChanged);
 }
 
 
@@ -282,12 +287,28 @@ bool videoPage::initableWidget()
 
                 qDebug() << "[VideoPage] 使用mPlayer打开视频:" << videoPath;
                 
-                // 启动播放器进程
-                m_ipcMgr->startChildProcess(mplayerPath, false);
+    // 启动播放器进程
+    m_ipcMgr->startChildProcess(mplayerPath, false);
 
-                // 发送播放视频指令并激活窗口
-                m_ipcMgr->sendMessage("play_video:" + videoPath);
-                m_ipcMgr->activateWindow();
+    // 等待一小段时间让mplayer启动，然后发送当前选择的模式
+    QTimer::singleShot(1000, [this]() {
+        // 发送当前选择的模式
+        int currentIndex = ui->recordComboBox->currentIndex();
+        QString modeStr;
+        switch (currentIndex) {
+            case 0: modeStr = "SCREEN"; break;
+            case 1: modeStr = "CAPTURE"; break;
+            case 2: modeStr = "VIDEO"; break;
+            default: modeStr = "VIDEO"; break;
+        }
+        
+        qDebug() << "[VideoPage] mplayer启动后发送初始模式:" << modeStr;
+        m_ipcMgr->sendMessage("select_mode:" + modeStr);
+    });
+
+    // 发送播放视频指令并激活窗口
+    m_ipcMgr->sendMessage("play_video:" + videoPath);
+    m_ipcMgr->activateWindow();
             });
 
             // 绑定删除按钮点击事件
@@ -507,5 +528,39 @@ void videoPage::on_pushButton_clicked()
     mconcat = new concat;
     mconcat->show();
     mconcat->setAttribute(Qt::WA_DeleteOnClose,true);
+}
+
+void videoPage::on_recordComboBox_currentIndexChanged(int index)
+{
+    qDebug() << "[VideoPage] 录制模式选择改变，索引:" << index;
+    
+    // 映射模式
+    QString modeStr;
+    switch (index) {
+        case 0: // 录制视频 (SCREEN)
+            modeStr = "SCREEN";
+            break;
+        case 1: // 摄像头 (CAPTURE)
+            modeStr = "CAPTURE";
+            break;
+        case 2: // 录制 (默认为VIDEO模式)
+            modeStr = "VIDEO";
+            break;
+        default:
+            modeStr = "VIDEO";
+            break;
+    }
+    
+    qDebug() << "[VideoPage] 映射后的模式字符串:" << modeStr;
+    
+    // 如果有IPC管理器，发送模式选择消息
+    if (m_ipcMgr) {
+        QString message = "select_mode:" + modeStr;
+        qDebug() << "[VideoPage] 准备发送IPC消息:" << message;
+        bool success = m_ipcMgr->sendMessage(message);
+        qDebug() << "[VideoPage] 消息发送结果:" << (success ? "成功" : "失败");
+    } else {
+        qDebug() << "[VideoPage] 警告: IPC管理器未初始化，无法发送模式选择";
+    }
 }
 

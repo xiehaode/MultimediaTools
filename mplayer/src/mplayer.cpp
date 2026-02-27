@@ -209,6 +209,32 @@ void mpalyer::playVideo(const QString& path)
     }
 }
 
+void mpalyer::selectModeFromString(const QString& modeStr)
+{
+    qDebug() << "[MPlayer] === 收到模式选择指令 ===";
+    qDebug() << "[MPlayer] 模式字符串:" << modeStr;
+    
+    // 映射字符串到Mode枚举
+    Mode mode = VIDEO; // 默认值
+    if (modeStr == "CAPTURE") {
+        mode = CAPTURE;
+        qDebug() << "[MPlayer] 映射为 CAPTURE 模式";
+    } else if (modeStr == "VIDEO") {
+        mode = VIDEO;
+        qDebug() << "[MPlayer] 映射为 VIDEO 模式";
+    } else if (modeStr == "SCREEN") {
+        mode = SCREEN;
+        qDebug() << "[MPlayer] 映射为 SCREEN 模式";
+    } else {
+        qDebug() << "[MPlayer] 未知模式，使用默认 VIDEO 模式";
+    }
+    
+    qDebug() << "[MPlayer] 调用 select_Mode() 方法";
+    // 调用模式选择函数
+    bool result = select_Mode(mode);
+    qDebug() << "[MPlayer] select_Mode() 返回结果:" << (result ? "成功" : "失败");
+}
+
 
 
 
@@ -376,6 +402,9 @@ bool mpalyer::controlInit()
 
 bool mpalyer::select_Mode(Mode m)
 {
+    qDebug() << "[MPlayer] === select_Mode 开始执行 ===";
+    qDebug() << "[MPlayer] 模式值:" << (int)m;
+    
     m_isVideoReady = false;
     m_pendingRecord = false;
     m_pendingRecordPath.clear();
@@ -387,15 +416,19 @@ bool mpalyer::select_Mode(Mode m)
     record->setDisabled(false);
     pipBtn->setDisabled(false);
 
-    if(m ==CAPTURE){
+    if(m == CAPTURE){
+        qDebug() << "[MPlayer] 进入 CAPTURE (摄像头) 模式";
         // 搜索摄像头并启动解码线程
         play->setDisabled(true);
         pause->setDisabled(true);
         pipBtn->setDisabled(true);
         auto devices = getVideoDevices();
+        qDebug() << "[MPlayer] 找到摄像头设备数量:" << devices.size();
         if (!devices.empty()) {
+            qDebug() << "[MPlayer] 打开摄像头设备:" << devices[0].name;
             if (p.ffplayer_open(devices[0].name) == 0) {
             //if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
+                qDebug() << "[MPlayer] 摄像头打开成功，启动解码线程";
                 QThread* thread = new QThread();
                 p.moveToThread(thread);
 
@@ -408,13 +441,19 @@ bool mpalyer::select_Mode(Mode m)
 
                 QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
                 thread->start();
+            } else {
+                qDebug() << "[MPlayer] 摄像头打开失败";
             }
+        } else {
+            qDebug() << "[MPlayer] 未找到摄像头设备";
         }
     }
     else if(m == VIDEO){
+        qDebug() << "[MPlayer] 进入 VIDEO (视频文件) 模式";
         QString file_name = QFileDialog::getOpenFileName(NULL, "标题", ".", "视频文件(*.mp4 *.avi *.mkv *.mov)");
-        if (p.ffplayer_open(file_name,false) == 0) {
-            //if (p.ffplayer_open("D:/vsPro/Project5/Project5/2.mp4",false) == 0) {
+        qDebug() << "[MPlayer] 用户选择的文件:" << file_name;
+        if (!file_name.isEmpty() && p.ffplayer_open(file_name,false) == 0) {
+            qDebug() << "[MPlayer] 视频文件打开成功，启动解码线程";
             QThread* thread = new QThread();
             p.moveToThread(thread);
 
@@ -427,15 +466,19 @@ bool mpalyer::select_Mode(Mode m)
 
             QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
             thread->start();
-            }
-
+        } else {
+            qDebug() << "[MPlayer] 视频文件未选择或打开失败";
+        }
     }
     else if (m == SCREEN) { // SCREEN 模式
+        qDebug() << "[MPlayer] 进入 SCREEN (屏幕录制) 模式";
         play->setDisabled(true);
         pause->setDisabled(true);
         pipBtn->setDisabled(true);
         // FFmpeg 使用 gdigrab 录制 Windows 屏幕
+        qDebug() << "[MPlayer] 尝试打开桌面设备进行屏幕录制";
         if (p.ffplayer_open("desktop", true) == 0) {
+            qDebug() << "[MPlayer] 桌面设备打开成功，启动解码线程";
             QThread* thread = new QThread();
             p.moveToThread(thread);
             QObject::connect(thread, &QThread::started, [=]() {
@@ -446,12 +489,13 @@ bool mpalyer::select_Mode(Mode m)
             });
             QObject::connect(&p, &player::frameReady, &window, &mGLWidget::onFrameReady, Qt::QueuedConnection);
             thread->start();
+        } else {
+            qDebug() << "[MPlayer] 桌面设备打开失败";
         }
 
     }
     selectMode->setDisabled(true);
-
-
-
+    
+    qDebug() << "[MPlayer] select_Mode 执行完成，返回true";
     return true;
 }

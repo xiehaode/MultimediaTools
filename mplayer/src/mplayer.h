@@ -27,6 +27,7 @@ public:
     bool controlInit();
     bool select_Mode(Mode m);
     void playVideo(const QString& path);
+    void selectModeFromString(const QString& modeStr);
 private:
     mGLWidget window;
     player p;
