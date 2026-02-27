@@ -34,6 +34,7 @@ private slots:
     void hideLoading();
 
     void on_pushButton_clicked();
+    void updataParamUi();
 
 private:
     Ui::picture *ui;
