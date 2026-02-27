@@ -23,6 +23,7 @@
 #include <QCoreApplication>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QApplication>
 
 // 声明GBK转UTF8函数（确保你的项目中有这个函数的实现）
 std::string gbk_to_utf8(const std::string& gbk_str);
@@ -44,6 +45,9 @@ videoPage::videoPage(QWidget *parent) :
         qDebug() << "AvWorker_Create failed!";
     }
     initableWidget();
+
+    // 连接刷新按钮的信号槽
+    connect(ui->flashbutton, &QPushButton::clicked, this, &videoPage::on_flashbutton_clicked);
 }
 
 
@@ -81,9 +85,11 @@ bool videoPage::init()
 
 bool videoPage::initableWidget()
 {
-    // 初始化视频存储目录
-    QString videoDirPath = QDir::currentPath() + "/video";
+    // 初始化视频存储目录（与应用程序目录保持一致）
+    QString videoDirPath = QCoreApplication::applicationDirPath() + "/video";
     QDir videoDir(videoDirPath);
+    
+    qDebug() << "[VideoPage] 视频目录路径:" << videoDirPath;
 
     // 创建视频目录（如果不存在）
     if (!videoDir.mkpath(videoDirPath)) {
@@ -408,7 +414,7 @@ void videoPage::on_begin_clicked()
 void videoPage::on_import_2_clicked()
 {
     // 确保视频目录存在
-    QString videoDirPath = QDir::currentPath() + "/video";
+    QString videoDirPath = QCoreApplication::applicationDirPath() + "/video";
     QDir videoDir(videoDirPath);
 
     if (!videoDir.mkpath(videoDirPath)) {
@@ -461,6 +467,39 @@ void videoPage::on_import_2_clicked()
 
     // 重新初始化表格显示新文件
     initableWidget();
+}
+
+void videoPage::on_flashbutton_clicked()
+{
+    qDebug() << "[VideoPage] 刷新视频列表";
+    
+    // 临时禁用刷新按钮，防止重复点击
+    ui->flashbutton->setEnabled(false);
+    ui->flashbutton->setText(QString::fromUtf8(gbk_to_utf8("刷新中...").c_str()));
+    
+    // 让界面更新显示
+    QApplication::processEvents();
+    
+    // 重新初始化表格，刷新视频文件列表
+    bool success = initableWidget();
+    
+    // 恢复按钮状态
+    ui->flashbutton->setEnabled(true);
+    ui->flashbutton->setText(QString::fromUtf8(gbk_to_utf8("刷新").c_str()));
+    
+    if (!success) {
+        qDebug() << "[VideoPage] 刷新失败";
+        QMessageBox::warning(this, 
+            QString::fromUtf8(gbk_to_utf8("刷新失败").c_str()),
+            QString::fromUtf8(gbk_to_utf8("无法刷新视频列表，请检查视频目录权限。").c_str()));
+    } else {
+        qDebug() << "[VideoPage] 刷新成功";
+        
+        // 可选：显示成功提示（如果需要的话）
+        // QMessageBox::information(this, 
+        //     QString::fromUtf8(gbk_to_utf8("刷新成功").c_str()),
+        //     QString::fromUtf8(gbk_to_utf8("视频列表已更新。").c_str()));
+    }
 }
 
 void videoPage::on_pushButton_clicked()

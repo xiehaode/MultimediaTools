@@ -34,6 +34,7 @@ public:
     QPushButton *begin;
     QTableWidget *tableWidget;
     QPushButton *pushButton;
+    QPushButton *flashbutton;
     QPushButton *import_2;
 
     void setupUi(QWidget *videoPage)
@@ -85,6 +86,11 @@ public:
 
         verticalLayout_2->addWidget(pushButton);
 
+        flashbutton = new QPushButton(videoPage);
+        flashbutton->setObjectName(QString::fromUtf8("flashbutton"));
+
+        verticalLayout_2->addWidget(flashbutton);
+
         import_2 = new QPushButton(videoPage);
         import_2->setObjectName(QString::fromUtf8("import_2"));
 
@@ -105,6 +111,7 @@ public:
         recordLabel->setText(QApplication::translate("videoPage", "\351\200\211\346\213\251\345\275\225\345\210\266\345\212\237\350\203\275", nullptr));
         begin->setText(QApplication::translate("videoPage", "\345\274\200\345\247\213", nullptr));
         pushButton->setText(QApplication::translate("videoPage", "\350\247\206\351\242\221\346\223\215\344\275\234", nullptr));
+        flashbutton->setText(QApplication::translate("videoPage", "\345\210\267\346\226\260", nullptr));
         import_2->setText(QApplication::translate("videoPage", "\345\257\274\345\205\245", nullptr));
     } // retranslateUi
 

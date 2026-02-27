@@ -811,6 +811,8 @@ release\moc_application.cpp: ..\MultiMediaTool\src\gui\application.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\MultiMediaTool\src\base\pagebase.h \
 		..\MultiMediaTool\src\base\timedcmdexecutor.h \
@@ -842,8 +844,6 @@ release\moc_application.cpp: ..\MultiMediaTool\src\gui\application.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QTextEdit \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtextedit.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtextdocument.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGridLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGroupBox \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgroupbox.h \
@@ -1276,6 +1276,15 @@ release\moc_concat.cpp: ..\MultiMediaTool\src\gui\page\concat.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayoutitem.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgridlayout.h \
 		release\moc_predefs.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\bin\moc.exe
 	D:\5.12\5.12.11\msvc2017_64\bin\moc.exe $(DEFINES) --compiler-flavor=msvc --include D:/vsPro/MultiMediaTool/build-MultiMediaTool-Desktop_Qt_5_12_11_MSVC2017_64bit-Release/release/moc_predefs.h -ID:/5.12/5.12.11/msvc2017_64/mkspecs/win32-msvc -ID:/vsPro/MultiMediaTool/MultiMediaTool -ID:/vsPro/MultiMediaTool/OpenCVTools -ID:/vsPro/MultiMediaTool/formatChange -ID:/vsPro/MultiMediaTool/curlAli -ID:/5.12/5.12.11/msvc2017_64/include -ID:/5.12/5.12.11/msvc2017_64/include/QtWidgets -ID:/5.12/5.12.11/msvc2017_64/include/QtGui -ID:/5.12/5.12.11/msvc2017_64/include/QtANGLE -ID:/5.12/5.12.11/msvc2017_64/include/QtNetwork -ID:/5.12/5.12.11/msvc2017_64/include/QtConcurrent -ID:/5.12/5.12.11/msvc2017_64/include/QtCore -I. -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\ATLMFC\include -ID:\vs\vs2017\Product\VC\Tools\MSVC\14.16.27023\include -I"D:\Windows Kits\10\include\10.0.26100.0\ucrt" -I"D:\Windows Kits\10\include\10.0.26100.0\shared" -I"D:\Windows Kits\10\include\10.0.26100.0\um" -I"D:\Windows Kits\10\include\10.0.26100.0\winrt" -I"D:\Windows Kits\10\include\10.0.26100.0\cppwinrt" -ID:\masm32\include ..\MultiMediaTool\src\gui\page\concat.h -o release\moc_concat.cpp
@@ -1950,6 +1959,15 @@ release\moc_videopage.cpp: ..\MultiMediaTool\src\gui\page\videopage.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayoutitem.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgridlayout.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\MultiMediaTool\src\base\pagebase.h \
 		..\MultiMediaTool\src\base\timedcmdexecutor.h \
@@ -3362,6 +3380,8 @@ release\application.obj: ..\MultiMediaTool\src\gui\application.cpp ..\MultiMedia
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\MultiMediaTool\src\base\pagebase.h \
 		..\MultiMediaTool\src\base\timedcmdexecutor.h \
@@ -3393,8 +3413,6 @@ release\application.obj: ..\MultiMediaTool\src\gui\application.cpp ..\MultiMedia
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QTextEdit \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtextedit.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtextdocument.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGridLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGroupBox \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgroupbox.h \
@@ -3872,6 +3890,15 @@ release\concat.obj: ..\MultiMediaTool\src\gui\page\concat.cpp ..\MultiMediaTool\
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayoutitem.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgridlayout.h \
 		ui_concat.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDir \
@@ -4703,6 +4730,8 @@ release\main.obj: ..\MultiMediaTool\src\main.cpp ..\MultiMediaTool\src\gui\appli
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\MultiMediaTool\src\base\pagebase.h \
 		..\MultiMediaTool\src\base\timedcmdexecutor.h \
@@ -4734,8 +4763,6 @@ release\main.obj: ..\MultiMediaTool\src\main.cpp ..\MultiMediaTool\src\gui\appli
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QTextEdit \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtextedit.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtGui\qtextdocument.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGridLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QGroupBox \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgroupbox.h \
@@ -4936,6 +4963,15 @@ release\videopage.obj: ..\MultiMediaTool\src\gui\page\videopage.cpp ..\MultiMedi
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qtabwidget.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qrubberband.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDebug \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QProgressBar \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qprogressbar.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QLabel \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlabel.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayoutitem.h \
+		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgridlayout.h \
 		..\OpenCVTools\OpenCVFFMpegTools.h \
 		..\MultiMediaTool\src\base\pagebase.h \
 		..\MultiMediaTool\src\base\timedcmdexecutor.h \
@@ -4971,10 +5007,6 @@ release\videopage.obj: ..\MultiMediaTool\src\gui\page\videopage.cpp ..\MultiMedi
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qtimer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qbasictimer.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QVBoxLayout \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qboxlayout.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayout.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qlayoutitem.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qgridlayout.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QStyle \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QDir \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\qdir.h \
@@ -4989,7 +5021,6 @@ release\videopage.obj: ..\MultiMediaTool\src\gui\page\videopage.cpp ..\MultiMedi
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QPushButton \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qpushbutton.h \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qabstractbutton.h \
-		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QHBoxLayout \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtCore\QRegularExpression \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\QFileDialog \
 		..\..\..\5.12\5.12.11\msvc2017_64\include\QtWidgets\qfiledialog.h \

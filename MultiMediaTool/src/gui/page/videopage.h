@@ -26,9 +26,7 @@ public:
 
 private slots:
     void on_begin_clicked();
-
-
-
+    void on_flashbutton_clicked();
     void on_import_2_clicked();
 
     void on_pushButton_clicked();

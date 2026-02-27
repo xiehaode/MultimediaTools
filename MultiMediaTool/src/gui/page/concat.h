@@ -7,6 +7,9 @@
 #include <QVector>
 #include <QTableWidgetItem>
 #include <QDebug>
+#include <QProgressBar>
+#include <QLabel>
+#include <QHBoxLayout>
 
 namespace Ui {
 class concat;
@@ -32,10 +35,16 @@ private:
     void updateButtonStates();
     QString getVideoDir();
     QStringList getSelectedVideos();
+    void showProgress(const QString& title);
+    void hideProgress();
+    bool validateVideoFile(const QString& filePath);
 
     Ui::concat *ui;
     void* m_worker;
     QStringList m_videoFiles;
+    QWidget* m_progressWidget;
+    QProgressBar* m_progressBar;
+    QLabel* m_progressLabel;
 };
 
 #endif // CONCAT_H
