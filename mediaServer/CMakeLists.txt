@@ -105,7 +105,7 @@ else()
     endif()
 endif()
 
-# 可执行文件 (修复：确保主函数正确链接核心库)
+# 可执行文件
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}

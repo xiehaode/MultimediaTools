@@ -14,6 +14,7 @@ CONFIG += c++11
 
 
 SOURCES += \
+    src/base/dragdrophandler.cpp \
     src/base/ipcmgrbase.cpp \
     src/gui/application.cpp \
     src/gui/basewindow.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
 
 
 HEADERS += \
+    src/base/dragdrophandler.h \
     src/base/ipcmgrbase.h \
     src/gui/application.h \
     src/gui/basewindow.h \

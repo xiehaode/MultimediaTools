@@ -19,7 +19,7 @@ public:
 	int64_t getDuration() const;
 	
 	// 处理函数 - 使用已初始化的解码器
-	int process(func fun);
+	int process(func fun, param mParem);
 	
 	// 重置解码器到开始位置
 	int reset();
@@ -28,8 +28,8 @@ public:
 	void cleanup();
 	
 	// 兼容性接口
-	int trans(func fun); 
-	int trans(const std::string& inputPath, const std::string& outputPath, func fun); // 完整接口
+	int trans(func fun, param m);
+	int trans(const std::string& inputPath, const std::string& outputPath, func fun, param m); // 完整接口
 
 private:
 	FFmpegDecoder* decoder;
@@ -45,5 +45,7 @@ private:
 	int m_height;
 	int m_fps;
 	int64_t m_duration;
+
+	
 };
 

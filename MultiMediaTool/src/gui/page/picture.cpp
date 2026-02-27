@@ -264,7 +264,7 @@ void picture::on_ok_clicked()
 
     // 如果用户未预设输出路径，则弹出对话框
     if (outFile.isEmpty()) {
-        outFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), QDir::currentPath(), gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
+        outFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), QDir::currentPath()+"/document", gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
     }
 
     if (outFile.isEmpty()) {
@@ -354,7 +354,7 @@ void picture::on_ok_clicked()
 
 void picture::on_addFile_clicked()
 {
-    QString selectedFile = QFileDialog::getOpenFileName(this, gbk_to_utf8("选择图片文件").c_str(), QDir::currentPath(), gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)").c_str());
+    QString selectedFile = QFileDialog::getOpenFileName(this, gbk_to_utf8("选择图片文件").c_str(), QDir::currentPath()+"/document", gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp);;所有文件 (*.*)").c_str());
     if (!selectedFile.isEmpty()) {
         // 验证文件是否为有效图片
         if (!isValidImageFile(selectedFile)) {
@@ -384,7 +384,7 @@ void picture::on_addFile_clicked()
 
 void picture::on_exportFile_clicked()
 {
-    QString selectedOutFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), outFile.isEmpty() ? QDir::currentPath() : outFile, gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
+    QString selectedOutFile = QFileDialog::getSaveFileName(this, gbk_to_utf8("选择输出文件").c_str(), outFile.isEmpty() ? QDir::currentPath()+"/document" : outFile, gbk_to_utf8("图片文件 (*.png *.jpg *.jpeg *.bmp)").c_str());
     if (!selectedOutFile.isEmpty()) {
         outFile = selectedOutFile;
         qDebug() << "Output file set to:" << outFile;

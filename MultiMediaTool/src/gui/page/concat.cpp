@@ -11,7 +11,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-// 声明GBK转UTF8函数（确保项目中有该函数的实现）
+// 声明GBK转UTF8函数(请确保你的项目中有该函数实现)
 std::string gbk_to_utf8(const std::string& gbk_str);
 
 concat::concat(QWidget *parent) :
@@ -22,7 +22,7 @@ concat::concat(QWidget *parent) :
     ui->setupUi(this);
 
     ui->tableWidget->setColumnCount(3);
-    // 设置表格表头（修复中文乱码）
+    // 设置表头(无需修改，已修复)
     ui->tableWidget->setHorizontalHeaderLabels(QStringList()
         << QString::fromUtf8(gbk_to_utf8("选择").c_str())
         << QString::fromUtf8(gbk_to_utf8("文件名").c_str())
@@ -130,7 +130,7 @@ void concat::on_tableWidget_itemChanged(QTableWidgetItem *item)
         QStringList selected = getSelectedVideos();
         if (selected.size() > 2) {
             item->setCheckState(Qt::Unchecked);
-            // 修复提示框中文乱码
+            // 修复显示提示信息
             QMessageBox::warning(this,
                 QString::fromUtf8(gbk_to_utf8("提示").c_str()),
                 QString::fromUtf8(gbk_to_utf8("最多只能选择2个视频！").c_str()));
@@ -150,9 +150,9 @@ void concat::on_btn_Merge_clicked()
         return;
     }
 
-    // 修复文件保存对话框中文
+    // 修复文件保存对话框标题
     QString outputFile = QFileDialog::getSaveFileName(this,
-        QString::fromUtf8(gbk_to_utf8("保存合并后的视频").c_str()),
+        QString::fromUtf8(gbk_to_utf8("选择合并后的视频").c_str()),
         getVideoDir() + "/merged.mp4",
         QString::fromUtf8(gbk_to_utf8("视频文件 (*.mp4 *.avi *.mkv)").c_str()));
     if (outputFile.isEmpty()) {
@@ -187,7 +187,7 @@ void concat::on_btn_Split_clicked()
     }
 
     bool ok;
-    // 修复输入对话框中文
+    // 修复输入对话框标题
     double startTime = QInputDialog::getDouble(this,
         QString::fromUtf8(gbk_to_utf8("分割视频").c_str()),
         QString::fromUtf8(gbk_to_utf8("请输入开始时间(秒)：").c_str()),
@@ -201,7 +201,7 @@ void concat::on_btn_Split_clicked()
     if (!ok) return;
 
     QString outputFile = QFileDialog::getSaveFileName(this,
-        QString::fromUtf8(gbk_to_utf8("保存分割后的视频").c_str()),
+        QString::fromUtf8(gbk_to_utf8("选择分割后的视频").c_str()),
         getVideoDir() + "/split.mp4",
         QString::fromUtf8(gbk_to_utf8("视频文件 (*.mp4 *.avi *.mkv)").c_str()));
     if (outputFile.isEmpty()) {
@@ -236,7 +236,7 @@ void concat::on_btn_Resize_clicked()
     }
 
     bool ok;
-    // 修复输入对话框中文
+    // 修复输入对话框标题
     int width = QInputDialog::getInt(this,
         QString::fromUtf8(gbk_to_utf8("调整视频大小").c_str()),
         QString::fromUtf8(gbk_to_utf8("请输入目标宽度：").c_str()),
@@ -250,7 +250,7 @@ void concat::on_btn_Resize_clicked()
     if (!ok) return;
 
     QString outputFile = QFileDialog::getSaveFileName(this,
-        QString::fromUtf8(gbk_to_utf8("保存调整后的视频").c_str()),
+        QString::fromUtf8(gbk_to_utf8("选择调整后的视频").c_str()),
         getVideoDir() + "/resized.mp4",
         QString::fromUtf8(gbk_to_utf8("视频文件 (*.mp4 *.avi *.mkv)").c_str()));
     if (outputFile.isEmpty()) {

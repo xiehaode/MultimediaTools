@@ -2,7 +2,7 @@
 
 # 配置基本版本号
 MAJOR=1
-MINOR=0
+MINOR=1
 PATCH=0
 
 # 获取Git提交次数作为Build号，如果不是Git仓库则默认为0

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 // DLL export/import
-// 注意：本工程 vcxproj 里使用的是 OPENCVTOOLS_EXPORTS 作为导出开关
+// OPENCVTOOLS_EXPORTS 作为导出开关
 #ifdef OPENCVTOOLS_EXPORTS
 #define OPENCVFFMPEGTOOLS_API __declspec(dllexport)
 #else
@@ -15,6 +15,15 @@
 typedef struct PlayerConfig PlayerConfig;
 typedef struct DecodedFrame DecodedFrame;
 
+struct param {
+	int iparam1;
+	int iparam2;
+	int iparam3;
+	int iparam4;
+	int iparam5;
+	double dparam1;
+	char arr[96];
+};
 
 
 enum func {
@@ -32,29 +41,18 @@ enum func {
 };
 
 
-
-
-
-
-// 
-// C++/OpenCV 相关能力请包含 `COpenCVTools.h`
 #ifdef __cplusplus
 extern "C" {
 #else
 #include <stdbool.h>
 #endif
 
+// ---- AvWorker C API
 
-
-
-// ---- AvWorker C API（基于文件输入输出，外部无需 OpenCV 头文件）----
-
-
-
-// ----  C API（基于文件输入输出，外部无需 OpenCV 头文件）----
+// ----  C API
 extern OPENCVFFMPEGTOOLS_API int nOpenCVTools;
 OPENCVFFMPEGTOOLS_API int fnOpenCVTools(void);
-// ---- AvWorker C API（基于文件输入输出，外部无需 OpenCV 头文件）----
+// ---- AvWorker C API
 OPENCVFFMPEGTOOLS_API void* AvWorker_Create();
 OPENCVFFMPEGTOOLS_API void AvWorker_Destroy(void* worker);
 OPENCVFFMPEGTOOLS_API bool AvWorker_GetVideoFirstFrame(void* worker, const char* input_url, const char* output_bmp, bool is_rtsp);
@@ -68,7 +66,7 @@ OPENCVFFMPEGTOOLS_API bool AvWorker_split_video(
 	double duration_seconds);
 OPENCVFFMPEGTOOLS_API double AvWorker_getDuration(void* worker, const char* input_url);
 
-// ---- CvTranslator C API（基于文件输入输出，外部无需 OpenCV 头文件）----
+// ---- CvTranslator C API
 OPENCVFFMPEGTOOLS_API void* CvTranslator_Create();
 OPENCVFFMPEGTOOLS_API void CvTranslator_Destroy(void* translator);
 
@@ -110,7 +108,7 @@ OPENCVFFMPEGTOOLS_API int VideoTrans_GetWidth(void* trans);
 OPENCVFFMPEGTOOLS_API int VideoTrans_GetHeight(void* trans);
 OPENCVFFMPEGTOOLS_API int VideoTrans_GetFPS(void* trans);
 OPENCVFFMPEGTOOLS_API int64_t VideoTrans_GetDuration(void* trans);
-OPENCVFFMPEGTOOLS_API int VideoTrans_Process(void* trans, int effect_type);
+OPENCVFFMPEGTOOLS_API int VideoTrans_Process(void* trans, int effect_type, param m);
 OPENCVFFMPEGTOOLS_API int VideoTrans_Reset(void* trans);
 OPENCVFFMPEGTOOLS_API void VideoTrans_Cleanup(void* trans);
 

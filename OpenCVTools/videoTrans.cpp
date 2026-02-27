@@ -33,12 +33,12 @@ int videoTrans::initialize(const std::string& inputPath, const std::string& outp
 		cleanup();
 	}
 	
-	// 1. 打开解码器
+	// 打开解码器
 	if (decoder->ffplayer_open(inputPath, false) != 0) {
 		return -2; // 打开输入文件失败
 	}
 	
-	// 2. 获取输入视频的实际属性
+	//获取输入视频的实际属性
 	m_width = decoder->getWidth();
 	m_height = decoder->getHeight();
 	m_fps = decoder->getFPS();
@@ -52,13 +52,13 @@ int videoTrans::initialize(const std::string& inputPath, const std::string& outp
 		return -3; // 无法获取视频尺寸
 	}
 	
-	// 3. 初始化编码器 - 使用输入视频的实际属性
+	// 初始化编码器 - 使用输入视频的实际属性
 	if (encoder->video_muxer_create(outputPath.c_str(), m_width, m_height, m_fps) != 0) {
 		decoder->ffplayer_close();
 		return -4; // 创建编码器失败
 	}
 	
-	// 4. 保存路径和状态
+	// 保存路径和状态
 	m_inputPath = inputPath;
 	m_outputPath = outputPath;
 	m_initialized = true;
@@ -122,7 +122,7 @@ void videoTrans::cleanup()
 	m_duration = 0;
 }
 
-int videoTrans::process(func fun)
+int videoTrans::process(func fun, param mParem)
 {
 	// 检查初始化状态
 	if (!m_initialized) {
@@ -172,17 +172,17 @@ int videoTrans::process(func fun)
 					break;
 					
 				case customOilPaintApprox:
-					processedFrame = translator.customOilPaintApprox(mat, 5, 8.0);
+					processedFrame = translator.customOilPaintApprox(mat, mParem.iparam1, mParem.dparam1);
 					break;
 					
 				case applyOilPainting:
-					processedFrame = translator.applyOilPainting(mat, 5, 8.0);
+					processedFrame = translator.applyOilPainting(mat, mParem.iparam1, mParem.dparam1);
 					break;
 					
 				case applyMosaic:
 					{
-						cv::Rect mosaicRegion(100, 100, 200, 200); // 示例区域
-						processedFrame = translator.applyMosaic(mat, mosaicRegion, 10);
+						cv::Rect mosaicRegion(mParem.iparam1, mParem.iparam2, mParem.iparam3, mParem.iparam4); // 示例区域
+						processedFrame = translator.applyMosaic(mat, mosaicRegion, mParem.iparam5);
 					}
 					break;
 					
@@ -203,7 +203,7 @@ int videoTrans::process(func fun)
 					break;
 					
 				case addTextWatermark:
-					processedFrame = translator.addTextWatermark(mat, "Sample", cv::Point(50, 50));
+					processedFrame = translator.addTextWatermark(mat, mParem.arr, cv::Point(mParem.iparam1, mParem.iparam2));
 					break;
 					
 				case invertImage:
@@ -249,7 +249,7 @@ int videoTrans::process(func fun)
 	return 0; // 成功
 }
 
-int videoTrans::trans(const std::string& inputPath, const std::string& outputPath, func fun)
+int videoTrans::trans(const std::string& inputPath, const std::string& outputPath, func fun , param m)
 {
 	// 使用新的初始化和process方法
 	int result = initialize(inputPath, outputPath);
@@ -257,14 +257,14 @@ int videoTrans::trans(const std::string& inputPath, const std::string& outputPat
 		return result; // 初始化失败
 	}
 	
-	return process(fun); // 处理视频
+	return process(fun,m); // 处理视频
 }
 
 // 为了兼容原来的接口，提供一个重载版本
-int videoTrans::trans(func fun)
+int videoTrans::trans(func fun,param m)
 {
 	// 使用默认的输入输出路径
-	return this->trans("input.mp4", "output.mp4", fun);
+	return this->trans("input.mp4", "output.mp4", fun,m);
 }
 
 // C接口实现
@@ -310,11 +310,11 @@ extern "C" OPENCVFFMPEGTOOLS_API int64_t VideoTrans_GetDuration(void* trans)
 	return static_cast<videoTrans*>(trans)->getDuration();
 }
 
-extern "C" OPENCVFFMPEGTOOLS_API int VideoTrans_Process(void* trans, int effect_type)
+extern "C" OPENCVFFMPEGTOOLS_API int VideoTrans_Process(void* trans, int effect_type, param m)
 {
 	if (!trans) return -1;
 	func effect = static_cast<func>(effect_type);
-	return static_cast<videoTrans*>(trans)->process(effect);
+	return static_cast<videoTrans*>(trans)->process(effect,m);
 }
 
 extern "C" OPENCVFFMPEGTOOLS_API int VideoTrans_Reset(void* trans)
