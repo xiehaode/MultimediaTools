@@ -52,6 +52,7 @@ basewindow::basewindow(QWidget *parent)
 
 bool basewindow::eventFilter(QObject *watched, QEvent *event)
 {
+    /*
     // 拦截所有鼠标按下/移动/释放事件
     if (event->type() == QEvent::MouseButtonPress ||
         event->type() == QEvent::MouseMove ||
@@ -65,6 +66,8 @@ bool basewindow::eventFilter(QObject *watched, QEvent *event)
             return true;     // 过滤掉该事件，不触发任何后续处理
         }
     }
+
+*/
     return QMainWindow::eventFilter(watched, event);
 }
 

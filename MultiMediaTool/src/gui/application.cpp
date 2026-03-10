@@ -106,7 +106,7 @@ QSplitter* MainWindow::createVerticalSplitter(QWidget *parent, QWidget *content1
     // 获取分割窗口的句柄
     QSplitterHandle *splitterHandle1 = splitter->handle(1);  // 获取右侧部分的句柄
     // 设置句柄样式，并禁用拖动功能
-    splitterHandle1->setEnabled(true);
+    splitterHandle1->setEnabled(false);
 
     return splitter;
 }
