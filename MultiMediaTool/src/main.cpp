@@ -104,8 +104,8 @@ int main(int argc, char *argv[])
 
 
 
-    // 检查是否已经有实例在运行（尝试作为Client连接）
-    // 注意：如果是明确指定的子进程，或者手动启动的第二个实例，都先尝试连接
+    // 检查是否已经有实例在运行,尝试作为Client连接
+    // 如果是明确指定的子进程，或者手动启动的第二个实例，都先尝试连接
     MyIPCMgr ipcClient(IPCRole::Client, IPC_PIPE_NAME);
     if (ipcClient.connectToServer()) {
         qDebug() << "Connected to server, activating window and exiting";
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     // 与 basewindow 内部设置保持一致，避免覆盖掉最小化相关 flag
     w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
-    w.resize(1000, 800);
+    w.resize(1200, 1000);
     w.show();
 
     return a.exec();

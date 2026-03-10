@@ -5,7 +5,7 @@ Menu::Menu(QWidget *parent) :
 {
     this->setMinimumWidth(200);
     this->setMaximumWidth(300);
-    this->setAttribute(Qt::WA_StyledBackground, true);  // 启用样式表对窗口背景的控制
+    this->setAttribute(Qt::WA_StyledBackground, true);
 
     newPage1BtnVideo = new QPushButton(this);
     newPage2BtnWord = new QPushButton(this);
@@ -14,7 +14,7 @@ Menu::Menu(QWidget *parent) :
     newPage5BtnFFmpeg = new QPushButton(this);
     newPage6BtnFFmpegClient = new QPushButton(this);
 
-    // 设置样式表，包括背景颜色
+
 //    QString styleSheet = "background-color: #A0A083;"
 //                         "border-radius: 7px;";
 //    this->setStyleSheet(styleSheet);
@@ -51,7 +51,7 @@ Menu::Menu(QWidget *parent) :
             }
         }
 
-        // 更改选中按钮的样式
+
         if (newPage2BtnWord) {
             newPage2BtnWord->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
@@ -68,7 +68,7 @@ Menu::Menu(QWidget *parent) :
             }
         }
 
-        // 更改选中按钮的样式
+
         if (newPage3BtnVideoEffact) {
             newPage3BtnVideoEffact->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
@@ -85,7 +85,7 @@ Menu::Menu(QWidget *parent) :
             }
         }
 
-        // 更改选中按钮的样式
+
         if (newPage4BtnPicture) {
             newPage4BtnPicture->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
@@ -102,7 +102,7 @@ Menu::Menu(QWidget *parent) :
             }
         }
 
-        // 更改选中按钮的样式
+
         if (newPage5BtnFFmpeg) {
             newPage5BtnFFmpeg->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
@@ -119,7 +119,7 @@ Menu::Menu(QWidget *parent) :
             }
         }
 
-        // 更改选中按钮的样式
+
         if (newPage6BtnFFmpegClient) {
             newPage6BtnFFmpegClient->setStyleSheet("background-color: rgba(0, 0, 0, 0.2);"
                                   "border-radius: 7px;");
@@ -225,15 +225,15 @@ void Menu::onButtonClicked(int id)
 
 void Menu::setPushButton(QPushButton *button, const QString& url, const QString& text)
 {
-    // 设置按钮的文字和图标
+
     button->setText(text);
     QIcon icon;
-    // 图标大小设置为30*30
+
     icon.addFile(url, QSize());
     button->setIcon(icon);
     button->setIconSize(QSize(30, 30));
 
-    // 设置按钮光标样式
+
     button->setCursor(QCursor(Qt::PointingHandCursor));
 }
 

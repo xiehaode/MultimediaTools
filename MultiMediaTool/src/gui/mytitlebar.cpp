@@ -107,15 +107,12 @@ void myTitleBar::initConnections()
     });
 }
 
-// 设置标题栏背景色,在paintEvent事件中进行绘制标题栏背景色;
-// 在构造函数中给了默认值，可以外部设置颜色值改变标题栏背景色;
 void myTitleBar::setBackgroundColor(int r, int g, int b, bool isTransparent)
 {
     m_colorR = r;
     m_colorG = g;
     m_colorB = b;
     m_isTransparent = isTransparent;
-    // 重新绘制（调用paintEvent事件）;
     update();
 }
 
@@ -126,14 +123,12 @@ void myTitleBar::setTitleIcon(QString filePath, QSize IconSize)
     m_pIcon->setPixmap(titleIcon.scaled(IconSize));
 }
 
-// 设置标题内容;
 void myTitleBar::setTitleContent(QString titleContent, int titleFontSize)
 {
-    // 设置标题字体大小;
     QFont font = m_pTitleContent->font();
     font.setPointSize(titleFontSize);
     m_pTitleContent->setFont(font);
-    // 设置标题内容;
+
     m_pTitleContent->setText(titleContent);
     m_titleContent = titleContent;
 }
@@ -144,9 +139,8 @@ void myTitleBar::setTitleWidth(int width)
     this->setFixedWidth(width);
 }
 
-// 设置标题栏上按钮类型;
-// 由于不同窗口标题栏上的按钮都不一样，所以可以自定义标题栏中的按钮;
-// 这里提供了四个按钮，分别为最小化、还原、最大化、关闭按钮，如果需要其他按钮可自行添加设置;
+
+// 最小化、还原、最大化、关闭按钮，;
 void myTitleBar::setButtonType(ButtonType buttonType)
 {
     m_buttonType = buttonType;

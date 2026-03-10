@@ -2,6 +2,7 @@
 #define MOSAIC_H
 
 #include <QWidget>
+#include "OpenCVFFMpegTools.h"
 
 namespace Ui {
 class mosaic;
@@ -14,6 +15,8 @@ class mosaic : public QWidget
 public:
     explicit mosaic(QWidget *parent = nullptr);
     ~mosaic();
+
+    param getParams() const;
 
 private:
     Ui::mosaic *ui;

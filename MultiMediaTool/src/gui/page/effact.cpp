@@ -14,11 +14,13 @@ effact::effact(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    //mainLayout->addWidget(ui->centralWidget);
-    this->setLayout(mainLayout);
-
     initUI();
+
+    // 设置三栏布局的stretch比例为2:2:3
+    ui->horizontalLayout_8->setStretch(0, 2);
+    ui->horizontalLayout_8->setStretch(1, 2);
+    ui->horizontalLayout_8->setStretch(2, 3);
+
     trans = VideoTrans_Create();
     if (!trans) {
         qDebug()<<"VideoTrans_Create failed";
@@ -54,6 +56,7 @@ effact::~effact()
 void effact::initUI()
 {
     setupCheckBoxConnections();
+    setupInputWidgets();
 
     // 初始化格式转换下拉列表
     QStringList srcFormats = {"MP4", "AVI", "MKV", "MOV", "TS"};
@@ -189,57 +192,43 @@ void effact::on_ok_clicked()
     param mParam;
     memset(&mParam, 0, sizeof(mParam)); // 清零至关重要
 
-    bool paramValid = true;
-    QString errorMsg;
-
+    // 从对应的input控件获取参数
     switch (effectType) {
     case grayImage:
+        mParam = m_greyWidget->getParams();
+        break;
     case FrostedGlass:
+        mParam = m_glassWidget->getParams();
+        break;
     case simpleSkinSmoothing:
+        mParam = m_smoothWidget->getParams();
+        break;
     case Whitening:
+        mParam = m_white1Widget->getParams();
+        break;
     case Whitening2:
-    case invertImage:{
-        // 这些特效不需要额外参数
+        mParam = m_white2Widget->getParams();
         break;
-    }
+    case invertImage:
+        mParam = m_greyWidget->getParams();
+        break;
     case customOilPaintApprox:
-    case applyOilPainting:{
-
-
-
-        if (mParam.iparam1 <= 0) { errorMsg = "油画细节必须大于 0"; paramValid = false; }
-        if (mParam.dparam1 <= 0.0) { errorMsg = "油画强度必须大于 0"; paramValid = false; }
+        mParam = m_easyOilPaintingWidget->getParams();
         break;
-    }
-
-    case applyMosaic:{
-
-
-        if (mParam.iparam5 <= 0) { errorMsg = "马赛克块大小必须大于 0"; paramValid = false; }
+    case applyOilPainting:
+        mParam = m_oilPaintingWidget->getParams();
         break;
-    }
-    case addTextWatermark: {
-
-
-
+    case applyMosaic:
+        mParam = m_mosaicWidget->getParams();
         break;
-    }
-
+    case addTextWatermark:
+        mParam = m_waterTextWidget->getParams();
+        break;
     default:
         break;
     }
 
-    if (!paramValid) {
-        this->setEnabled(true);
-        ui->ok->setEnabled(true);
-
-        QMessageBox::warning(this, gbk_to_utf8("参数错误").c_str(), gbk_to_utf8(errorMsg.toStdString()).c_str());
-        return;
-    }
-
-
     int processRet = VideoTrans_Process(trans, effectType, mParam);
-    QString("").arg(15);
     if (processRet != 0) {
         qDebug() << "视频处理失败，错误码:" << processRet;
         QMessageBox::critical(this, gbk_to_utf8("处理失败").c_str(),
@@ -433,40 +422,95 @@ void effact::on_pushButton_clicked()
 
 void effact::updataParamUi()
 {
+    updateParameterWidget();
+}
 
+void effact::setupInputWidgets()
+{
+    // 创建所有input控件实例
+    m_glassWidget = new glass(this);
+    m_greyWidget = new grey(this);
+    m_mosaicWidget = new mosaic(this);
+    m_oilPaintingWidget = new oilPainting(this);
+    m_reverseWidget = new reverse(this);
+    m_smoothWidget = new smooth(this);
+    m_white1Widget = new white1(this);
+    m_white2Widget = new white2(this);
+    m_waterTextWidget = new waterText(this);
+    m_easyOilPaintingWidget = new easyOilPainting(this);
 
-    bool paramValid = true;
-    QString errorMsg;
+    // 将所有控件添加到verticalLayout_2布局中
+    ui->verticalLayout_2->addWidget(m_glassWidget);
+    ui->verticalLayout_2->addWidget(m_greyWidget);
+    ui->verticalLayout_2->addWidget(m_mosaicWidget);
+    ui->verticalLayout_2->addWidget(m_oilPaintingWidget);
+    ui->verticalLayout_2->addWidget(m_reverseWidget);
+    ui->verticalLayout_2->addWidget(m_smoothWidget);
+    ui->verticalLayout_2->addWidget(m_white1Widget);
+    ui->verticalLayout_2->addWidget(m_white2Widget);
+    ui->verticalLayout_2->addWidget(m_waterTextWidget);
+    ui->verticalLayout_2->addWidget(m_easyOilPaintingWidget);
 
+    // 初始状态隐藏所有控件
+    m_glassWidget->hide();
+    m_greyWidget->hide();
+    m_mosaicWidget->hide();
+    m_oilPaintingWidget->hide();
+    m_reverseWidget->hide();
+    m_smoothWidget->hide();
+    m_white1Widget->hide();
+    m_white2Widget->hide();
+    m_waterTextWidget->hide();
+    m_easyOilPaintingWidget->hide();
+}
+
+void effact::updateParameterWidget()
+{
+    // 隐藏所有控件
+    m_glassWidget->hide();
+    m_greyWidget->hide();
+    m_mosaicWidget->hide();
+    m_oilPaintingWidget->hide();
+    m_reverseWidget->hide();
+    m_smoothWidget->hide();
+    m_white1Widget->hide();
+    m_white2Widget->hide();
+    m_waterTextWidget->hide();
+    m_easyOilPaintingWidget->hide();
+
+    // 根据effectType显示对应的控件
     switch (effectType) {
     case grayImage:
+        m_greyWidget->show();
+        break;
     case FrostedGlass:
+        m_glassWidget->show();
+        break;
     case simpleSkinSmoothing:
+        m_smoothWidget->show();
+        break;
     case Whitening:
+        m_white1Widget->show();
+        break;
     case Whitening2:
+        m_white2Widget->show();
+        break;
     case invertImage:
+        m_reverseWidget->show();
         break;
-
     case customOilPaintApprox:
-    case applyOilPainting:{
-
+        m_easyOilPaintingWidget->show();
         break;
-    }
-    case applyMosaic:{
-
+    case applyOilPainting:
+        m_oilPaintingWidget->show();
         break;
-    }
-    case addTextWatermark:{
-
+    case applyMosaic:
+        m_mosaicWidget->show();
         break;
-    }
+    case addTextWatermark:
+        m_waterTextWidget->show();
+        break;
     default:
         break;
-    }
-
-
-    if (!paramValid) {
-        QMessageBox::warning(this, gbk_to_utf8("参数错误").c_str(), errorMsg);
-        return; // 终止后续处理
     }
 }

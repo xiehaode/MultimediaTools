@@ -2,6 +2,7 @@
 #define WHITE1_H
 
 #include <QWidget>
+#include "OpenCVFFMpegTools.h"
 
 namespace Ui {
 class white1;
@@ -14,6 +15,8 @@ class white1 : public QWidget
 public:
     explicit white1(QWidget *parent = nullptr);
     ~white1();
+
+    param getParams() const;
 
 private:
     Ui::white1 *ui;

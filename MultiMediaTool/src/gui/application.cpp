@@ -60,18 +60,13 @@ bool MainWindow::createleftNavigationBar()
         QString styleSheet = QString("QStackedWidget#BaseContentWidget{background-color: #2177B8}");
         this->setStyleSheet(styleSheet);
 
-        /* 侧边栏设置 */
-        // 创建左侧边栏容器
         sidebarWidget = new Menu;
         // 创建透明效果SidebarWidget
         auto *opacityEffect = new QGraphicsOpacityEffect();
-        // 设置透明度为0.9（90%不透明）
         opacityEffect->setOpacity(0.9);
         // 应用透明度效果
         sidebarWidget->setGraphicsEffect(opacityEffect);
 
-        /* 主内容容器设置 */
-        // 创建内容布局
         auto *contentLayout = new QVBoxLayout;
 
         // 创建内容容器
@@ -111,7 +106,7 @@ QSplitter* MainWindow::createVerticalSplitter(QWidget *parent, QWidget *content1
     // 获取分割窗口的句柄
     QSplitterHandle *splitterHandle1 = splitter->handle(1);  // 获取右侧部分的句柄
     // 设置句柄样式，并禁用拖动功能
-    splitterHandle1->setEnabled(false);
+    splitterHandle1->setEnabled(true);
 
     return splitter;
 }

@@ -1,5 +1,6 @@
 #include "white1.h"
 #include "ui_white1.h"
+#include <cstring>
 
 white1::white1(QWidget *parent) :
     QWidget(parent),
@@ -11,4 +12,11 @@ white1::white1(QWidget *parent) :
 white1::~white1()
 {
     delete ui;
+}
+
+param white1::getParams() const
+{
+    param p;
+    memset(&p, 0, sizeof(p));
+    return p;
 }

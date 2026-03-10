@@ -2,6 +2,7 @@
 #define OILPAINTING_H
 
 #include <QWidget>
+#include "OpenCVFFMpegTools.h"
 
 namespace Ui {
 class oilPainting;
@@ -14,6 +15,8 @@ class oilPainting : public QWidget
 public:
     explicit oilPainting(QWidget *parent = nullptr);
     ~oilPainting();
+
+    param getParams() const;
 
 private:
     Ui::oilPainting *ui;

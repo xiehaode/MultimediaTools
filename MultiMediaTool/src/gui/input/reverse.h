@@ -2,6 +2,7 @@
 #define REVERSE_H
 
 #include <QWidget>
+#include "OpenCVFFMpegTools.h"
 
 namespace Ui {
 class reverse;
@@ -14,6 +15,8 @@ class reverse : public QWidget
 public:
     explicit reverse(QWidget *parent = nullptr);
     ~reverse();
+
+    param getParams() const;
 
 private:
     Ui::reverse *ui;

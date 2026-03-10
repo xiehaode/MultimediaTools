@@ -15,12 +15,17 @@
 #include <QPixmap>
 
 picture::picture(QWidget *parent) :
-    QWidget(parent),  // 父类初始化
+    QWidget(parent),
     ui(new Ui::picture),
     isProcessing(false)
 {
     ui->setupUi(this);
     initUI();
+
+    // 设置三栏布局的stretch比例为2:2:3
+    ui->horizontalLayout_6->setStretch(0, 2);
+    ui->horizontalLayout_6->setStretch(1, 2);
+    ui->horizontalLayout_6->setStretch(2, 3);
 
     translator = CvTranslator_Create();
     if (!translator) {
@@ -39,6 +44,7 @@ picture::~picture()
 void picture::initUI()
 {
     setupCheckBoxConnections();
+    setupInputWidgets();
 
     // 初始化所有参数控件为隐藏状态
     QList<QWidget*> allParamWidgets = {
@@ -62,7 +68,7 @@ void picture::initUI()
 
 void picture::setupCheckBoxConnections()
 {
-    // 给复选框绑定stateChanged信号，代替clicked
+
     QList<QCheckBox*> checkBoxes = {
         ui->gray, ui->TextWatermark, ui->customOilPaintApprox, ui->OilPainting2,
         ui->Mosaic, ui->FrostedGlass, ui->SkinSmoothing, ui->whitening,
@@ -114,6 +120,9 @@ void picture::setupCheckBoxConnections()
                 w->setEnabled(false);
             }
         }
+
+
+        updateParameterWidget();
     });
 }
 
@@ -248,9 +257,9 @@ void picture::on_ok_clicked()
     // 参数验证
     bool paramValid = true;
     QString errorMsg;
-    
+
     if(effectType == addTextWatermark) {
-        QString watermarkText = ui->lineEdit_2->text();
+        QString watermarkText = m_waterTextWidget->findChild<QLineEdit*>("lineEdit_watermarkText")->text();
         if(watermarkText.isEmpty()){
             QMessageBox::information(this, gbk_to_utf8("提示").c_str(), gbk_to_utf8("未设置水印文字").c_str());
             return;
@@ -326,33 +335,38 @@ void picture::on_ok_clicked()
     param mParam;
     memset(&mParam, 0, sizeof(mParam)); // 清零至关重要
 
-    // 根据特效类型获取参数
+    // 从对应的input控件获取参数
     switch (effectType) {
+    case grayImage:
+        mParam = m_greyWidget->getParams();
+        break;
+    case FrostedGlass:
+        mParam = m_glassWidget->getParams();
+        break;
+    case simpleSkinSmoothing:
+        mParam = m_smoothWidget->getParams();
+        break;
+    case Whitening:
+        mParam = m_white1Widget->getParams();
+        break;
+    case Whitening2:
+        mParam = m_white2Widget->getParams();
+        break;
+    case invertImage:
+        mParam = m_greyWidget->getParams();
+        break;
     case customOilPaintApprox:
-    case applyOilPainting:{
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // 细节
-        mParam.dparam1 = ui->doubleSpinBox->value(); // 强度
+        mParam = m_easyOilPaintingWidget->getParams();
         break;
-    }
-    case applyMosaic:{
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // x
-        mParam.iparam2 = ui->spinBoxArgs2->value(); // y
-        mParam.iparam3 = ui->spinBoxArgs3->value(); // w
-        mParam.iparam4 = ui->spinBoxArgs4->value(); // h
-        mParam.iparam5 = ui->spinBox_7->value(); // 块大小
+    case applyOilPainting:
+        mParam = m_oilPaintingWidget->getParams();
         break;
-    }
-    case addTextWatermark: {
-        QString text = ui->lineEdit_2->text();
-        if (!text.isEmpty()) {
-            QByteArray ba = text.toUtf8();
-            strncpy_s(mParam.arr, ba.constData(), sizeof(mParam.arr) - 1);
-            mParam.arr[sizeof(mParam.arr) - 1] = '\0';
-        }
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // x
-        mParam.iparam2 = ui->spinBoxArgs2->value(); // y
+    case applyMosaic:
+        mParam = m_mosaicWidget->getParams();
         break;
-    }
+    case addTextWatermark:
+        mParam = m_waterTextWidget->getParams();
+        break;
     default:
         // 其他特效不需要额外参数
         break;
@@ -367,6 +381,7 @@ void picture::on_ok_clicked()
             case addTextWatermark:
                 return CvTranslator_AddTextWatermark_File(translator, inputPath, outputPath, mParam.arr);
             case customOilPaintApprox:
+                return CvTranslator_OilPainting_File(translator, inputPath, outputPath, mParam.iparam1, (int)mParam.dparam1);
             case applyOilPainting:
                 return CvTranslator_OilPainting_File(translator, inputPath, outputPath, mParam.iparam1, (int)mParam.dparam1);
             case applyMosaic:
@@ -463,115 +478,94 @@ void picture::hideLoading()
 
 void picture::updataParamUi()
 {
-    // 先隐藏所有参数控件
-    QList<QWidget*> allParamWidgets = {
-        ui->spinBoxArgs1, ui->spinBoxArgs2, ui->spinBoxArgs3, ui->spinBoxArgs4, ui->spinBox_7,
-        ui->doubleSpinBox, ui->lineEdit_2
-    };
+    updateParameterWidget();
+}
 
-    for (QWidget* w : allParamWidgets) {
-        if (w) {
-            w->setVisible(false);
-            w->setEnabled(false);
-        }
-    }
+void picture::setupInputWidgets()
+{
+    // 创建所有input控件实例
+    m_glassWidget = new glass(this);
+    m_greyWidget = new grey(this);
+    m_mosaicWidget = new mosaic(this);
+    m_oilPaintingWidget = new oilPainting(this);
+    m_reverseWidget = new reverse(this);
+    m_smoothWidget = new smooth(this);
+    m_white1Widget = new white1(this);
+    m_white2Widget = new white2(this);
+    m_waterTextWidget = new waterText(this);
+    m_easyOilPaintingWidget = new easyOilPainting(this);
 
-    // 根据特效类型显示对应的参数控件
+    // 将所有控件添加到verticalLayout_2布局中
+    ui->verticalLayout_2->addWidget(m_glassWidget);
+    ui->verticalLayout_2->addWidget(m_greyWidget);
+    ui->verticalLayout_2->addWidget(m_mosaicWidget);
+    ui->verticalLayout_2->addWidget(m_oilPaintingWidget);
+    ui->verticalLayout_2->addWidget(m_reverseWidget);
+    ui->verticalLayout_2->addWidget(m_smoothWidget);
+    ui->verticalLayout_2->addWidget(m_white1Widget);
+    ui->verticalLayout_2->addWidget(m_white2Widget);
+    ui->verticalLayout_2->addWidget(m_waterTextWidget);
+    ui->verticalLayout_2->addWidget(m_easyOilPaintingWidget);
+
+    // 初始状态隐藏所有控件
+    m_glassWidget->hide();
+    m_greyWidget->hide();
+    m_mosaicWidget->hide();
+    m_oilPaintingWidget->hide();
+    m_reverseWidget->hide();
+    m_smoothWidget->hide();
+    m_white1Widget->hide();
+    m_white2Widget->hide();
+    m_waterTextWidget->hide();
+    m_easyOilPaintingWidget->hide();
+}
+
+void picture::updateParameterWidget()
+{
+    // 隐藏所有控件
+    m_glassWidget->hide();
+    m_greyWidget->hide();
+    m_mosaicWidget->hide();
+    m_oilPaintingWidget->hide();
+    m_reverseWidget->hide();
+    m_smoothWidget->hide();
+    m_white1Widget->hide();
+    m_white2Widget->hide();
+    m_waterTextWidget->hide();
+    m_easyOilPaintingWidget->hide();
+
+    // 根据effectType显示对应的控件
     switch (effectType) {
     case grayImage:
+        m_greyWidget->show();
+        break;
     case FrostedGlass:
+        m_glassWidget->show();
+        break;
     case simpleSkinSmoothing:
+        m_smoothWidget->show();
+        break;
     case Whitening:
+        m_white1Widget->show();
+        break;
     case Whitening2:
+        m_white2Widget->show();
+        break;
     case invertImage:
-        // 这些特效不需要额外参数
+        m_reverseWidget->show();
         break;
-
     case customOilPaintApprox:
-    case applyOilPainting:{
-        ui->spinBoxArgs1->setVisible(true);
-        ui->doubleSpinBox->setVisible(true);
-        ui->spinBoxArgs1->setEnabled(true);
-        ui->doubleSpinBox->setEnabled(true);
-
-        if(ui->spinBoxArgs1) {
-            ui->spinBoxArgs1->setMinimum(1);
-            ui->spinBoxArgs1->setMaximum(50);
-            ui->spinBoxArgs1->setValue(5);
-            ui->spinBoxArgs1->setToolTip(gbk_to_utf8("油画细节程度 (1-50)").c_str());
-        }
-        if(ui->doubleSpinBox) {
-            ui->doubleSpinBox->setMinimum(0.1);
-            ui->doubleSpinBox->setMaximum(10.0);
-            ui->doubleSpinBox->setValue(3.0);
-            ui->doubleSpinBox->setToolTip(gbk_to_utf8("油画强度 (0.1-10.0)").c_str());
-        }
+        m_easyOilPaintingWidget->show();
         break;
-    }
-    case applyMosaic:{
-        if(ui->spinBoxArgs1) {ui->spinBoxArgs1->setVisible(true); ui->spinBoxArgs1->setEnabled(true);} // x
-        if(ui->spinBoxArgs2) {ui->spinBoxArgs2->setVisible(true); ui->spinBoxArgs2->setEnabled(true);} // y
-        if(ui->spinBoxArgs3) {ui->spinBoxArgs3->setVisible(true); ui->spinBoxArgs3->setEnabled(true);} // w
-        if(ui->spinBoxArgs4) {ui->spinBoxArgs4->setVisible(true); ui->spinBoxArgs4->setEnabled(true);} // h
-        if(ui->spinBox_7) {ui->spinBox_7->setVisible(true); ui->spinBox_7->setEnabled(true);} // 块大小
-
-        if(ui->spinBoxArgs1) {
-            ui->spinBoxArgs1->setMinimum(0);
-            ui->spinBoxArgs1->setMaximum(9999);
-            ui->spinBoxArgs1->setValue(0);
-            ui->spinBoxArgs1->setToolTip("X坐标");
-        }
-        if(ui->spinBoxArgs2) {
-            ui->spinBoxArgs2->setMinimum(0);
-            ui->spinBoxArgs2->setMaximum(9999);
-            ui->spinBoxArgs2->setValue(0);
-            ui->spinBoxArgs2->setToolTip("Y坐标");
-        }
-        if(ui->spinBoxArgs3) {
-            ui->spinBoxArgs3->setMinimum(1);
-            ui->spinBoxArgs3->setMaximum(9999);
-            ui->spinBoxArgs3->setValue(100);
-            ui->spinBoxArgs3->setToolTip("宽度");
-        }
-        if(ui->spinBoxArgs4) {
-            ui->spinBoxArgs4->setMinimum(1);
-            ui->spinBoxArgs4->setMaximum(9999);
-            ui->spinBoxArgs4->setValue(100);
-            ui->spinBoxArgs4->setToolTip("高度");
-        }
-        if(ui->spinBox_7) {
-            ui->spinBox_7->setMinimum(1);
-            ui->spinBox_7->setMaximum(100);
-            ui->spinBox_7->setValue(10);
-            ui->spinBox_7->setToolTip("块大小");
-        }
+    case applyOilPainting:
+        m_oilPaintingWidget->show();
         break;
-    }
-    case addTextWatermark:{
-        if(ui->lineEdit_2) {ui->lineEdit_2->setVisible(true); ui->lineEdit_2->setEnabled(true);}
-        if(ui->spinBoxArgs1) {ui->spinBoxArgs1->setVisible(true); ui->spinBoxArgs1->setEnabled(true);} // x
-        if(ui->spinBoxArgs2) {ui->spinBoxArgs2->setVisible(true); ui->spinBoxArgs2->setEnabled(true);} // y
-
-        if(ui->lineEdit_2) {
-            ui->lineEdit_2->setPlaceholderText(gbk_to_utf8("请输入水印文字").c_str());
-            ui->lineEdit_2->setToolTip("水印文字内容");
-        }
-        
-        // 设置水印坐标的默认值
-        if(ui->spinBoxArgs1) {
-            ui->spinBoxArgs1->setMinimum(0);
-            ui->spinBoxArgs1->setMaximum(9999);
-            ui->spinBoxArgs1->setValue(50); // 默认x坐标
-            ui->spinBoxArgs1->setToolTip(gbk_to_utf8("水印X坐标").c_str());
-        }
-        if(ui->spinBoxArgs2) {
-            ui->spinBoxArgs2->setMinimum(0);
-            ui->spinBoxArgs2->setMaximum(9999);
-            ui->spinBoxArgs2->setValue(50); // 默认y坐标
-            ui->spinBoxArgs2->setToolTip(gbk_to_utf8("水印Y坐标").c_str());
-        }
+    case applyMosaic:
+        m_mosaicWidget->show();
         break;
-    }
+    case addTextWatermark:
+        m_waterTextWidget->show();
+        break;
     default:
         break;
     }

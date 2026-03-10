@@ -1,5 +1,6 @@
 #include "smooth.h"
 #include "ui_smooth.h"
+#include <cstring>
 
 smooth::smooth(QWidget *parent) :
     QWidget(parent),
@@ -11,4 +12,11 @@ smooth::smooth(QWidget *parent) :
 smooth::~smooth()
 {
     delete ui;
+}
+
+param smooth::getParams() const
+{
+    param p;
+    memset(&p, 0, sizeof(p));
+    return p;
 }

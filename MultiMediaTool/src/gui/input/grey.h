@@ -2,6 +2,7 @@
 #define GREY_H
 
 #include <QWidget>
+#include "OpenCVFFMpegTools.h"
 
 namespace Ui {
 class grey;
@@ -14,6 +15,8 @@ class grey : public QWidget
 public:
     explicit grey(QWidget *parent = nullptr);
     ~grey();
+
+    param getParams() const;
 
 private:
     Ui::grey *ui;
