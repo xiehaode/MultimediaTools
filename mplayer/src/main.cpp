@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
         mp.show();
     }
     
-    // 设置超时保护，5秒后强制显示窗口
+
     QTimer::singleShot(5000, [&]() {
         if (!mp.isVisible()) {
             qDebug() << "[MPlayer] 超时强制显示窗口";

@@ -18,7 +18,7 @@ videoTrans::videoTrans()
 
 videoTrans::~videoTrans()
 {
-	cleanup(); // 使用统一的清理函数
+	cleanup(); 
 }
 
 int videoTrans::initialize(const std::string& inputPath, const std::string& outputPath)
@@ -46,19 +46,17 @@ int videoTrans::initialize(const std::string& inputPath, const std::string& outp
 	
 	printf("输入视频属性: %dx%d, %dfps, 时长: %lldms\n", m_width, m_height, m_fps, (long long)m_duration);
 	
-	// 验证获取到的视频属性
+
 	if (m_width <= 0 || m_height <= 0) {
 		decoder->ffplayer_close();
 		return -3; // 无法获取视频尺寸
 	}
 	
-	// 初始化编码器 - 使用输入视频的实际属性
 	if (encoder->video_muxer_create(outputPath.c_str(), m_width, m_height, m_fps) != 0) {
 		decoder->ffplayer_close();
 		return -4; // 创建编码器失败
 	}
 	
-	// 保存路径和状态
 	m_inputPath = inputPath;
 	m_outputPath = outputPath;
 	m_initialized = true;
@@ -93,7 +91,6 @@ int videoTrans::reset()
 		return -1; // 未初始化
 	}
 	
-	// 关闭当前解码器
 	decoder->ffplayer_close();
 	
 	// 重新打开

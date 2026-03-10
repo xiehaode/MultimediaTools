@@ -1,0 +1,14 @@
+#include "white2.h"
+#include "ui_white2.h"
+
+white2::white2(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::white2)
+{
+    ui->setupUi(this);
+}
+
+white2::~white2()
+{
+    delete ui;
+}

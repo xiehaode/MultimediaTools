@@ -18,6 +18,14 @@ SOURCES += \
     src/base/ipcmgrbase.cpp \
     src/gui/application.cpp \
     src/gui/basewindow.cpp \
+    src/gui/input/glass.cpp \
+    src/gui/input/grey.cpp \
+    src/gui/input/mosaic.cpp \
+    src/gui/input/oilpainting.cpp \
+    src/gui/input/reverse.cpp \
+    src/gui/input/smooth.cpp \
+    src/gui/input/white1.cpp \
+    src/gui/input/white2.cpp \
     src/gui/mytitlebar.cpp \
     src/gui/page/concat.cpp \
     src/gui/page/ffmpegclientwidget.cpp \
@@ -43,6 +51,14 @@ HEADERS += \
     src/base/ipcmgrbase.h \
     src/gui/application.h \
     src/gui/basewindow.h \
+    src/gui/input/glass.h \
+    src/gui/input/grey.h \
+    src/gui/input/mosaic.h \
+    src/gui/input/oilpainting.h \
+    src/gui/input/reverse.h \
+    src/gui/input/smooth.h \
+    src/gui/input/white1.h \
+    src/gui/input/white2.h \
     src/gui/mytitlebar.h \
     src/gui/page/concat.h \
     src/gui/page/ffmpegclientwidget.h \
@@ -65,6 +81,14 @@ HEADERS += \
     src/version.h
 
 FORMS += \
+    src/gui/input/glass.ui \
+    src/gui/input/grey.ui \
+    src/gui/input/mosaic.ui \
+    src/gui/input/oilpainting.ui \
+    src/gui/input/reverse.ui \
+    src/gui/input/smooth.ui \
+    src/gui/input/white1.ui \
+    src/gui/input/white2.ui \
     src/gui/page/concat.ui \
     src/gui/ui/mVersion.ui \
     src/gui/ui/ffmpegcmd.ui \

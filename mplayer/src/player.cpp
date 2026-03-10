@@ -116,7 +116,7 @@ void player::ffplayer_read_frame()
                     {
                         std::lock_guard<std::mutex> lock(ctx->shared_buf.mtx);
                         
-                        // 零拷贝准备：确保缓冲区大小正确
+                        // 确保缓冲区大小正确
                         int target_size = dw * dh * 4; // 假设转为 RGBA
                         if (ctx->shared_buf.buf.size() != (size_t)target_size) {
                             ctx->shared_buf.buf.resize(target_size);
@@ -230,7 +230,7 @@ int64_t player::getDuration() const
 
 int64_t player::getCurrentTime() const
 {
-    // 简化处理，实际可以通过当前帧的pts获取
+
     return 0; 
 }
 
@@ -265,7 +265,7 @@ int player::startRecord(const QString &outputPath)
     if (m_recording) return -5;
 
 
-    // 关键修复：确保分辨率可用（优先解码器，其次流参数）
+    // 确保分辨率可用（优先解码器，其次流参数）
     if (!ctx || !ctx->fmt_ctx || ctx->video_index < 0) {
         qDebug() << "Start record failed: context not ready";
         return -1;

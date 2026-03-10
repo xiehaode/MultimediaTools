@@ -199,6 +199,20 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
+          <widget class="QPushButton" name="ok">
+           <property name="text">
+            <string>确定</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cancel">
+           <property name="text">
+            <string>取消</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QToolButton" name="addFile">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -247,56 +261,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="QSpinBox" name="spinBoxArgs1"/>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinBoxArgs2"/>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinBoxArgs3"/>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinBoxArgs4"/>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="spinBoxArgs5"/>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="doubleSpinBoxArgs1"/>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="argLine1">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>300</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="ok">
-           <property name="text">
-            <string>确定</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="cancel">
-           <property name="text">
-            <string>取消</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <layout class="QVBoxLayout" name="verticalLayout_2"/>
        </item>
       </layout>
      </item>

@@ -36,18 +36,6 @@ effact::effact(QWidget *parent) :
         this->handleDroppedFiles(filePaths);
     });
 
-    QList<QWidget*> allParamWidgets = {
-        ui->spinBoxArgs1, ui->spinBoxArgs2, ui->spinBoxArgs3, ui->spinBoxArgs4, ui->spinBoxArgs5,
-        ui->doubleSpinBoxArgs1,
-        ui->argLine1,
-    };
-
-    for (QWidget* w : allParamWidgets) {
-        if (w) {
-            w->setVisible(false);
-            w->setEnabled(false);
-        }
-    }
 }
 
 effact::~effact()
@@ -217,8 +205,7 @@ void effact::on_ok_clicked()
     case customOilPaintApprox:
     case applyOilPainting:{
 
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // 细节
-        mParam.dparam1 = ui->doubleSpinBoxArgs1->value(); // 强度
+
 
         if (mParam.iparam1 <= 0) { errorMsg = "油画细节必须大于 0"; paramValid = false; }
         if (mParam.dparam1 <= 0.0) { errorMsg = "油画强度必须大于 0"; paramValid = false; }
@@ -227,29 +214,14 @@ void effact::on_ok_clicked()
 
     case applyMosaic:{
 
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // x
-        mParam.iparam2 = ui->spinBoxArgs2->value(); // y
-        mParam.iparam3 = ui->spinBoxArgs3->value(); // w
-        mParam.iparam4 = ui->spinBoxArgs4->value(); // h
-        mParam.iparam5 = ui->spinBoxArgs5->value(); // 块大小
 
         if (mParam.iparam5 <= 0) { errorMsg = "马赛克块大小必须大于 0"; paramValid = false; }
         break;
     }
     case addTextWatermark: {
 
-        QString text = ui->argLine1->text();
-        if (text.isEmpty()) {
-            errorMsg = "水印文字不能为空";
-            paramValid = false;
-        } else {
-            QByteArray ba = text.toUtf8();
-            strncpy_s(mParam.arr, ba.constData(), sizeof(mParam.arr) - 1);
-            mParam.arr[sizeof(mParam.arr) - 1] = '\0';
-        }
 
-        mParam.iparam1 = ui->spinBoxArgs1->value(); // x
-        mParam.iparam2 = ui->spinBoxArgs2->value(); // y
+
         break;
     }
 
@@ -461,18 +433,7 @@ void effact::on_pushButton_clicked()
 
 void effact::updataParamUi()
 {
-    QList<QWidget*> allParamWidgets = {
-        ui->spinBoxArgs1, ui->spinBoxArgs2, ui->spinBoxArgs3, ui->spinBoxArgs4, ui->spinBoxArgs5,
-        ui->doubleSpinBoxArgs1,
-        ui->argLine1,
-    };
 
-    for (QWidget* w : allParamWidgets) {
-        if (w) {
-            w->setVisible(false);
-            w->setEnabled(false);
-        }
-    }
 
     bool paramValid = true;
     QString errorMsg;
@@ -488,56 +449,15 @@ void effact::updataParamUi()
 
     case customOilPaintApprox:
     case applyOilPainting:{
-        ui->spinBoxArgs1->setVisible(true);
-        ui->doubleSpinBoxArgs1->setVisible(true);
-        ui->spinBoxArgs1->setEnabled(true);
-        ui->doubleSpinBoxArgs1->setEnabled(true);
 
-        if(ui->spinBoxArgs1) ui->spinBoxArgs1->setToolTip(gbk_to_utf8("油画细节程度 (1-50)").c_str());
-        if(ui->doubleSpinBoxArgs1) ui->doubleSpinBoxArgs1->setToolTip(gbk_to_utf8("油画强度 (0.1-10.0)").c_str());
         break;
     }
     case applyMosaic:{
-        if(ui->spinBoxArgs1) ui->spinBoxArgs1->setVisible(true); // x
-        if(ui->spinBoxArgs2) ui->spinBoxArgs2->setVisible(true); // y
-        if(ui->spinBoxArgs3) ui->spinBoxArgs3->setVisible(true); // w
-        if(ui->spinBoxArgs4) ui->spinBoxArgs4->setVisible(true); // h
-        if(ui->spinBoxArgs5) ui->spinBoxArgs5->setVisible(true); // 块大小
-        if(ui->spinBoxArgs1) ui->spinBoxArgs1->setEnabled(true); // x
-        if(ui->spinBoxArgs2) ui->spinBoxArgs2->setEnabled(true); // y
-        if(ui->spinBoxArgs3) ui->spinBoxArgs3->setEnabled(true); // w
-        if(ui->spinBoxArgs4) ui->spinBoxArgs4->setEnabled(true); // h
-        if(ui->spinBoxArgs5) ui->spinBoxArgs5->setEnabled(true); // 块大小
-        ui->spinBoxArgs1->setToolTip("x");
-        ui->spinBoxArgs2->setToolTip("y");
-        ui->spinBoxArgs3->setToolTip("w");
-        ui->spinBoxArgs4->setToolTip("h");
-        ui->spinBoxArgs5->setToolTip("块大小");
+
         break;
     }
     case addTextWatermark:{
-        if(ui->argLine1) {ui->argLine1->setVisible(true);ui->argLine1->setEnabled(true);}
-        if(ui->spinBoxArgs1) {ui->spinBoxArgs1->setVisible(true); ui->spinBoxArgs1->setEnabled(true);}          // x
-        if(ui->spinBoxArgs2) {ui->spinBoxArgs2->setVisible(true); ui->spinBoxArgs2->setEnabled(true);} // y
 
-        if(ui->argLine1) {
-            ui->argLine1->setPlaceholderText(gbk_to_utf8("请输入水印文字").c_str());
-            ui->argLine1->setToolTip("水印文字内容");
-        }
-        
-        // 设置水印坐标的默认值
-        if(ui->spinBoxArgs1) {
-            ui->spinBoxArgs1->setMinimum(0);
-            ui->spinBoxArgs1->setMaximum(9999);
-            ui->spinBoxArgs1->setValue(50); // 默认x坐标
-            ui->spinBoxArgs1->setToolTip(gbk_to_utf8("水印X坐标").c_str());
-        }
-        if(ui->spinBoxArgs2) {
-            ui->spinBoxArgs2->setMinimum(0);
-            ui->spinBoxArgs2->setMaximum(9999);
-            ui->spinBoxArgs2->setValue(50); // 默认y坐标
-            ui->spinBoxArgs2->setToolTip(gbk_to_utf8("水印Y坐标").c_str());
-        }
         break;
     }
     default:

@@ -137,8 +137,8 @@ bool videoPage::initableWidget()
     QStringList videoFilters;
     videoFilters << "*.mp4" << "*.avi" << "*.mkv" << "*.flv" << "*.mov" << "*.wmv";
     QFileInfoList videoFileList = videoDir.entryInfoList(videoFilters,
-                                                        QDir::Files | QDir::NoDotAndDotDot,
-                                                        QDir::Name);
+                                                         QDir::Files | QDir::NoDotAndDotDot,
+                                                         QDir::Name);
 
     // 填充表格
     if (!videoFileList.isEmpty()) {
@@ -153,11 +153,11 @@ bool videoPage::initableWidget()
             QByteArray gbkBmpPath = QString2GBK(bmpPath);
 
             bool getFrameOk = AvWorker_GetVideoFirstFrame(
-                worker,
-                gbkVideoPath.constData(),
-                gbkBmpPath.constData(),
-                false
-            );
+                        worker,
+                        gbkVideoPath.constData(),
+                        gbkBmpPath.constData(),
+                        false
+                        );
 
             // 视频名称单元格（预览图+名称）
             QWidget* nameWidget = new QWidget();
@@ -287,41 +287,41 @@ bool videoPage::initableWidget()
 
                 qDebug() << "[VideoPage] 使用mPlayer打开视频:" << videoPath;
                 
-    // 启动播放器进程
-    m_ipcMgr->startChildProcess(mplayerPath, false);
+                // 启动播放器进程
+                m_ipcMgr->startChildProcess(mplayerPath, false);
 
-    // 等待一小段时间让mplayer启动，然后发送当前选择的模式
-    QTimer::singleShot(1000, [this]() {
-        // 发送当前选择的模式
-        int currentIndex = ui->recordComboBox->currentIndex();
-        QString modeStr;
-        switch (currentIndex) {
-            case 0: modeStr = "SCREEN"; break;
-            case 1: modeStr = "CAPTURE"; break;
-            case 2: modeStr = "VIDEO"; break;
-            default: modeStr = "VIDEO"; break;
-        }
-        
-        qDebug() << "[VideoPage] mplayer启动后发送初始模式:" << modeStr;
-        m_ipcMgr->sendMessage("select_mode:" + modeStr);
-    });
+                // 等待一小段时间让mplayer启动，然后发送当前选择的模式
+                QTimer::singleShot(1000, [this]() {
+                    // 发送当前选择的模式
+                    int currentIndex = ui->recordComboBox->currentIndex();
+                    QString modeStr;
+                    switch (currentIndex) {
+                    case 0: modeStr = "SCREEN"; break;
+                    case 1: modeStr = "CAPTURE"; break;
+                    case 2: modeStr = "VIDEO"; break;
+                    default: modeStr = "VIDEO"; break;
+                    }
 
-    // 发送播放视频指令并激活窗口
-    m_ipcMgr->sendMessage("play_video:" + videoPath);
-    m_ipcMgr->activateWindow();
+                    qDebug() << "[VideoPage] mplayer启动后发送初始模式:" << modeStr;
+                    m_ipcMgr->sendMessage("select_mode:" + modeStr);
+                });
+
+                // 发送播放视频指令并激活窗口
+                m_ipcMgr->sendMessage("play_video:" + videoPath);
+                m_ipcMgr->activateWindow();
             });
 
             // 绑定删除按钮点击事件
             connect(delBtn, &QPushButton::clicked, this, [this, videoPath, fileInfo]() {
                 int ret = QMessageBox::question(this, QString::fromUtf8(gbk_to_utf8("确认删除").c_str()),
-                                               QString::fromUtf8(gbk_to_utf8("确定要删除该文件吗？\n").c_str()) + fileInfo.fileName());
+                                                QString::fromUtf8(gbk_to_utf8("确定要删除该文件吗？\n").c_str()) + fileInfo.fileName());
                 if (ret == QMessageBox::Yes) {
                     if (QFile::remove(videoPath)) {
                         // 删除成功后重新初始化表格
                         initableWidget();
                     } else {
                         QMessageBox::critical(this, QString::fromUtf8(gbk_to_utf8("错误").c_str()),
-                                             QString::fromUtf8(gbk_to_utf8("文件删除失败，可能被占用。").c_str()));
+                                              QString::fromUtf8(gbk_to_utf8("文件删除失败，可能被占用。").c_str()));
                     }
                 }
             });
