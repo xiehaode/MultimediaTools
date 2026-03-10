@@ -13,6 +13,8 @@ basewindow::basewindow(QWidget *parent)
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
     // 设置窗口背景透明;
     setAttribute(Qt::WA_TranslucentBackground);
+    // 启用鼠标跟踪，确保窗口能正确接收鼠标移动事件
+    setMouseTracking(true);
 
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setObjectName("BaseWindowCentralWidget"); // 方便样式表控制
@@ -42,37 +44,7 @@ basewindow::basewindow(QWidget *parent)
 
     // 将内容区添加到布局，占满剩余空间
     mainLayout->addWidget(m_contentWidget, 1); // 第二个参数1表示占满剩余空间
-
-    //为标题栏和内容区安装事件过滤器
-    m_titleBar->installEventFilter(this);
-    m_contentWidget->installEventFilter(this);
-    centralWidget->installEventFilter(this);
 }
-
-
-bool basewindow::eventFilter(QObject *watched, QEvent *event)
-{
-    /*
-    // 拦截所有鼠标按下/移动/释放事件
-    if (event->type() == QEvent::MouseButtonPress ||
-        event->type() == QEvent::MouseMove ||
-        event->type() == QEvent::MouseButtonRelease)
-    {
-        // 匹配标题栏、内容区、中心部件
-        if (watched == m_titleBar || watched == m_contentWidget ||
-            watched == this->centralWidget())
-        {
-            event->accept(); // 接受事件，不再向上/向下传递
-            return true;     // 过滤掉该事件，不触发任何后续处理
-        }
-    }
-
-*/
-    return QMainWindow::eventFilter(watched, event);
-}
-
-
-
 
 
 
@@ -80,6 +52,9 @@ basewindow::~basewindow()
 {
 
 }
+
+
+
 
 void basewindow::initTitleBar()
 {

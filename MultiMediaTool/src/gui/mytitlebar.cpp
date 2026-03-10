@@ -19,6 +19,8 @@ myTitleBar::myTitleBar(QWidget *parent)
     , m_windowBorderWidth(0)
     , m_isTransparent(false)
 {
+    // 启用鼠标跟踪，确保能正确接收鼠标移动事件
+    setMouseTracking(true);
     // 初始化;
     initControl();
     initConnections();
@@ -269,10 +271,28 @@ void myTitleBar::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_isPressed)
     {
+        // 计算鼠标移动的距离
         QPoint movePoint = event->globalPos() - m_startMovePos;
-        QPoint widgetPos = this->parentWidget()->pos();
-        m_startMovePos = event->globalPos();
-        this->parentWidget()->move(widgetPos.x() + movePoint.x(), widgetPos.y() + movePoint.y());
+
+        // 获取顶层窗口指针（basewindow/QMainWindow）
+        QWidget* topLevelWindow = window();
+        if (topLevelWindow)
+        {
+            // 获取当前窗口位置
+            QPoint widgetPos = topLevelWindow->pos();
+
+            // 计算新位置
+            QPoint newPos = widgetPos + movePoint;
+
+            // 移动窗口到新位置
+            topLevelWindow->move(newPos);
+
+            // 强制更新窗口
+            topLevelWindow->update();
+
+            // 更新起始位置为当前位置，用于下一次计算
+            m_startMovePos = event->globalPos();
+        }
     }
     return QWidget::mouseMoveEvent(event);
 }

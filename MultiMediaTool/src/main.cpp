@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QTranslator>
 #include <QCommandLineParser>
+#include <QDesktopWidget>
 #include <QDebug>
 
 #include <windows.h>
@@ -119,6 +120,14 @@ int main(int argc, char *argv[])
     // 与 basewindow 内部设置保持一致，避免覆盖掉最小化相关 flag
     w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
     w.resize(1200, 1000);
+
+    // 将窗口居中显示在屏幕中间
+    QDesktopWidget* desktop = QApplication::desktop();
+    int screenWidth = desktop->width();
+    int screenHeight = desktop->height();
+    int x = (screenWidth - w.width()) / 2;
+    int y = (screenHeight - w.height()) / 2;
+    w.move(x, y);
     w.show();
 
     return a.exec();
